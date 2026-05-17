@@ -234,8 +234,21 @@ export class Core {
 	invocationReporter?: (report: NodeInvocationReport) => void;
 
 	print(msg: string, node: Node) {
+		this.consoleLog("log", msg, node);
+	}
+
+	warn(msg: string, node: Node) {
+		this.consoleLog("warn", msg, node);
+	}
+
+	error(msg: string, node: Node) {
+		this.consoleLog("error", msg, node);
+	}
+
+	private consoleLog(type: PrintType, msg: string, node: Node) {
 		for (const cb of this.printListeners) {
 			cb({
+				type,
 				value: msg,
 				timestamp: new Date(),
 				graph: { name: node.graph.name, id: node.graph.id },
@@ -250,7 +263,10 @@ export class Core {
 	}
 }
 
+export type PrintType = "log" | "warn" | "error";
+
 export interface PrintItem {
+	type: PrintType;
 	value: string;
 	timestamp: Date;
 	graph: { name: string; id: number };
@@ -529,6 +545,12 @@ export class ExecutionContext {
 			eventData?: unknown;
 		},
 	) {
+		if (!args.ok && args.error !== undefined) {
+			const err = args.error;
+			const msg = err instanceof Error ? err.message : String(err);
+			node.graph.project.core.error(`${node.state.name}: ${msg}`, node);
+		}
+
 		const reporter = node.graph.project.core.invocationReporter;
 		if (!reporter) return;
 
@@ -539,14 +561,14 @@ export class ExecutionContext {
 
 			let error: NodeInvocationReport["error"];
 			if (!args.ok && args.error !== undefined) {
-				const e = args.error;
+				const err = args.error;
 				error =
-					e instanceof Error
+					err instanceof Error
 						? {
-								message: e.message,
-								stack: e.stack ?? "",
+								message: err.message,
+								stack: err.stack ?? "",
 							}
-						: { message: String(e) };
+						: { message: String(err) };
 			}
 
 			reporter({

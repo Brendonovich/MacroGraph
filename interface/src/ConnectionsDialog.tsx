@@ -8,8 +8,7 @@ import {
 	startTransition,
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
-
-import { Tabs } from "@kobalte/core";
+import clsx from "clsx";
 import type { Core } from "@macrograph/runtime";
 import {
 	Button,
@@ -20,9 +19,7 @@ import {
 	DialogTrigger,
 } from "@macrograph/ui";
 
-export function ConnectionsDialog(props: { core: Core }) {
-	const [open, setOpen] = createSignal(false);
-
+export function ConnectionsContent(props: { core: Core }) {
 	const packages = createMemo(() =>
 		props.core.packages
 			.sort((a, b) => a.name.localeCompare(b.name))
@@ -30,6 +27,53 @@ export function ConnectionsDialog(props: { core: Core }) {
 	);
 
 	const [selectedPackage, setSelectedPackage] = createSignal(packages()[0]);
+
+	return (
+		<>
+			<div class="w-48 shrink-0 overflow-y-auto border-r border-neutral-700">
+				<div class="flex flex-col text-neutral-400 font-light">
+					<For each={packages()}>
+						{(pkg) => (
+							<button
+								type="button"
+								onClick={() =>
+									startTransition(() => setSelectedPackage(pkg))
+								}
+								class={clsx(
+									"px-3 py-2 text-left hover:text-white transition-colors",
+									selectedPackage() === pkg && "text-white bg-neutral-800",
+								)}
+							>
+								{pkg.name}
+							</button>
+						)}
+					</For>
+				</div>
+			</div>
+			<div class="flex-1 overflow-y-auto p-4 text-white">
+				<Suspense fallback="Loading">
+					<Show when={selectedPackage()?.SettingsUI} keyed>
+						{(UI) => (
+							<ErrorBoundary
+								fallback={(error: Error) => (
+									<div>
+										<p>An error occurred:</p>
+										<p>{error.message}</p>
+									</div>
+								)}
+							>
+								<Dynamic {...selectedPackage()?.ctx} component={UI} />
+							</ErrorBoundary>
+						)}
+					</Show>
+				</Suspense>
+			</div>
+		</>
+	);
+}
+
+export function ConnectionsDialog(props: { core: Core }) {
+	const [open, setOpen] = createSignal(false);
 
 	return (
 		<Dialog onOpenChange={setOpen} open={open()}>
@@ -45,46 +89,7 @@ export function ConnectionsDialog(props: { core: Core }) {
 					<DialogTitle class="font-bold text-2xl">Connections</DialogTitle>
 					<DialogCloseButton />
 				</div>
-				<div class="flex flex-row divide-x divide overflow-auto flex-1">
-					<Tabs.Root value={selectedPackage()?.name} orientation="vertical">
-						<Tabs.List class="flex flex-col relative text-neutral-400 font-light">
-							<For each={packages()}>
-								{(pkg) => (
-									<Tabs.Trigger
-										value={pkg.name}
-										onClick={() =>
-											startTransition(() => setSelectedPackage(pkg))
-										}
-										class="px-3 py-2 text-left ui-selected:text-white"
-									>
-										{pkg.name}
-									</Tabs.Trigger>
-								)}
-							</For>
-							<Tabs.Indicator class="bg-white w-[2px] absolute -right-[1.5px] data-[resizing='false']:transition-transform rounded-full" />
-						</Tabs.List>
-					</Tabs.Root>
-					<div class="flex flex-col p-4 text-white min-w-[32rem]">
-						<Suspense fallback="Loading">
-							<Show when={selectedPackage()?.SettingsUI} keyed>
-								{(UI) => (
-									<ErrorBoundary
-										fallback={(error: Error) => (
-											<div>
-												<p>An error occurred:</p>
-												<p>{error.message}</p>
-											</div>
-										)}
-									>
-										<div>
-											<Dynamic {...selectedPackage()?.ctx} component={UI} />
-										</div>
-									</ErrorBoundary>
-								)}
-							</Show>
-						</Suspense>
-					</div>
-				</div>
+				<ConnectionsContent core={props.core} />
 			</DialogContent>
 		</Dialog>
 	);

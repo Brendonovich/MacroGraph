@@ -23,9 +23,12 @@ import { createStore, produce, reconcile } from "solid-js/store";
 
 import { historyActions } from "./actions";
 import {
-	type GraphState,
+	type GraphViewState,
 	type SelectedItemID,
+	type TabState,
 	makeGraphState,
+	makeFunctionTab,
+	makeQueueTab,
 } from "./components/Graph/Context";
 import { MIN_WIDTH } from "./components/Sidebar";
 import {
@@ -56,8 +59,24 @@ export type GraphBounds = XY & {
 
 const MOSAIC_LS_PREFIX = "macrograph-editor-mosaic-";
 
+export type TabListState = {
+	tabs: Array<TabState>;
+	selectedIndex: number;
+};
+
+let _openTab: ((tab: TabState) => void) | null = null;
+export function registerOpenTab(fn: (tab: TabState) => void) { _openTab = fn; }
+
+export function tabKey(tab: TabState) {
+	if (tab.type === "graph") return `graph:${tab.graphId}`;
+	if (tab.type === "function") return `function:${tab.functionId}`;
+	if (tab.type === "queue") return `queue:${tab.queueId}`;
+	if (tab.type === "package") return `package:${tab.packageName}`;
+	return tab.type;
+}
+
 export type MosaicWorkspaceState = {
-	groups: Array<GraphTabListState>;
+	groups: Array<TabListState>;
 	focusedIndex: number;
 };
 
@@ -65,8 +84,10 @@ function mosaicLocalStorageKey(workspaceSegment: string) {
 	return `${MOSAIC_LS_PREFIX}${encodeURIComponent(workspaceSegment)}`;
 }
 
-function filterTabToProject(tab: GraphState, project: Project): GraphState | null {
-	const graph = project.graph(tab.id);
+function filterTabToProject(tab: TabState, project: Project): TabState | null {
+	if (tab.type === "settings" || tab.type === "connections") return tab;
+
+	const graph = project.graph(tab.graphId);
 	if (!graph) return null;
 
 	const selectedItemIds = (tab.selectedItemIds ?? []).filter((sid) => {
@@ -81,12 +102,18 @@ function filterTabToProject(tab: GraphState, project: Project): GraphState | nul
 			? tab.scale
 			: 1;
 
-	return {
-		id: tab.id,
+	const view = {
+		graphId: tab.graphId,
 		translate: { x: translate.x ?? 0, y: translate.y ?? 0 },
 		scale,
 		selectedItemIds,
 	};
+
+	if (tab.type === "graph") return { type: "graph", ...view };
+	if (tab.type === "function") return { type: "function", functionId: tab.functionId, ...view };
+	if (tab.type === "queue") return { type: "queue", queueId: tab.queueId, ...view };
+
+	return tab;
 }
 
 function loadMosaicForWorkspace(
@@ -123,7 +150,7 @@ function loadMosaicForWorkspace(
 		return structuredClone(defaultState);
 	}
 
-	const groups: Array<GraphTabListState> = p.groups.map((g) => {
+	const groups: Array<TabListState> = p.groups.map((g) => {
 		if (typeof g !== "object" || g === null || !("tabs" in g)) {
 			return { tabs: [], selectedIndex: 0 };
 		}
@@ -132,9 +159,26 @@ function loadMosaicForWorkspace(
 		if (!Array.isArray(tabsRaw)) return { tabs: [], selectedIndex: 0 };
 
 		const tabs = tabsRaw
-			.filter((t): t is GraphState => typeof t === "object" && t !== null && "id" in t)
-			.map((t) => filterTabToProject(t as GraphState, project))
-			.filter((t): t is GraphState => t !== null);
+			.filter((t): t is TabState =>
+				typeof t === "object" && t !== null && ("type" in t || "id" in t),
+			)
+			.map((t) => {
+				// migrate old GraphState format
+				const raw = t as Record<string, unknown>;
+				if (!("type" in raw) && "id" in raw) {
+					const old = raw as unknown as { id: number; translate?: XY; scale?: number; selectedItemIds?: SelectedItemID[] };
+					const migrated: TabState = {
+						type: "graph",
+						graphId: old.id,
+						translate: old.translate ?? { x: 0, y: 0 },
+						scale: typeof old.scale === "number" && old.scale > 0 ? old.scale : 1,
+						selectedItemIds: old.selectedItemIds ?? [],
+					};
+					return filterTabToProject(migrated, project);
+				}
+				return filterTabToProject(t as TabState, project);
+			})
+			.filter((t): t is TabState => t !== null);
 
 		const selectedIndex =
 			typeof selectedIndexRaw === "number" && selectedIndexRaw >= 0
@@ -164,7 +208,7 @@ function createEditorState(initialMosaic: MosaicWorkspaceState) {
 
 	const [graphStates, setGraphStates] =
 		// makePersisted(
-		createStore<GraphState[]>([]);
+		createStore<TabState[]>([]);
 	//   ,
 	//   {
 	//     name: "graph-states",
@@ -451,7 +495,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			if (!cursor || cursor.graphId === lastFollowedGraph.id) return;
 
 			const focusedGroup = mosaicState.groups[mosaicState.focusedIndex];
-			if (focusedGroup?.tabs.some((t) => t.id === cursor.graphId)) return;
+			if (focusedGroup?.tabs.some((t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === cursor.graphId)) return;
 
 			const graph = props.core.project.graphs.get(cursor.graphId);
 			if (!graph) return;
@@ -466,7 +510,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			if (cursor.graphId === lastFollowedGraph.id) return;
 
 			const focusedGroup = mosaicState.groups[mosaicState.focusedIndex];
-			if (focusedGroup?.tabs.some((t) => t.id === cursor.graphId)) return;
+			if (focusedGroup?.tabs.some((t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === cursor.graphId)) return;
 
 			const graph = props.core.project.graphs.get(cursor.graphId);
 			if (!graph) return;
@@ -476,18 +520,19 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 		});
 		onCleanup(() => setOnCursorUpdate(null));
 
-		function selectGraph(graph: Graph) {
-			const graphIndex = mosaicState.groups[
+		function openTab(tab: TabState) {
+			const key = tabKey(tab);
+			const idx = mosaicState.groups[
 				mosaicState.focusedIndex
-			]?.tabs.findIndex((tab) => tab.id === graph.id);
+			]?.tabs.findIndex((t) => tabKey(t) === key);
 
-			if (graphIndex === undefined || graphIndex < 0) {
+			if (idx === undefined || idx < 0) {
 				setMosaicState(
 					"groups",
 					mosaicState.focusedIndex,
 					produce((t) => {
 						t.selectedIndex = t.tabs.length;
-						t.tabs.push(makeGraphState(graph));
+						t.tabs.push(tab);
 					}),
 				);
 			} else {
@@ -495,9 +540,27 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 					"groups",
 					mosaicState.focusedIndex,
 					"selectedIndex",
-					graphIndex,
+					idx,
 				);
 			}
+		}
+
+		registerOpenTab(openTab);
+
+		function selectGraph(graph: Graph) {
+			openTab(makeGraphState(graph));
+		}
+
+		function selectFunction(fn: { id: number; graphId: number }) {
+			openTab(makeFunctionTab(fn));
+		}
+
+		function selectQueue(queue: { id: number; graphId: number }) {
+			openTab(makeQueueTab(queue));
+		}
+
+		function selectPackage(pkg: { name: string }) {
+			openTab({ type: "package", packageName: pkg.name });
 		}
 
 		return {
@@ -527,6 +590,9 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 				return props.environment;
 			},
 			selectGraph,
+			selectFunction,
+			selectQueue,
+			selectPackage,
 			graphBounds,
 			setGraphBounds,
 			invocationWorkspaceKey: workspaceKey,
@@ -616,7 +682,4 @@ function createSidebarState(name: string) {
 	return { state, setState };
 }
 
-export type GraphTabListState = {
-	tabs: Array<GraphState>;
-	selectedIndex: number;
-};
+

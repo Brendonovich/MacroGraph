@@ -25,7 +25,7 @@ import { CommentBox } from "./CommentBox";
 import {
 	type GraphContext,
 	GraphContextProvider,
-	type GraphState,
+	type GraphViewState,
 	toGraphSpace,
 	toScreenSpace,
 } from "./Context";
@@ -40,7 +40,7 @@ const MAX_ZOOM_OUT = 5;
 const ZOOM_STEP = 1.05;
 
 interface Props extends Solid.ComponentProps<"div"> {
-	state: GraphState;
+	state: GraphViewState;
 	graph: GraphModel;
 	onGraphDrag?(): void;
 	onMouseDown?: Solid.JSX.EventHandler<HTMLDivElement, MouseEvent>;
@@ -126,7 +126,6 @@ export const Graph = (props: Props) => {
 
 	Solid.onMount(() => {
 		createEventListener(window, "resize", onResize);
-		createResizeObserver(ref, onResize);
 
 		if (!isMobile)
 			createEventListener(ref, "gesturestart", () => {
@@ -436,7 +435,8 @@ export const Graph = (props: Props) => {
 
 			if (target) {
 				lastFollowGraphRef.id = model().id;
-				const screenPos = toScreenSpace(target.position, state.bounds, props.state);
+				const followPos = target.viewportCenter ?? target.position;
+				const screenPos = toScreenSpace(followPos, state.bounds, props.state);
 				const centerX = state.size.width / 2;
 				const centerY = state.size.height / 2;
 
@@ -468,7 +468,7 @@ export const Graph = (props: Props) => {
 	});
 
 	const cursorRaf = { current: 0 as unknown as ReturnType<typeof requestAnimationFrame> | null };
-	const sendCursor = (payload: { graphId: number; position: { x: number; y: number } }) => {
+	const sendCursor = (payload: { graphId: number; position: { x: number; y: number }; viewportCenter?: { x: number; y: number } }) => {
 		if (cursorRaf.current != null) cancelAnimationFrame(cursorRaf.current);
 		cursorRaf.current = requestAnimationFrame(() => {
 			cursorRaf.current = null;
@@ -531,7 +531,14 @@ export const Graph = (props: Props) => {
 				}}
 				onPointerMove={(e) => {
 					const graphSpace = ctx.toGraphSpace({ x: e.clientX, y: e.clientY });
-					sendCursor?.({ graphId: model().id, position: graphSpace });
+					sendCursor?.({
+						graphId: model().id,
+						position: graphSpace,
+						viewportCenter: {
+							x: (state.size.width / 2) / props.state.scale + props.state.translate.x,
+							y: (state.size.height / 2) / props.state.scale + props.state.translate.y,
+						},
+					});
 				}}
 				onPointerLeave={() => {
 					sendCursor?.({ graphId: model().id, position: { x: -99999, y: -99999 } });

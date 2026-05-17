@@ -81,8 +81,20 @@ export function SchemaMenu(props: Props) {
 		interfaceCtx.core.packages.sort((a, b) => a.name.localeCompare(b.name)),
 	);
 
+	const isRestrictedGraph = createMemo(() => {
+		const graph = props.graphModel;
+		const isFn = [...interfaceCtx.core.project.functions].some(
+			([, f]) => f.graphId === graph.id,
+		);
+		const isQueue = [...interfaceCtx.core.project.queues].some(
+			([, q]) => q.graphId === graph.id,
+		);
+		return isFn || isQueue;
+	});
+
 	const renderedSchemas = createMemo(() => {
 		const p = new Map<string, Map<string, RenderedSchema>>();
+		const restrict = isRestrictedGraph();
 
 		for (const pkg of interfaceCtx.core.packages) {
 			const schemas = new Map<string, RenderedSchema>();
@@ -90,6 +102,7 @@ export function SchemaMenu(props: Props) {
 			for (const schema of pkg.schemas.values()) {
 				if (!("type" in schema)) continue;
 				if ("internal" in schema && schema.internal) continue;
+				if (restrict && ("event" in schema || ("type" in schema && schema.type === "event"))) continue;
 				const renderedSchema = renderSchema(schema);
 
 				if (renderedSchema) {
@@ -255,6 +268,7 @@ export function SchemaMenu(props: Props) {
 
 								for (const schema of p.schemas.values()) {
 									if ("internal" in schema && schema.internal) continue;
+									if (isRestrictedGraph() && ("event" in schema || ("type" in schema && schema.type === "event"))) continue;
 									const lowercaseSchemaName = schema.name.toLowerCase();
 
 									const searchMatches = leftoverSearchTokens.every((t) =>
@@ -421,10 +435,12 @@ export function SchemaMenu(props: Props) {
 
 								if (p.name === "Queue" && !props.suggestion) {
 									const addToQueue = p.schemas.get("Add to Queue");
-									const getQueueItem = p.schemas.get("Get Queue Item");
+									const queueIterated = p.schemas.get("Queue Iterated Event");
+									const getQueuePaused = p.schemas.get("Get Queue Paused");
+									const setQueuePaused = p.schemas.get("Set Queue Paused");
 									const queueLength = p.schemas.get("Queue Length");
 
-									for (const q of props.graphModel.project.queues) {
+									for (const q of props.graphModel.project.queues.values()) {
 										const n = q.name.toLowerCase();
 										const searchMatches = leftoverSearchTokens.every((t) =>
 											n.includes(t),
@@ -434,12 +450,24 @@ export function SchemaMenu(props: Props) {
 											ret.push({
 												schema: addToQueue,
 												name: `Add to ${q.name}`,
-												defaultProperties: { queue: q.id, position: "End" },
+												defaultProperties: { queue: q.id },
 											});
-										if (getQueueItem)
+										if (queueIterated)
 											ret.push({
-												schema: getQueueItem,
-												name: `Get from ${q.name}`,
+												schema: queueIterated,
+												name: `${q.name} Iterated`,
+												defaultProperties: { queue: q.id },
+											});
+										if (getQueuePaused)
+											ret.push({
+												schema: getQueuePaused,
+												name: `${q.name} Paused`,
+												defaultProperties: { queue: q.id },
+											});
+										if (setQueuePaused)
+											ret.push({
+												schema: setQueuePaused,
+												name: `Set ${q.name} Paused`,
 												defaultProperties: { queue: q.id },
 											});
 										if (queueLength)

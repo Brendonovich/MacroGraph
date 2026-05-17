@@ -1,5 +1,6 @@
 import { Maybe, type Option } from "@macrograph/option";
 import type { EnumBase, StructBase } from "@macrograph/typesystem";
+import { t } from "@macrograph/typesystem";
 import { createEventBus } from "@solid-primitives/event-bus";
 import { ReactiveMap } from "@solid-primitives/map";
 import "@total-typescript/ts-reset";
@@ -43,7 +44,7 @@ export class Project {
 	functions = new ReactiveMap<number, GraphFunction>();
 	resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
 	variables: Array<Variable> = [];
-	queues: Array<Queue> = [];
+	queues = new ReactiveMap<number, Queue>();
 	name = "New Project";
 	events = createEventBus<ProjectEvent>();
 
@@ -53,6 +54,7 @@ export class Project {
 	customEventIdCounter = 0;
 	customTypeIdCounter = 0;
 	functionIdCounter = 0;
+	queueIdCounter = 0;
 	idCounter = 0;
 
 	constructor(args: ProjectArgs) {
@@ -263,27 +265,48 @@ export class Project {
 		}
 	}
 
-	createQueue(args: Omit<QueueArgs, "id" | "owner"> & { id?: number }) {
-		const id = args.id ?? this.generateId();
+	generateQueueId() {
+		return this.queueIdCounter++;
+	}
 
-		this.queues.push(new Queue({ ...args, id, owner: this }));
-
-		return id;
+	createQueue(args?: { id?: number; name?: string; itemType?: t.Any }) {
+		const id = args?.id ?? this.generateQueueId();
+		const graphId = this.generateGraphId();
+		const name = args?.name ?? `Queue ${id}`;
+		const graph = new Graph({
+			id: graphId,
+			name,
+			project: this,
+		});
+		this.graphs.set(graphId, graph);
+		this.graphOrder.push(graphId);
+		const queue = new Queue({
+			id,
+			name,
+			itemType: args?.itemType ?? t.string(),
+			graphId,
+			owner: this,
+		});
+		this.queues.set(id, queue);
+		return queue;
 	}
 
 	setQueueValue(id: number, value: any[]) {
-		const queue = this.queues.find((q) => q.id === id);
-		if (queue) queue.value = value;
+		const queue = this.queues.get(id);
+		if (queue) queue.items = value;
 	}
 
 	removeQueue(id: number) {
-		const index = this.queues.findIndex((q) => q.id === id);
-		if (index === -1) return;
-
-		const queues = this.queues.splice(index, 1);
-		for (const q of queues) {
-			q.dispose();
+		const queue = this.queues.get(id);
+		if (!queue) return;
+		const graph = this.graphs.get(queue.graphId);
+		if (graph) {
+			this.graphOrder = this.graphOrder.filter((gid) => gid !== queue.graphId);
+			this.graphs.delete(queue.graphId);
+			graph.dispose();
 		}
+		this.queues.delete(id);
+		queue.dispose();
 	}
 
 	emit(event: ProjectEvent) {

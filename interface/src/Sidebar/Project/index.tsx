@@ -1,9 +1,10 @@
-import type { Graph, Project } from "@macrograph/runtime";
+import type { Graph, GraphFunction, Project, Queue } from "@macrograph/runtime";
 
 import { CustomTypes } from "./CustomTypes";
 import { Functions } from "./Functions";
 import { Graphs } from "./Graphs";
-import { PrintOutput } from "./PrintOutput";
+import { Packages } from "./Packages";
+import { Console } from "./PrintOutput";
 import { Queues } from "./Queues";
 import { Resources } from "./Resources";
 import { Variables } from "./Variables";
@@ -13,6 +14,9 @@ export function Sidebar(props: {
 	project: Project;
 	currentGraph?: Graph;
 	onGraphClicked(graph: Graph): void;
+	onFunctionClicked?(fn: GraphFunction): void;
+	onQueueClicked?(queue: Queue): void;
+	onPackageClicked?(pkg: { name: string }): void;
 }) {
 	return (
 		<>
@@ -20,13 +24,14 @@ export function Sidebar(props: {
 				currentGraph={props.currentGraph?.id}
 				onGraphClicked={props.onGraphClicked}
 			/>
-			<Functions onFunctionClicked={(graphId) => {
-				const graph = props.project.graphs.get(graphId);
-				if (graph) props.onGraphClicked(graph);
-			}} />
-			<PrintOutput />
+			<Functions onFunctionClicked={(fn) => props.onFunctionClicked?.(fn)} />
+			<Console />
 			<Variables project={props.project} />
-			<Queues project={props.project} />
+			<Queues
+				project={props.project}
+				onQueueClicked={(queue) => props.onQueueClicked?.(queue)}
+			/>
+			<Packages onPackageClicked={props.onPackageClicked} />
 			<CustomTypes />
 			<Resources />
 			<Viewers />

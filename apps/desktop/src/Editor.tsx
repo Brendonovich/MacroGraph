@@ -1,6 +1,5 @@
 import {
 	ConfigDialog,
-	ConnectionsDialog,
 	Interface,
 	PlatformContext,
 	importInvocationLogFromProject,
@@ -211,7 +210,6 @@ export default function Editor() {
 export function MenuItems() {
   return (
     <>
-      <ConnectionsDialog core={core} />
       <ConfigDialog />
       <RemoteHostDialog />
       <Button

@@ -25,8 +25,18 @@ export function pkg(core: Core) {
 	});
 
 	pkg.createSchema({
-		name: "Print",
+		name: "Console Log",
 		type: "exec",
+		properties: {
+			type: {
+				name: "Type",
+				source: () => [
+					{ id: "log", display: "Log" },
+					{ id: "warn", display: "Warning" },
+					{ id: "error", display: "Error" },
+				],
+			},
+		},
 		createIO({ io }) {
 			return io.dataInput({
 				id: "input",
@@ -34,8 +44,12 @@ export function pkg(core: Core) {
 				type: t.string(),
 			});
 		},
-		run({ ctx, io }) {
-			core.print(ctx.getInput(io), io.node);
+		run({ ctx, io, properties }) {
+			const type = ctx.getProperty(properties.type) ?? "log";
+			const msg = ctx.getInput(io);
+			if (type === "warn") core.warn(msg, io.node);
+			else if (type === "error") core.error(msg, io.node);
+			else core.print(msg, io.node);
 		},
 	});
 

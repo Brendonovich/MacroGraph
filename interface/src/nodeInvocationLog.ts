@@ -1,25 +1,29 @@
-import type { NodeInvocationReport } from "@macrograph/runtime";
+import type { NodeInvocationReport, PrintItem } from "@macrograph/runtime";
 import type { NodeInvocationFileRow } from "@macrograph/runtime-serde";
 import type { SetStoreFunction } from "solid-js/store";
 
-export const MAX_NODE_INVOCATIONS = 10;
+export const MAX_NODE_INVOCATIONS = 20;
 
 const DB_NAME = "macrograph-node-invocation-log";
 const DB_VERSION = 2;
 const STORE = "nodes";
 
+export type EntryType = "invocation" | "log" | "warn" | "error";
+
 export type StoredNodeInvocation = {
 	id: string;
+	entryType: EntryType;
 	startedAt: number;
-	durationMs: number;
-	ok: boolean;
+	durationMs?: number;
+	ok?: boolean;
 	graphId: number;
 	graphName: string;
 	nodeId: number;
 	nodeName: string;
+	consoleMessage?: string;
 	eventData?: unknown;
-	inputs: Record<string, unknown>;
-	outputs: Record<string, unknown>;
+	inputs?: Record<string, unknown>;
+	outputs?: Record<string, unknown>;
 	error?: { message: string; stack?: string };
 };
 
@@ -207,6 +211,7 @@ function toStored(report: NodeInvocationReport): StoredNodeInvocation {
 			typeof crypto !== "undefined" && "randomUUID" in crypto
 				? crypto.randomUUID()
 				: `${report.startedAt}-${Math.random().toString(36).slice(2)}`,
+		entryType: "invocation",
 		startedAt: report.startedAt,
 		durationMs: Math.round(report.durationMs * 1000) / 1000,
 		ok: report.ok,
@@ -223,6 +228,22 @@ function toStored(report: NodeInvocationReport): StoredNodeInvocation {
 					stack: report.error.stack ?? "",
 				}
 			: undefined,
+	};
+}
+
+function consoleToStored(item: PrintItem, now: number): StoredNodeInvocation {
+	return {
+		id:
+			typeof crypto !== "undefined" && "randomUUID" in crypto
+				? crypto.randomUUID()
+				: `${now}-${Math.random().toString(36).slice(2)}`,
+		entryType: item.type,
+		startedAt: now,
+		graphId: item.graph.id,
+		graphName: item.graph.name,
+		nodeId: item.node.id,
+		nodeName: item.node.name,
+		consoleMessage: item.value,
 	};
 }
 
@@ -447,6 +468,33 @@ export function appendInvocationReport(
 		entry = toStored(report);
 	} catch (e) {
 		console.error("Invocation log serialize failed", e);
+		return;
+	}
+
+	setLogs(
+		key,
+		(prev: StoredNodeInvocation[] | undefined) =>
+			[entry, ...(prev ?? [])].slice(0, MAX_NODE_INVOCATIONS) as StoredNodeInvocation[],
+	);
+
+	dirtyKeys.add(key);
+	scheduleFlush(getRowSnapshot);
+}
+
+export function appendConsoleEntry(
+	setLogs: SetStoreFunction<Record<string, StoredNodeInvocation[]>>,
+	getWorkspaceKey: () => string,
+	item: PrintItem,
+	getRowSnapshot: (key: string) => StoredNodeInvocation[] | undefined,
+) {
+	const wk = getWorkspaceKey();
+	const key = invocationRowKey(wk, item.graph.id, item.node.id);
+	const now = Date.now();
+	let entry: StoredNodeInvocation;
+	try {
+		entry = consoleToStored(item, now);
+	} catch (e) {
+		console.error("Console entry serialize failed", e);
 		return;
 	}
 

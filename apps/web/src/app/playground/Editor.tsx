@@ -1,7 +1,6 @@
 import { contract } from "@macrograph/api-contract";
 import {
 	ConfigDialog,
-	ConnectionsDialog,
 	Interface,
 	PlatformContext,
 	exportInvocationLogForGraphs,
@@ -169,7 +168,6 @@ export default () => {
 export function ConnectionsDialogButton() {
 	return (
 		<>
-			<ConnectionsDialog core={core} />
 			<ConfigDialog />
 		</>
 	);

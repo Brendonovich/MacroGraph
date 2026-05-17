@@ -56,8 +56,8 @@ import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 import * as v from "valibot";
 import type {
+	GraphViewState,
 	SelectedItemID,
-	// makeGraphState,
 } from "./components/Graph/Context";
 import type { EditorState } from "./context";
 
@@ -119,9 +119,13 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		const tile = editor.mosaicState.groups[editor.mosaicState.focusedIndex];
 		if (!tile) return;
 
-		if (graphId !== undefined) return tile.tabs.find((t) => t.id === graphId);
+		if (graphId !== undefined) return tile.tabs.find((t) =>
+			(t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === graphId,
+		) as GraphViewState | undefined;
 
-		return tile.tabs[tile.selectedIndex];
+		const tab = tile.tabs[tile.selectedIndex];
+		if (!tab || (tab.type !== "graph" && tab.type !== "function" && tab.type !== "queue")) return;
+		return tab as GraphViewState;
 	}
 
 	function getGraph(input: GraphRef) {
@@ -3178,15 +3182,33 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		}),
 		createQueue: historyAction({
 			prepare() {
-				return { id: core.project.generateId() };
+				return { id: core.project.generateQueueId() };
 			},
 			perform(entry) {
-				core.project.createQueue({
+				const queue = core.project.createQueue({
 					id: entry.id,
-					name: `Queue ${core.project.queues.length + 1}`,
-					value: [],
-					itemType: t.string(),
+					name: `Queue ${core.project.queues.size + 1}`,
 				});
+				const graph = core.project.graphs.get(queue.graphId);
+				if (!graph) return;
+
+				const startSchema = core.schema("Queue", "Queue Start");
+				const iterateSchema = core.schema("Queue", "Iterate Queue");
+				if (!startSchema || !iterateSchema) return;
+
+				const startNode = graph.createNode({
+					id: graph.generateId(),
+					schema: startSchema as any,
+					position: { x: 400, y: 300 },
+				});
+				const iterateNode = graph.createNode({
+					id: graph.generateId(),
+					schema: iterateSchema as any,
+					position: { x: 700, y: 300 },
+				});
+				const outRef = `${startNode.id}:o:exec` as const;
+				const inRef = `${iterateNode.id}:i:exec` as const;
+				graph.connections.set(outRef, [inRef] as any);
 			},
 			rewind(entry) {
 				core.project.removeQueue(entry.id);
@@ -3194,25 +3216,19 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		}),
 		setQueueName: historyAction({
 			prepare(input: { queueId: number; name: string }) {
-				const queue = core.project.queues.find(
-					(q) => q.id === input.queueId,
-				);
+				const queue = core.project.queues.get(input.queueId);
 				if (!queue) return;
 
 				return { ...input, prev: queue.name };
 			},
 			perform(entry) {
-				const queue = core.project.queues.find(
-					(q) => q.id === entry.queueId,
-				);
+				const queue = core.project.queues.get(entry.queueId);
 				if (!queue) return;
 
 				queue.name = entry.name;
 			},
 			rewind(entry) {
-				const queue = core.project.queues.find(
-					(q) => q.id === entry.queueId,
-				);
+				const queue = core.project.queues.get(entry.queueId);
 				if (!queue) return;
 
 				queue.name = entry.prev;
@@ -3220,48 +3236,38 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		}),
 		setQueueValue: historyAction({
 			prepare(input: { queueId: number; value: any[] }) {
-				const queue = core.project.queues.find(
-					(q) => q.id === input.queueId,
-				);
+				const queue = core.project.queues.get(input.queueId);
 				if (!queue) return;
 
-				return { ...input, prev: [...queue.value] };
+				return { ...input, prev: [...queue.items] };
 			},
 			perform(entry) {
-				const queue = core.project.queues.find(
-					(q) => q.id === entry.queueId,
-				);
+				const queue = core.project.queues.get(entry.queueId);
 				if (!queue) return;
 
-				queue.value = entry.value;
+				queue.items = entry.value;
 			},
 			rewind(entry) {
-				const queue = core.project.queues.find(
-					(q) => q.id === entry.queueId,
-				);
+				const queue = core.project.queues.get(entry.queueId);
 				if (!queue) return;
 
-				queue.value = entry.prev;
+				queue.items = entry.prev;
 			},
 		}),
 		setQueueItemType: historyAction({
 			prepare(input: { queueId: number; type: t.Any }) {
-				const queue = core.project.queues.find(
-					(q) => q.id === input.queueId,
-				);
+				const queue = core.project.queues.get(input.queueId);
 				if (!queue) return;
 
 				return {
 					...input,
 					type: input.type.serialize(),
 					prev: queue.itemType.serialize(),
-					prevValue: [...queue.value],
+					prevValue: [...queue.items],
 				};
 			},
 			perform(entry) {
-				const queue = core.project.queues.find(
-					(q) => q.id === entry.queueId,
-				);
+				const queue = core.project.queues.get(entry.queueId);
 				if (!queue) return;
 
 				const type = deserializeType(
@@ -3269,31 +3275,79 @@ export const historyActions = (core: Core, editor: EditorState) => {
 					core.project.getType.bind(core.project),
 				);
 				queue.itemType = type;
-				queue.value = [];
+				queue.items = [];
 			},
 			rewind(entry) {
-				const queue = core.project.queues.find(
-					(q) => q.id === entry.queueId,
-				);
+				const queue = core.project.queues.get(entry.queueId);
 				if (!queue) return;
 
 				queue.itemType = deserializeType(
 					entry.prev,
 					core.project.getType.bind(core.project),
 				);
-				queue.value = entry.prevValue;
+				queue.items = entry.prevValue;
+			},
+		}),
+		setQueuePaused: historyAction({
+			prepare(input: { queueId: number; paused: boolean }) {
+				const queue = core.project.queues.get(input.queueId);
+				if (!queue) return;
+
+				return { ...input, prev: queue.paused };
+			},
+			perform(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				queue.setPaused(entry.paused);
+			},
+			rewind(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				queue.setPaused(entry.prev);
+			},
+		}),
+		setQueueConcurrent: historyAction({
+			prepare(input: { queueId: number; concurrent: boolean }) {
+				const queue = core.project.queues.get(input.queueId);
+				if (!queue) return;
+
+				return { ...input, prev: queue.concurrent };
+			},
+			perform(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				queue.concurrent = entry.concurrent;
+			},
+			rewind(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				queue.concurrent = entry.prev;
+			},
+		}),
+		removeQueueItem: historyAction({
+			prepare(input: { queueId: number; index: number }) {
+				const queue = core.project.queues.get(input.queueId);
+				if (!queue) return;
+
+				return { ...input, prev: [...queue.items] };
+			},
+			perform(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				queue.items = queue.items.filter((_: any, i: number) => i !== entry.index);
+			},
+			rewind(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				queue.items = entry.prev;
 			},
 		}),
 		deleteQueue: historyAction({
 			prepare(input: { queueId: number }) {
-				const index = core.project.queues.findIndex(
-					(q) => q.id === input.queueId,
-				);
-				if (index === -1) return;
+				const queue = core.project.queues.get(input.queueId);
+				if (!queue) return;
 
-				const queue = core.project.queues[index]!;
-
-				return { ...input, index, data: serializeQueue(queue) };
+				return { ...input, data: serializeQueue(queue) };
 			},
 			perform(entry) {
 				core.project.removeQueue(entry.queueId);
@@ -3308,7 +3362,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 					core.project,
 				);
 
-				core.project.queues.splice(entry.index, 0, queue);
+				core.project.queues.set(queue.id, queue);
+				const graph = core.project.graphs.get(queue.graphId);
+				if (!graph) {
+					core.project.createGraph({ id: queue.graphId, name: queue.name });
+				}
 			},
 		}),
 		createResource: historyAction({
@@ -3846,12 +3904,12 @@ export const historyActions = (core: Core, editor: EditorState) => {
 			},
 			perform(entry) {
 				const group = editor.mosaicState.groups.find((g) =>
-					g.tabs.some((t) => t.id === entry.graphId),
+					g.tabs.some((t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === entry.graphId),
 				);
 				if (!group) return;
 
 				const tabIdx = group.tabs.findIndex(
-					(t) => t.id === entry.graphId,
+					(t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === entry.graphId,
 				);
 				if (tabIdx < 0) return;
 
@@ -3867,12 +3925,12 @@ export const historyActions = (core: Core, editor: EditorState) => {
 			},
 			rewind(entry) {
 				const group = editor.mosaicState.groups.find((g) =>
-					g.tabs.some((t) => t.id === entry.graphId),
+					g.tabs.some((t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === entry.graphId),
 				);
 				if (!group) return;
 
 				const tabIdx = group.tabs.findIndex(
-					(t) => t.id === entry.graphId,
+					(t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === entry.graphId,
 				);
 				if (tabIdx < 0) return;
 

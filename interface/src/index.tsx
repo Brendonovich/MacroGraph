@@ -1,4 +1,3 @@
-import { Tabs } from "@kobalte/core";
 import {
 	type ClipboardItem,
 	deserializeClipboardItem,
@@ -33,14 +32,18 @@ import { toast } from "solid-sonner";
 import type * as v from "valibot";
 import clsx from "clsx";
 import { isMobile } from "@solid-primitives/platform";
+import { Dynamic } from "solid-js/web";
 
 import * as Sidebars from "./Sidebar";
 import type { CreateNodeInput, GraphItemPositionInput } from "./actions";
 import { Graph } from "./components/Graph";
 import {
-	type GraphState,
 	makeGraphState,
+	type GraphViewState,
+	type SelectedItemID,
+	type TabState,
 	toGraphSpace,
+	toScreenSpace,
 } from "./components/Graph/Context";
 import { GRID_SIZE, SHIFT_MULTIPLIER } from "./components/Graph/util";
 import { NodeSearchDialog } from "./components/NodeSearchDialog";
@@ -49,7 +52,7 @@ import { MIN_WIDTH, Sidebar } from "./components/Sidebar";
 import {
 	type Environment,
 	type GraphBounds,
-	GraphTabListState,
+	type TabListState,
 	InterfaceContextProvider,
 	useInterfaceContext,
 } from "./context";
@@ -131,7 +134,7 @@ export function Interface(props: {
 
 type CurrentGraph = {
 	model: GraphModel;
-	state: GraphState;
+	state: GraphViewState;
 	size: GraphBounds;
 };
 
@@ -171,13 +174,13 @@ function ProjectInterface() {
 	const currentGraph = Solid.createMemo(() => {
 		const group = mosaicState.groups[mosaicState.focusedIndex];
 
-		const state = group?.tabs[group?.selectedIndex ?? 0];
-		if (!state) return;
+		const tab = group?.tabs[group?.selectedIndex ?? 0];
+		if (!tab || (tab.type !== "graph" && tab.type !== "function" && tab.type !== "queue")) return;
 
-		const model = ctx.core.project.graphs.get(state.id);
+		const model = ctx.core.project.graphs.get(tab.graphId);
 		if (!model) return;
 
-		return { model, state } as CurrentGraph;
+		return { model, state: tab } as unknown as CurrentGraph;
 	});
 
 	// will account for multi-pane in future
@@ -221,12 +224,54 @@ function ProjectInterface() {
 				e.stopPropagation();
 			}}
 		>
-			<div class="flex-1 flex divide-x divide-neutral-700 flex-row h-full justify-center items-center text-white overflow-x-hidden animate-in origin-top relative">
+			<Solid.Show when={ctx.leftSidebar.state.open}>
+				<div class="flex flex-row">
+					<Sidebar
+						width={leftSidebarWidth()}
+						name="Project"
+						initialValue={["Graphs"]}
+					>
+						<Sidebars.Project
+							currentGraph={currentGraph()?.model}
+							project={ctx.core.project}
+							onGraphClicked={(graph) => ctx.selectGraph(graph)}
+							onFunctionClicked={(fn) => ctx.selectFunction(fn)}
+							onQueueClicked={(queue) => ctx.selectQueue(queue)}
+							onPackageClicked={(pkg) => ctx.selectPackage(pkg)}
+						/>
+					</Sidebar>
+
+					<ResizeHandle
+						width={leftSidebar.state.width}
+						side="right"
+						onResize={(width) => leftSidebar.setState({ width })}
+						onResizeEnd={(width) =>
+							leftSidebar.state.open &&
+							width < MIN_WIDTH &&
+							leftSidebar.setState({ width: MIN_WIDTH })
+						}
+					/>
+				</div>
+			</Solid.Show>
+			<Solid.Show when={isTouchDevice}>
+				<button
+					type="button"
+					class="mt-auto mb-auto rounded-r border-y border-r border-neutral-700 bg-neutral-800 h-12 w-4 flex items-center justify-center shadow shrink-0"
+					onClick={() => {
+						ctx.leftSidebar.setState((s) => ({ open: !s.open }));
+					}}
+				>
+					<IconTablerChevronRight
+						class={clsx("size-4", ctx.leftSidebar.state.open && "rotate-180")}
+					/>
+				</button>
+			</Solid.Show>
+
+			<div class="flex-1 flex divide-x divide-neutral-700 flex-row h-full justify-center items-center text-white overflow-x-hidden min-w-0">
 				<Solid.For each={mosaicState.groups}>
 					{(mosaicItem, i) => (
 						<GraphTabList
 							focused={mosaicState.focusedIndex === i()}
-							leftPadding={i() === 0 ? leftSidebarWidth() : undefined}
 							state={mosaicItem}
 							onTabClose={(index) => {
 								setMosaicState(
@@ -234,7 +279,6 @@ function ProjectInterface() {
 									mosaicState.focusedIndex,
 									produce((state) => {
 										state.tabs.splice(index, 1);
-										console.log(state.tabs.length);
 										state.selectedIndex = Math.min(
 											state.selectedIndex,
 											state.tabs.length - 1,
@@ -267,166 +311,123 @@ function ProjectInterface() {
 				</Solid.For>
 			</div>
 
-			<div class="absolute inset-0 pointer-events-none flex flex-row items-stretch">
-				<Solid.Show when={ctx.leftSidebar.state.open}>
-					<div class="animate-in slide-in-from-left-4 fade-in flex flex-row pointer-events-auto">
-						<Sidebar
-							width={leftSidebarWidth()}
-							name="Project"
-							initialValue={["Graphs"]}
-						>
-							<Sidebars.Project
-								currentGraph={currentGraph()?.model}
-								project={ctx.core.project}
-								onGraphClicked={(graph) => ctx.selectGraph(graph)}
+			<Solid.Show when={isTouchDevice}>
+				<button
+					type="button"
+					class="mt-auto mb-auto rounded-l border-y border-l border-neutral-700 bg-neutral-800 h-12 w-4 flex items-center justify-center shadow shrink-0"
+					onClick={() => {
+						ctx.rightSidebar.setState((s) => ({ open: !s.open }));
+					}}
+				>
+					<IconTablerChevronRight
+						class={clsx(
+							"size-4",
+							!ctx.rightSidebar.state.open && "rotate-180",
+						)}
+					/>
+				</button>
+			</Solid.Show>
+			<Solid.Show when={rightSidebar.state.open}>
+				<div class="flex flex-row">
+					<ResizeHandle
+						width={rightSidebar.state.width}
+						side="left"
+						onResize={(width) => rightSidebar.setState({ width })}
+						onResizeEnd={(width) =>
+							rightSidebar.state.open &&
+							width < MIN_WIDTH &&
+							rightSidebar.setState({ width: MIN_WIDTH })
+						}
+					/>
+
+					<Solid.Show
+						when={currentGraph()}
+						fallback={
+							<Sidebar
+								width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
+								name="Blank"
 							/>
-						</Sidebar>
-
-						<ResizeHandle
-							width={leftSidebar.state.width}
-							side="right"
-							onResize={(width) => leftSidebar.setState({ width })}
-							onResizeEnd={(width) =>
-								leftSidebar.state.open &&
-								width < MIN_WIDTH &&
-								leftSidebar.setState({ width: MIN_WIDTH })
-							}
-						/>
-					</div>
-				</Solid.Show>
-				<Solid.Show when={isTouchDevice}>
-					<button
-						type="button"
-						class="mt-auto mb-auto rounded-r border-y border-r border-neutral-700 bg-neutral-800 h-12 w-4 flex items-center justify-center shadow pointer-events-auto"
-						onClick={() => {
-							ctx.leftSidebar.setState((s) => ({ open: !s.open }));
-						}}
+						}
 					>
-						<IconTablerChevronRight
-							class={clsx("size-4", ctx.leftSidebar.state.open && "rotate-180")}
-						/>
-					</button>
-				</Solid.Show>
-
-				<div class="flex-1 relative">{/*{isDev && <ActionHistory />}*/}</div>
-				<Solid.Show when={isTouchDevice}>
-					<button
-						type="button"
-						class="mt-auto mb-auto rounded-l border-y border-l border-neutral-700 bg-neutral-800 h-12 w-4 flex items-center justify-center shadow pointer-events-auto"
-						onClick={() => {
-							ctx.rightSidebar.setState((s) => ({ open: !s.open }));
-						}}
-					>
-						<IconTablerChevronRight
-							class={clsx(
-								"size-4",
-								!ctx.rightSidebar.state.open && "rotate-180",
-							)}
-						/>
-					</button>
-				</Solid.Show>
-				<Solid.Show when={rightSidebar.state.open}>
-					<div class="animate-in slide-in-from-right-4 fade-in flex flex-row pointer-events-auto">
-						<ResizeHandle
-							width={rightSidebar.state.width}
-							side="left"
-							onResize={(width) => rightSidebar.setState({ width })}
-							onResizeEnd={(width) =>
-								rightSidebar.state.open &&
-								width < MIN_WIDTH &&
-								rightSidebar.setState({ width: MIN_WIDTH })
-							}
-						/>
-
-						<Solid.Show
-							when={currentGraph()}
-							fallback={
-								<Sidebar
-									width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
-									name="Blank"
-								/>
-							}
-						>
-							{(graph) => (
-								<Solid.Switch
-									fallback={
-										<Sidebar
-											width={rightSidebarWidth()}
-											name="Graph"
-											initialValue={["Graph Variables"]}
+						{(graph) => (
+							<Solid.Switch
+								fallback={
+									<Sidebar
+										width={rightSidebarWidth()}
+										name="Graph"
+										initialValue={["Graph Variables"]}
+									>
+										<Solid.Show
+											when={graph().state.selectedItemIds.length === 0}
+											fallback={
+												<div class="pt-4 text-center w-full text-neutral-400 text-sm">
+													Multiple Items Selected
+												</div>
+											}
 										>
-											<Solid.Show
-												when={graph().state.selectedItemIds.length === 0}
-												fallback={
-													<div class="pt-4 text-center w-full text-neutral-400 text-sm">
-														Multiple Items Selected
-													</div>
-												}
-											>
-												<Sidebars.Graph graph={graph().model} />
-											</Solid.Show>
-										</Sidebar>
-									}
+											<Sidebars.Graph graph={graph().model} />
+										</Solid.Show>
+									</Sidebar>
+								}
+							>
+								<Solid.Match
+									when={(() => {
+										const {
+											model,
+											state: { selectedItemIds },
+										} = graph();
+										if (selectedItemIds.length > 1) return;
+
+										const selectedItemId = selectedItemIds[0];
+										if (!selectedItemId || selectedItemId.type !== "node")
+											return;
+
+										return model.nodes.get(selectedItemId.id);
+									})()}
 								>
-									<Solid.Match
-										when={(() => {
-											const {
-												model,
-												state: { selectedItemIds },
-											} = graph();
-											if (selectedItemIds.length > 1) return;
+									{(node) => (
+										<Sidebar
+											width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
+											name="Node"
+											initialValue={["Node Info"]}
+										>
+											<Sidebars.Node node={node()} />
+										</Sidebar>
+									)}
+								</Solid.Match>
+								<Solid.Match
+									when={(() => {
+										const {
+											model,
+											state: { selectedItemIds },
+										} = graph();
+										if (selectedItemIds.length > 1) return;
 
-											const selectedItemId = selectedItemIds[0];
-											if (!selectedItemId || selectedItemId.type !== "node")
-												return;
+										const selectedItemId = selectedItemIds[0];
+										if (
+											!selectedItemId ||
+											selectedItemId.type !== "commentBox"
+										)
+											return;
 
-											return model.nodes.get(selectedItemId.id);
-										})()}
-									>
-										{(node) => (
-											<Sidebar
-												width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
-												name="Node"
-												initialValue={["Node Info"]}
-											>
-												<Sidebars.Node node={node()} />
-											</Sidebar>
-										)}
-									</Solid.Match>
-									<Solid.Match
-										when={(() => {
-											const {
-												model,
-												state: { selectedItemIds },
-											} = graph();
-											if (selectedItemIds.length > 1) return;
-
-											const selectedItemId = selectedItemIds[0];
-											if (
-												!selectedItemId ||
-												selectedItemId.type !== "commentBox"
-											)
-												return;
-
-											return model.commentBoxes.get(selectedItemId.id);
-										})()}
-									>
-										{(box) => (
-											<Sidebar
-												width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
-												name="Comment Box"
-												initialValue={["Comment Box Info"]}
-											>
-												<Sidebars.CommentBox box={box()} />
-											</Sidebar>
-										)}
-									</Solid.Match>
-								</Solid.Switch>
-							)}
-						</Solid.Show>
-					</div>
-				</Solid.Show>
-			</div>
+										return model.commentBoxes.get(selectedItemId.id);
+									})()}
+								>
+									{(box) => (
+										<Sidebar
+											width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
+											name="Comment Box"
+											initialValue={["Comment Box Info"]}
+										>
+											<Sidebars.CommentBox box={box()} />
+										</Sidebar>
+									)}
+								</Solid.Match>
+							</Solid.Switch>
+						)}
+					</Solid.Show>
+				</div>
+			</Solid.Show>
 
 			<NodeSearchDialog />
 
@@ -1056,17 +1057,41 @@ function createKeydownShortcuts(
 	});
 }
 
+function tabLabel(tab: TabState, ctx: InterfaceContext): string {
+	if (tab.type === "graph") return ctx.core.project.graphs.get(tab.graphId)?.name ?? "Graph";
+	if (tab.type === "function") {
+		const fn = [...ctx.core.project.functions].find(([, f]) => f.id === tab.functionId)?.[1];
+		return fn?.name ?? "Function";
+	}
+	if (tab.type === "queue") {
+		const q = ctx.core.project.queues.get(tab.queueId);
+		return q?.name ?? "Queue";
+	}
+	if (tab.type === "settings") return "Settings";
+	if (tab.type === "package") return `pkg: ${tab.packageName}`;
+	return "Tab";
+}
+
 function GraphTabList(props: {
 	focused: boolean;
-	state: GraphTabListState;
+	state: TabListState;
 	onSelectedChanged: (index: number) => void;
 	onTabClose: (index: number) => void;
-	leftPadding?: number;
 	onFocus: () => void;
 	onClose: () => void;
 	setHoveredPane: Solid.Setter<boolean | null>;
 }) {
 	const ctx = useInterfaceContext();
+
+	const selectedTab = () => props.state.tabs[props.state.selectedIndex];
+
+	const graphContent = () => {
+		const tab = selectedTab();
+		if (!tab || (tab.type !== "graph" && tab.type !== "function" && tab.type !== "queue")) return;
+		const graph = ctx.core.project.graphs.get(tab.graphId);
+		if (!graph) return;
+		return { tab, graph };
+	};
 
 	return (
 		<div
@@ -1077,19 +1102,100 @@ function GraphTabList(props: {
 				}, 1);
 			}}
 		>
-			<Solid.Show
-				when={(() => {
-					const state = props.state.tabs[props.state.selectedIndex];
-					if (!state) return;
+			<div class="overflow-x-auto w-full scrollbar scrollbar-none border-b border-neutral-700 h-8 flex flex-row text-sm">
+				<Solid.For each={props.state.tabs}>
+					{(tab, index) => (
+						<button
+							type="button"
+							class={clsx(
+								"py-2 px-4 flex flex-row items-center relative group shrink-0 whitespace-nowrap transition-colors",
+								props.state.selectedIndex === index()
+									? clsx(
+										props.focused ? "bg-white/20" : "bg-white/10",
+										tab.type === "function" && "text-sky-200",
+										tab.type === "queue" && "text-amber-200",
+										tab.type === "settings" && "text-purple-200",
+										tab.type === "package" && "text-cyan-200",
+									)
+									: clsx(
+										"hover:bg-white/5",
+										tab.type === "function" && "text-sky-300",
+										tab.type === "queue" && "text-amber-300",
+										tab.type === "settings" && "text-purple-300",
+										tab.type === "package" && "text-cyan-300",
+									),
+							)}
+							onClick={() => props.onSelectedChanged(index())}
+						>
+							<span class="font-medium">{tabLabel(tab, ctx)}</span>
+							<span
+								class="ml-1 hover:bg-white/20 rounded-[0.125rem] opacity-0 group-hover:opacity-100 cursor-pointer"
+								onClick={(e) => {
+									e.stopPropagation();
+									props.onTabClose(index());
+								}}
+							>
+								<IconHeroiconsXMarkSolid
+									class="size-2"
+									stroke-width={1}
+								/>
+							</span>
+						</button>
+					)}
+				</Solid.For>
+				<div class="flex-1" />
+			</div>
+			{(() => {
+				const tab = selectedTab();
+				const graph = (tab && (tab.type === "graph" || tab.type === "function" || tab.type === "queue"))
+					? ctx.core.project.graphs.get(tab.graphId)
+					: undefined;
 
-					const [_, setState] = createStore(state);
+				if (tab && graph) {
+					const groupIdx = ctx.mosaicState.groups.indexOf(props.state);
+					const setGraphTranslate = (t: XY) => {
+						if (groupIdx >= 0)
+							ctx.setMosaicState("groups", groupIdx, "tabs", props.state.selectedIndex, "translate", t);
+					};
+					const setGraphScale = (s: number) => {
+						if (groupIdx >= 0)
+							ctx.setMosaicState("groups", groupIdx, "tabs", props.state.selectedIndex, "scale", s);
+					};
+					return (
+						<Graph
+							graph={graph}
+							state={tab}
+							onMouseEnter={() => props.setHoveredPane(true)}
+							onMouseMove={() => props.setHoveredPane(true)}
+							onMouseLeave={() => props.setHoveredPane(null)}
+							onBoundsChange={ctx.setGraphBounds}
+							onSizeChange={ctx.setGraphBounds}
+							onScaleChange={setGraphScale}
+							onTranslateChange={setGraphTranslate}
+						/>
+					);
+				}
 
-					const graph = ctx.core.project.graphs.get(state.id);
-					if (!graph) return;
+				if (tab?.type === "package") {
+					const pkg = ctx.core.packages.find((p) => p.name === tab.packageName);
+					return (
+						<div class="flex-1 w-full flex flex-row overflow-auto bg-neutral-900">
+							<div class="flex-1 overflow-y-auto p-4 text-white">
+								<Solid.Suspense fallback="Loading...">
+									<Solid.ErrorBoundary fallback={<span class="text-red-400">Error loading package settings</span>}>
+										{pkg?.SettingsUI ? (
+											<Dynamic {...(pkg as any).ctx} component={pkg.SettingsUI} />
+										) : (
+											<span class="text-neutral-500">Package has no settings</span>
+										)}
+									</Solid.ErrorBoundary>
+								</Solid.Suspense>
+							</div>
+						</div>
+					);
+				}
 
-					return { graph, state, setState };
-				})()}
-				fallback={
+				return (
 					<>
 						<Solid.Show when={ctx.mosaicState.groups.length > 1}>
 							<button
@@ -1107,99 +1213,8 @@ function GraphTabList(props: {
 						</Solid.Show>
 						<span class="text-neutral-400 font-medium">No graph selected</span>
 					</>
-				}
-			>
-				{(selected) => (
-					<>
-						<Tabs.Root
-							class="overflow-x-auto w-full scrollbar scrollbar-none border-b border-neutral-700"
-							value={selected().graph.id.toString()}
-							style={
-								props.leftPadding
-									? { "padding-left": `${props.leftPadding}px` }
-									: undefined
-							}
-						>
-							<Tabs.List class="h-8 flex flex-row relative text-sm">
-								<Tabs.Indicator class="absolute inset-0 data-[resizing='false']:transition-[transform,width]">
-									<div
-										class={clsx(
-											"w-full h-full",
-											props.focused ? "bg-white/20" : "bg-white/10",
-										)}
-									/>
-								</Tabs.Indicator>
-								<Solid.For each={props.state.tabs}>
-									{(state, index) => (
-										<Solid.Show when={ctx.core.project.graphs.get(state.id)}>
-											{(graph) => (
-												<Tabs.Trigger
-													value={graph().id.toString()}
-													type="button"
-													class="py-2 px-4 flex flex-row items-center relative group shrink-0 whitespace-nowrap transition-colors"
-													onClick={
-														() => props.onSelectedChanged(index())
-														// setCurrentGraphId(graph.id)
-													}
-												>
-													<span class="font-medium">{graph().name}</span>
-													<button
-														type="button"
-														class="absolute right-1 hover:bg-white/20 rounded-[0.125rem] opacity-0 group-hover:opacity-100"
-													>
-														<IconHeroiconsXMarkSolid
-															class="size-2"
-															stroke-width={1}
-															onClick={(e) => {
-																e.stopPropagation();
-
-																props.onTabClose(index());
-																// Solid.batch(() => {
-																//   setGraphStates(
-																//     produce((states) => {
-																//       const currentIndex = currentGraphIndex();
-																//       states.splice(index(), 1);
-																//       if (currentIndex !== null) {
-																//         const state =
-																//           states[
-																//             Math.min(currentIndex, states.length - 1)
-																//           ];
-																//         if (state) setCurrentGraphId(state.id);
-																//       }
-
-																//       return states;
-																//     }),
-																//   );
-																// });
-															}}
-														/>
-													</button>
-												</Tabs.Trigger>
-											)}
-										</Solid.Show>
-									)}
-								</Solid.For>
-								<div class="flex-1" />
-							</Tabs.List>
-						</Tabs.Root>
-						<Graph
-							graph={selected().graph}
-							state={selected().state}
-							onMouseEnter={() => props.setHoveredPane(true)}
-							onMouseMove={() => props.setHoveredPane(true)}
-							onMouseLeave={() => props.setHoveredPane(null)}
-							onBoundsChange={ctx.setGraphBounds}
-							onSizeChange={ctx.setGraphBounds}
-							onScaleChange={(scale) => {
-								selected().setState("scale", scale);
-							}}
-							onTranslateChange={(translate) => {
-								selected().setState("translate", translate);
-							}}
-						/>
-					</>
-				)}
-			</Solid.Show>
+				);
+			})()}
 		</div>
 	);
 }

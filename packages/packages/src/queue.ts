@@ -1,184 +1,207 @@
 import { Package, type PropertyDef } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
-const projectQueues = (graph: { project: { queues: any[] } }) =>
-	graph.project.queues;
+const queueProperty = {
+	name: "Queue",
+	source: ({ node }: any) =>
+		[...node.graph.project.queues].map(([id, q]: any) => ({
+			id,
+			display: q.name,
+		})),
+} satisfies PropertyDef;
 
-export function pkg() {
+export function pkg(core?: any) {
 	const pkg = new Package({
 		name: "Queue",
 	});
 
-	const queueProperty = {
-		name: "Queue",
-		source: ({ node }) =>
-			projectQueues(node.graph).map((q: any) => ({
-				id: q.id,
-				display: q.name,
-			})),
-	} satisfies PropertyDef;
-
-	const positionProperty = {
-		name: "Position",
-		source: () =>
-			["End", "Front", "At Index"].map((p) => ({
-				id: p,
-				display: p,
-			})),
-	} satisfies PropertyDef;
-
 	pkg.createSchema({
 		name: "Add to Queue",
 		type: "exec",
-		properties: {
-			queue: queueProperty,
-			position: positionProperty,
-		},
-		createIO({ io, ctx, properties }) {
+		properties: { queue: queueProperty },
+		createIO({ io, ctx, properties }: any) {
 			const queueId = ctx.getProperty(properties.queue);
-			const queue = projectQueues(ctx.graph).find(
-				(q: any) => q.id === queueId,
-			);
+			if (queueId === undefined) return;
+			const queue = ctx.graph.project.queues.get(queueId);
 			if (!queue) return;
 
-			const position = ctx.getProperty(properties.position) ?? "End";
-
-			const inputs: any = {
+			return {
 				value: io.dataInput({
 					id: "value",
 					name: "Value",
 					type: queue.itemType,
 				}),
 			};
-
-			if (position === "At Index") {
-				inputs.index = io.dataInput({
-					id: "index",
-					name: "Index",
-					type: t.int(),
-				});
-			}
-
-			return inputs;
 		},
-		async run({ ctx, io, properties }) {
+		async run({ ctx, io, properties, graph }: any) {
 			if (!io) return;
-
 			const queueId = ctx.getProperty(properties.queue);
 			if (queueId === undefined) return;
-
-			const queue = ctx.graph.project.queues.find((q) => q.id === queueId);
+			const queue = graph.project.queues.get(queueId);
 			if (!queue) return;
 
-			const position = ctx.getProperty(properties.position) ?? "End";
 			const value = ctx.getInput(io.value);
+			queue.addItem(value);
+		},
+	});
 
-			switch (position) {
-				case "End":
-					queue.value = [...queue.value, value];
-					break;
-				case "Front":
-					queue.value = [value, ...queue.value];
-					break;
-				case "At Index": {
-					const list = [...queue.value];
-					list.splice(ctx.getInput(io.index), 0, value);
-					queue.value = list;
-					break;
-				}
-			}
+	pkg.createEventSchema({
+		name: "Queue Iterated Event",
+		event: ({ ctx, properties }: any) => {
+			const queueId = ctx.getProperty(properties.queue);
+			if (queueId === undefined) return;
+			return `iterated:${queueId}`;
+		},
+		properties: { queue: queueProperty },
+		createIO({ io, ctx, properties }: any) {
+			const queueId = ctx.getProperty(properties.queue);
+			if (queueId === undefined) return;
+			const queue = ctx.graph.project.queues.get(queueId);
+			if (!queue) return;
+
+			return {
+				exec: io.execOutput({ id: "exec" }),
+				item: io.dataOutput({
+					id: "item",
+					name: "Item",
+					type: queue.itemType,
+				}),
+			};
+		},
+		run({ ctx, io, data }: any) {
+			if (!io) return;
+			ctx.setOutput(io.item, data.item);
+			ctx.exec(io.exec);
 		},
 	});
 
 	pkg.createSchema({
-		name: "Get Queue Item",
-		type: "base",
-		properties: {
-			queue: queueProperty,
+		name: "Get Queue Paused",
+		type: "pure",
+		properties: { queue: queueProperty },
+		createIO({ io }: any) {
+			return io.dataOutput({
+				id: "",
+				name: "Paused",
+				type: t.bool(),
+			});
 		},
-		createIO({ io, ctx, properties }) {
+		run({ ctx, io, properties, graph }: any) {
+			if (!io) return;
 			const queueId = ctx.getProperty(properties.queue);
-			const queue = projectQueues(ctx.graph).find(
-				(q: any) => q.id === queueId,
-			);
-			if (!queue) return;
+			if (queueId === undefined) return;
+			const queue = graph.project.queues.get(queueId);
+			ctx.setOutput(io, queue ? queue.paused : false);
+		},
+	});
 
+	pkg.createSchema({
+		name: "Set Queue Paused",
+		type: "exec",
+		properties: { queue: queueProperty },
+		createIO({ io }: any) {
 			return {
-				exec: io.execInput({
-					id: "exec",
-				}),
-				index: io.dataInput({
-					id: "index",
-					name: "Index",
-					type: t.int(),
-				}),
-				gotItem: io.scopeOutput({
-					id: "gotItem",
-					name: "Got Item",
-					scope: (s) => {
-						s.output({
-							id: "value",
-							name: "Value",
-							type: queue.itemType,
-						});
-					},
-				}),
-				empty: io.execOutput({
-					id: "empty",
-					name: "Empty",
+				paused: io.dataInput({
+					id: "paused",
+					name: "Paused",
+					type: t.bool(),
 				}),
 			};
 		},
-		async run({ ctx, io, properties }) {
+		async run({ ctx, io, properties, graph }: any) {
 			if (!io) return;
-
 			const queueId = ctx.getProperty(properties.queue);
 			if (queueId === undefined) return;
-
-			const queue = ctx.graph.project.queues.find((q) => q.id === queueId);
+			const queue = graph.project.queues.get(queueId);
 			if (!queue) return;
 
-			const index = ctx.getInput(io.index);
-			const item =
-				index >= 0 && index < queue.value.length
-					? queue.value.splice(index, 1)[0]
-					: undefined;
-
-			if (item !== undefined) {
-				await ctx.execScope(io.gotItem, { value: item });
-			} else {
-				await ctx.exec(io.empty);
-			}
+			queue.setPaused(ctx.getInput(io.paused));
 		},
 	});
 
 	pkg.createSchema({
 		name: "Queue Length",
 		type: "pure",
-		properties: {
-			queue: queueProperty,
-		},
-		createIO({ io, ctx, properties }) {
-			const queueId = ctx.getProperty(properties.queue);
-			const queue = projectQueues(ctx.graph).find(
-				(q: any) => q.id === queueId,
-			);
-			if (!queue) return;
-
+		properties: { queue: queueProperty },
+		createIO({ io }: any) {
 			return io.dataOutput({
 				id: "",
 				name: "Length",
 				type: t.int(),
 			});
 		},
-		run({ ctx, io, properties }) {
+		run({ ctx, io, properties, graph }: any) {
 			if (!io) return;
-
 			const queueId = ctx.getProperty(properties.queue);
 			if (queueId === undefined) return;
+			const queue = graph.project.queues.get(queueId);
+			ctx.setOutput(io, queue ? queue.items.length : 0);
+		},
+	});
 
-			const queue = ctx.graph.project.queues.find((q) => q.id === queueId);
-			ctx.setOutput(io, queue ? queue.value.length : 0);
+	// --- Internal queue graph nodes ---
+
+	pkg.createSchema({
+		name: "Queue Start",
+		type: "base",
+		internal: true,
+		createIO({ io, ctx }: any) {
+			const graph = ctx.graph;
+			const queue = [...graph.project.queues].find(
+				([, q]: any) => q.graphId === graph.id,
+			)?.[1];
+			if (!queue) return;
+
+			const exec = io.execOutput({ id: "exec" });
+			io.dataOutput({
+				id: "item",
+				name: "Current Item",
+				type: queue.itemType,
+			});
+			return { exec };
+		},
+		async run({ ctx, io }: any) {
+			if (!io) return;
+			await ctx.exec(io.exec);
+		},
+	});
+
+	pkg.createSchema({
+		name: "Iterate Queue",
+		type: "base",
+		internal: true,
+		createIO({ io, ctx }: any) {
+			const graph = ctx.graph;
+			const queue = [...graph.project.queues].find(
+				([, q]: any) => q.graphId === graph.id,
+			)?.[1];
+			if (!queue) return;
+
+			return {
+				exec: io.execInput({ id: "exec" }),
+				item: io.dataInput({
+					id: "item",
+					name: "Item",
+					type: queue.itemType,
+				}),
+			};
+		},
+		async run({ ctx, io, graph }: any) {
+			if (!io) return;
+
+			const queue = [...graph.project.queues].find(
+				([, q]: any) => q.graphId === graph.id,
+			)?.[1];
+			if (!queue) return;
+
+			queue.iterateFired = true;
+
+			const item = ctx.getInput(io.item);
+
+			pkg.emitEvent({
+				name: `iterated:${queue.id}`,
+				data: { queueId: queue.id, item },
+			});
 		},
 	});
 

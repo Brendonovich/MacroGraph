@@ -15,10 +15,12 @@ import { Variables as VariablesRoot } from "../Variables";
 export function Variables(props: { graph: Graph }) {
 	const interfaceCtx = useInterfaceContext();
 	const isFn = [...interfaceCtx.core.project.functions].some(([, f]) => f.graphId === props.graph.id);
+	const isQueue = [...interfaceCtx.core.project.queues].some(([, q]) => q.graphId === props.graph.id);
+	const titlePrefix = isFn ? "Function" : isQueue ? "Queue" : "Graph";
 
 	return (
 		<VariablesRoot
-			titlePrefix={isFn ? "Function" : "Graph"}
+			titlePrefix={titlePrefix}
 			variables={props.graph.variables}
 			onCreateVariable={() => {
 				interfaceCtx.execute("createVariable", {

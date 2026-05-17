@@ -37,7 +37,7 @@ export function serializeProject(
 			serializeResources(type, entry),
 		),
 		variables: project.variables.map(serializeVariable),
-		queues: project.queues.map(serializeQueue),
+		queues: [...project.queues.values()].map(serializeQueue),
 	};
 }
 
@@ -211,7 +211,10 @@ export function serializeQueue(
 	return {
 		id: q.id,
 		name: q.name,
-		value: q.value.map((item) => serializeValue(item, q.itemType)),
+		graphId: q.graphId,
+		items: q.items.map((item) => serializeValue(item, q.itemType)),
+		paused: q.paused,
+		concurrent: q.concurrent,
 		type: q.itemType.serialize(),
 	};
 }

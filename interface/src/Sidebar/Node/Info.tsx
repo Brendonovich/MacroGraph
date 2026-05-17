@@ -11,6 +11,7 @@ import { SidebarSection } from "../../components/Sidebar";
 import { useInterfaceContext } from "../../context";
 import {
 	MAX_NODE_INVOCATIONS,
+	type EntryType,
 	type StoredNodeInvocation,
 } from "../../nodeInvocationLog";
 import { usePlatform } from "../../platform";
@@ -41,16 +42,47 @@ function formatInvocationErrorText(err: NonNullable<StoredNodeInvocation["error"
 	return err.message;
 }
 
+const typeFilterOptions: EntryType[] = ["invocation", "warn", "error"];
+
+const typeFilterLabels: Record<EntryType, string> = {
+	invocation: "Invocations",
+	log: "Logs",
+	warn: "Warnings",
+	error: "Errors",
+};
+
+const entryStyles: Record<string, string> = {
+	invocation: "bg-black/30",
+	log: "bg-black/30",
+	warn: "bg-orange-950/50",
+	error: "bg-red-950/50",
+};
+
 export function NodeInfo(props: { node: Node }) {
 	const ctx = useInterfaceContext();
 	const platform = usePlatform();
 	const [rerunningId, setRerunningId] = createSignal<string | null>(null);
-
-	const entries = createMemo(() =>
-		ctx.getNodeInvocationEntries(props.node.graph.id, props.node.id),
+	const [activeFilters, setActiveFilters] = createSignal<Set<EntryType>>(
+		new Set(typeFilterOptions),
 	);
 
+	function toggleFilter(type: EntryType) {
+		setActiveFilters((prev) => {
+			const next = new Set(prev);
+			if (next.has(type)) next.delete(type);
+			else next.add(type);
+			return next;
+		});
+	}
+
+	const entries = createMemo(() => {
+		const all = ctx.getNodeInvocationEntries(props.node.graph.id, props.node.id);
+		const active = activeFilters();
+		return all.filter((e) => active.has(e.entryType));
+	});
+
 	async function rerun(inv: StoredNodeInvocation) {
+		if (inv.entryType !== "invocation") return;
 		setRerunningId(inv.id);
 		try {
 			if (props.node.graph.project.core.remoteShell) {
@@ -65,7 +97,7 @@ export function NodeInfo(props: { node: Node }) {
 				});
 			} else {
 				await rerunNodeFromInvocationSnapshot(props.node, {
-					inputs: inv.inputs,
+					inputs: inv.inputs!,
 					eventData: inv.eventData,
 				});
 			}
@@ -125,51 +157,83 @@ export function NodeInfo(props: { node: Node }) {
 			</SidebarSection>
 
 			<SidebarSection
-				title={`Recent runs (last ${MAX_NODE_INVOCATIONS})`}
+				title={`Node History (last ${MAX_NODE_INVOCATIONS})`}
 				class="flex min-h-0 flex-col overflow-hidden p-0"
 			>
-				<p class="shrink-0 border-b border-neutral-900 px-2 py-1.5 text-sm text-neutral-500">
-					Full inputs and outputs are stored in IndexedDB for rerun. Rerun uses
-					only cached pin values for that node (no live upstream reads); exec
-					continues down the graph. Values that cannot be cloned use a JSON-safe
-					fallback.
-				</p>
+				<div class="flex flex-row gap-1 p-1 border-b border-neutral-900">
+					<For each={typeFilterOptions}>
+						{(type) => (
+							<button
+								type="button"
+								class={`px-2 py-0.5 text-xs rounded ${
+									activeFilters().has(type)
+										? "bg-neutral-600 text-white"
+										: "text-neutral-500 hover:text-neutral-200"
+								}`}
+								onClick={() => toggleFilter(type)}
+							>
+								{typeFilterLabels[type]}
+							</button>
+						)}
+					</For>
+				</div>
 				<div class="min-h-0 flex-1 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-neutral-600">
 					<ul class="flex flex-col gap-y-2 p-1">
 						<For each={entries()}>
 							{(inv) => (
-								<li class="rounded-md bg-black/30 px-2 py-2">
+								<li class={`rounded-md px-2 py-2 ${entryStyles[inv.entryType] ?? "bg-black/30"}`}>
 									<div class="mb-1.5 flex flex-row flex-wrap items-center justify-between gap-2 text-sm text-neutral-400">
 										<div class="flex min-w-0 flex-wrap items-center gap-2">
 											<span class="font-mono text-[13px] text-neutral-300">
 												{new Date(inv.startedAt).toLocaleString()}
 											</span>
-											<span
-												class={
-													inv.ok
-														? "rounded-sm bg-neutral-800/90 px-1.5 py-0.5 text-[13px] font-medium text-neutral-200"
-														: "rounded-sm bg-red-950/50 px-1.5 py-0.5 text-[13px] font-medium text-red-300"
-												}
-											>
-												{inv.ok ? "ok" : "error"}
-											</span>
+											{inv.entryType === "invocation" ? (
+												<span
+													class={
+														inv.ok
+															? "rounded-sm bg-neutral-800/90 px-1.5 py-0.5 text-[13px] font-medium text-neutral-200"
+															: "rounded-sm bg-red-950/50 px-1.5 py-0.5 text-[13px] font-medium text-red-300"
+													}
+												>
+													{inv.ok ? "ok" : "error"}
+												</span>
+											) : (
+												<span
+													class={`rounded-sm px-1.5 py-0.5 text-[13px] font-medium ${
+														inv.entryType === "warn"
+															? "bg-orange-950/50 text-orange-300"
+															: inv.entryType === "error"
+																? "bg-red-950/50 text-red-300"
+																: "bg-neutral-800/90 text-neutral-200"
+													}`}
+												>
+													{inv.entryType}
+												</span>
+											)}
 										</div>
-										<div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
-											<button
-												type="button"
-												class="rounded-sm border border-neutral-600 bg-neutral-800/80 px-2 py-0.5 text-[13px] font-medium text-neutral-100 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-40"
-												disabled={rerunningId() === inv.id}
-												onClick={() => void rerun(inv)}
-											>
-												{rerunningId() === inv.id ? "…" : "Rerun"}
-											</button>
-											<span class="font-mono text-[13px] text-neutral-500">
-												{inv.durationMs} ms
-											</span>
-										</div>
+										{inv.entryType === "invocation" ? (
+											<div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
+												<button
+													type="button"
+													class="rounded-sm border border-neutral-600 bg-neutral-800/80 px-2 py-0.5 text-[13px] font-medium text-neutral-100 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-40"
+													disabled={rerunningId() === inv.id}
+													onClick={() => void rerun(inv)}
+												>
+													{rerunningId() === inv.id ? "…" : "Rerun"}
+												</button>
+												<span class="font-mono text-[13px] text-neutral-500">
+													{inv.durationMs} ms
+												</span>
+											</div>
+										) : null}
 									</div>
-									{inv.error ? (
-										<div class="mb-1.5 rounded-sm border border-neutral-800 bg-neutral-900/80 p-2 text-sm text-red-300">
+									{inv.consoleMessage ? (
+										<p class="text-sm break-words text-white">
+											{inv.consoleMessage}
+										</p>
+									) : null}
+									{inv.entryType === "invocation" && inv.error ? (
+										<div class="mb-1.5 rounded-sm border border-neutral-800 bg-neutral-900/80 p-2 text-sm text-white">
 											<div class="mb-1 flex flex-row flex-wrap items-start justify-between gap-2">
 												<div class="min-w-0 flex-1 font-medium text-red-200">
 													{inv.error.message}
@@ -192,19 +256,21 @@ export function NodeInfo(props: { node: Node }) {
 											) : null}
 										</div>
 									) : null}
-									<div class="space-y-2">
-										{inv.eventData !== undefined ? (
-											<JsonBlock label="Event data" value={inv.eventData} />
-										) : null}
-										<JsonBlock label="Inputs" value={inv.inputs} />
-										<JsonBlock label="Outputs" value={inv.outputs} />
-									</div>
+									{inv.entryType === "invocation" ? (
+										<div class="space-y-2">
+											{inv.eventData !== undefined ? (
+												<JsonBlock label="Event data" value={inv.eventData} />
+											) : null}
+											{inv.inputs ? <JsonBlock label="Inputs" value={inv.inputs} /> : null}
+											{inv.outputs ? <JsonBlock label="Outputs" value={inv.outputs} /> : null}
+										</div>
+									) : null}
 								</li>
 							)}
 						</For>
 						<Show when={entries().length === 0}>
 							<li class="px-2 py-6 text-center text-sm text-neutral-400">
-								No recorded runs for this node yet.
+								No recorded entries for this node yet.
 							</li>
 						</Show>
 					</ul>

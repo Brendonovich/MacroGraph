@@ -205,7 +205,7 @@ function flushCursorRelays() {
 }
 
 /** Broadcast host cursor position to all remote clients. */
-export function broadcastRemoteHostCursorPosition(payload: { graphId: number; position: { x: number; y: number } }) {
+export function broadcastRemoteHostCursorPosition(payload: { graphId: number; position: { x: number; y: number }; viewportCenter?: { x: number; y: number } }) {
 	if (!remoteHostSettings.enabled) return;
 	const port = remoteHostSettings.port;
 	const data = stringifyCursorWire({ id: "host", ...payload });

@@ -47,6 +47,8 @@ export function Graphs(props: Props) {
 				if (!g) return;
 				const isFnGraph = [...interfaceCtx.core.project.functions].some(([, f]) => f.graphId === id);
 				if (isFnGraph) return;
+				const isQueueGraph = [...interfaceCtx.core.project.queues].some(([, q]) => q.graphId === id);
+				if (isQueueGraph) return;
 
 				return [tokeniseString(g.name), g] as const;
 			})

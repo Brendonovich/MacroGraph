@@ -79,7 +79,10 @@ export type Variable = v.InferOutput<typeof Variable>;
 export const Queue = v.object({
 	id: v.number(),
 	name: v.string(),
-	value: v.array(v.any()),
+	graphId: v.optional(IntID, 0),
+	items: v.optional(v.array(v.any()), []),
+	paused: v.optional(v.boolean(), false),
+	concurrent: v.optional(v.boolean(), false),
 	type: Type,
 });
 export type Queue = v.InferOutput<typeof Queue>;

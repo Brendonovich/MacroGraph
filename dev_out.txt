@@ -1,0 +1,171 @@
+
+> @ dev:web G:\coding\MacroGraph
+> pnpm web dev
+
+
+> @ web G:\coding\MacroGraph
+> pnpm --filter @macrograph/web -- "dev"
+
+apps/web                                 |  WARN  Unsupported engine: wanted: {"node":"22"} (current: {"node":"v24.12.0","pnpm":"9.15.6"})
+
+> @macrograph/web@ dev G:\coding\MacroGraph\apps\web
+> vinxi dev --port 4321
+
+[2m[34mvinxi[39m[22m [2m[33mv0.5.1[39m[22m
+[2m[34mvinxi[39m[22m [2m[32mstarting dev server[39m[22m
+[get-port] Unable to find an available port (tried 4321 on host "localhost"). Using alternative port 3000.
+
+[32m  ➜ Local:   [39m [36m[4mhttp://localhost:[1m3000[22m/[24m[39m
+[90m  ➜ Network:  use [37m--host[90m to expose[39m
+
+[2m12:18:59 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ new dependencies optimized: [33m@solid-primitives/event-listener, clsx, cva, tailwind-merge[32m[39m
+[2m12:18:59 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ optimized dependencies changed. reloading[39m
+[2m12:19:00 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ new dependencies optimized: [33mcookie-es, valibot[32m[39m
+[2m12:19:00 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ optimized dependencies changed. reloading[39m
+[2m12:19:17 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:17 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:17 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:23 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:23 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:23 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:31 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:31 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:31 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:36 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.vercel/output/static/landing/index.html[22m
+[2m12:19:36 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.vercel/output/static/landing/index.html[22m
+[2m12:19:37 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.vercel/output/static/landing/index.html[22m
+[2m12:19:38 pm[22m [36m[1m[vite][22m[39m changed tsconfig file detected: G:/coding/MacroGraph/apps/web/.vinxi/types/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m12:19:38 pm[22m [36m[1m[vite][22m[39m changed tsconfig file detected: G:/coding/MacroGraph/apps/web/.vinxi/types/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m12:19:38 pm[22m [36m[1m[vite][22m[39m changed tsconfig file detected: G:/coding/MacroGraph/apps/web/.vinxi/types/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m12:19:45 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:19:45 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:19:45 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:19:45 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:19:45 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:19:45 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:19:46 pm[22m [36m[1m[vite][22m[39m changed tsconfig file detected: G:/coding/MacroGraph/apps/web/.vinxi/types/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m12:19:46 pm[22m [36m[1m[vite][22m[39m changed tsconfig file detected: G:/coding/MacroGraph/apps/web/.vinxi/types/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m12:19:46 pm[22m [36m[1m[vite][22m[39m changed tsconfig file detected: G:/coding/MacroGraph/apps/web/.vinxi/types/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m12:19:46 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.vercel/output/static/landing/index.html[22m
+[2m12:19:46 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.vercel/output/static/landing/index.html[22m
+[2m12:19:46 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2m.vercel/output/static/landing/index.html[22m
+[2m12:19:46 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:46 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:46 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:46 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:46 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:46 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:19:56 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:19:56 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:19:56 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:19:56 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:19:56 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:19:56 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:19:57 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/remote-editor/src/auto-imports.d.ts[22m
+[2m12:19:57 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/remote-editor/src/auto-imports.d.ts[22m
+[2m12:19:57 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/remote-editor/src/auto-imports.d.ts[22m
+[2m12:20:03 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:20:03 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:20:03 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:20:24 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:20:24 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:20:24 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:20:24 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:20:24 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:20:24 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:20:25 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:20:25 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:20:25 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:20:25 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:20:25 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:20:25 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:20:59 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:20:59 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:20:59 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:20:59 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:20:59 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:20:59 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:21:00 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:21:00 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:21:00 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:21:00 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:21:00 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:21:00 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:21:57 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mvinxi/routes[22m
+[2m12:21:57 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mvinxi/routes[22m
+[2m12:21:57 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/app/(landing)/index.tsx[22m
+[2m12:21:57 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/app/(landing)/index.tsx[22m
+[2m12:22:13 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mvinxi/routes[22m
+[2m12:22:13 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mvinxi/routes[22m
+[2m12:22:13 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/app/(landing)/index.tsx[22m
+[2m12:22:13 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/app/(landing)/index.tsx[22m
+[2m12:22:21 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:22:21 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:22:21 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:22:21 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:22:21 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:22:21 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:22:22 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:22:22 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:22:22 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:22:22 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:22:22 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:22:22 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:23:08 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:23:08 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:23:08 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:23:08 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:23:08 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:23:08 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:23:09 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:23:09 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:23:09 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:24:52 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mvinxi/routes[22m
+[2m12:24:52 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mvinxi/routes[22m
+[2m12:24:52 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mvinxi/routes[22m
+[2m12:24:52 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2msrc/app/(landing)/index.tsx[22m
+[2m12:24:52 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/app/(landing)/index.tsx[22m
+[2m12:25:46 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:25:46 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:25:46 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:25:46 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:25:46 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:25:46 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:25:47 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:25:47 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:25:47 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:25:47 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:25:47 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:25:47 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:26:29 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/interface/src/index.tsx[22m
+[2m12:26:29 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/interface/src/index.tsx[22m
+[2m12:26:29 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/interface/src/index.tsx[22m
+[2m12:26:29 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/Editor.tsx[22m
+[2m12:26:29 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/interface/src/context.ts[22m
+[2m12:26:29 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/Editor.tsx[22m
+[2m12:26:29 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/Editor.tsx[22m
+[2m12:26:29 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/interface/src/context.ts[22m
+[2m12:26:29 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/interface/src/context.ts[22m
+[2m12:27:00 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/remote-editor/src/auto-imports.d.ts[22m
+[2m12:27:00 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/remote-editor/src/auto-imports.d.ts[22m
+[2m12:27:00 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/remote-editor/src/auto-imports.d.ts[22m
+[2m12:27:05 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:27:05 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:27:05 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/rspc/types.ts[22m
+[2m12:27:05 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:27:05 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:27:05 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/apps/desktop/src/commands.ts[22m
+[2m12:27:06 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:27:06 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:27:06 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:27:06 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:27:06 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:27:06 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:28:16 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:28:16 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+[2m12:28:16 pm[22m [36m[1m[vite][22m[39m [34m[2m(ssr)[22m[39m [32mpage reload [39m[2mG:/coding/MacroGraph/packages/ui/src/auto-imports.d.ts[22m
+G:\coding\MacroGraph\apps\web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @macrograph/web@ dev: `vinxi dev --port 4321`
+Exit status 4294967295
+ ELIFECYCLE  Command failed with exit code 4294967295.
+ ELIFECYCLE  Command failed with exit code 4294967295.

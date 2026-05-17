@@ -1,8 +1,11 @@
-import type { Project } from "@macrograph/runtime";
+import type { Project, Queue } from "@macrograph/runtime";
 import { useInterfaceContext } from "../../context";
 import { Queues as QueuesRoot } from "../Queues";
 
-export function Queues(props: { project: Project }) {
+export function Queues(props: {
+	project: Project;
+	onQueueClicked(queue: Queue): void;
+}) {
 	const interfaceCtx = useInterfaceContext();
 
 	return (
@@ -16,23 +19,14 @@ export function Queues(props: { project: Project }) {
 					queueId: id,
 				});
 			}}
-			onSetQueueValue={(id, value) => {
-				interfaceCtx.execute("setQueueValue", {
-					queueId: id,
-					value,
-				});
-			}}
-			onSetQueueItemType={(id, type) => {
-				interfaceCtx.execute("setQueueItemType", {
-					queueId: id,
-					type,
-				});
-			}}
 			onQueueNameChanged={(id, name) => {
 				interfaceCtx.execute("setQueueName", {
 					queueId: id,
 					name,
 				});
+			}}
+			onQueueClicked={(queue) => {
+				props.onQueueClicked(queue);
 			}}
 		/>
 	);

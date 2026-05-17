@@ -163,6 +163,7 @@ export type WireCursorPosition = {
 	id: string;
 	graphId: number;
 	position: { x: number; y: number };
+	viewportCenter?: { x: number; y: number };
 };
 
 export type RemoteCursor = WireCursorPosition;
@@ -266,12 +267,12 @@ export function setOnCursorUpdate(fn: typeof onCursorUpdate) {
 }
 
 // Broadcast callbacks registered by host/remote editors
-let cursorBroadcastFn: ((pos: { graphId: number; position: { x: number; y: number } }) => void) | null = null;
+let cursorBroadcastFn: ((pos: { graphId: number; position: { x: number; y: number }; viewportCenter?: { x: number; y: number } }) => void) | null = null;
 export function setCursorBroadcastFn(fn: typeof cursorBroadcastFn) {
 	cursorBroadcastFn = fn;
 }
 
-export function broadcastCursorPosition(pos: { graphId: number; position: { x: number; y: number } }) {
+export function broadcastCursorPosition(pos: { graphId: number; position: { x: number; y: number }; viewportCenter?: { x: number; y: number } }) {
 	cursorBroadcastFn?.(pos);
 }
 
@@ -312,7 +313,8 @@ export function parseCursorMessage(
 	if (graphId == null) return null;
 	const position = parseWirePosition(body.position);
 	if (!position) return null;
-	return { id, graphId, position };
+	const viewportCenter = parseWirePosition(body.viewportCenter);
+	return { id, graphId, position, viewportCenter: viewportCenter ?? undefined };
 }
 
 export function stringifyNodeExecuteWire(graphId: number, nodeId: number): string {

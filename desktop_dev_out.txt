@@ -1,0 +1,15 @@
+apps/web                                 |  WARN  Unsupported engine: wanted: {"node":"22"} (current: {"node":"v24.12.0","pnpm":"9.15.6"})
+
+> @macrograph/desktop@ dev G:\coding\MacroGraph\apps\desktop
+> vinxi dev
+
+[2m[34mvinxi[39m[22m [2m[33mv0.4.1[39m[22m
+[2m[34mvinxi[39m[22m [2m[32mstarting dev server[39m[22m
+[get-port] Unable to find an available port (tried 3000 on host "localhost"). Using alternative port 3002.
+
+[32m  ➜ Local:   [39m [36m[4mhttp://localhost:[1m3002[22m/[24m[39m
+[90m  ➜ Network:  use [37m--host[90m to expose[39m
+
+G:\coding\MacroGraph\apps\desktop:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @macrograph/desktop@ dev: `vinxi dev`
+Exit status 4294967295

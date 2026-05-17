@@ -213,7 +213,7 @@ export function NodeSearchDialog() {
 
 			const groupIndex = ctx.mosaicState.focusedIndex;
 			const tabIndex = ctx.mosaicState.groups[groupIndex]?.tabs.findIndex(
-				(t) => t.id === graph.id,
+				(t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === graph.id,
 			);
 			if (tabIndex === undefined || tabIndex < 0) return;
 
@@ -222,7 +222,7 @@ export function NodeSearchDialog() {
 				groupIndex,
 				"tabs",
 				tabIndex,
-				produce((tab) => {
+				produce((tab: any) => {
 					tab.scale = scale;
 					tab.translate = {
 						x: cx - vw / (2 * scale),

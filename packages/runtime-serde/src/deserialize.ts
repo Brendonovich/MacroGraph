@@ -111,7 +111,12 @@ export async function deserializeProject(
 			deserializeVariable(v, project),
 		);
 
-		project.queues = data.queues.map((q) => deserializeQueue(q, project));
+		project.queues = new ReactiveMap(
+			data.queues.map((q) => {
+				const queue = deserializeQueue(q, project);
+				return [queue.id, queue] as [number, runtime.Queue];
+			}),
+		);
 
 		project.graphOrder = data.graphs.map((g) => g.id);
 	});
@@ -287,13 +292,54 @@ export function deserializeQueue(
 ): runtime.Queue {
 	const type = deserializeType(data.type, owner.getType.bind(owner));
 
-	return new runtime.Queue({
+	let graphId = data.graphId;
+	if (!graphId) {
+		graphId = owner.generateGraphId();
+	}
+
+	const queue = new runtime.Queue({
 		id: data.id,
 		name: data.name,
-		value: data.value.map((item: any) => deserializeValue(item, type)),
 		itemType: type,
+		graphId,
 		owner,
 	});
+
+	if (!data.graphId) {
+		const graph = new runtime.Graph({
+			id: graphId,
+			name: data.name,
+			project: owner,
+		});
+		owner.graphs.set(graphId, graph);
+		owner.graphOrder.push(graphId);
+
+		owner.queues.set(queue.id, queue);
+
+		const startSchema = owner.core.schema("Queue", "Queue Start");
+		const iterateSchema = owner.core.schema("Queue", "Iterate Queue");
+		if (startSchema && iterateSchema) {
+			const startNode = graph.createNode({
+				id: graph.generateId(),
+				schema: startSchema as any,
+				position: { x: 400, y: 300 },
+			});
+			const iterateNode = graph.createNode({
+				id: graph.generateId(),
+				schema: iterateSchema as any,
+				position: { x: 700, y: 300 },
+			});
+			const outRef = `${startNode.id}:o:exec` as const;
+			const inRef = `${iterateNode.id}:i:exec` as const;
+			graph.connections.set(outRef, [inRef] as any);
+		}
+	}
+	const rawData = data as Record<string, unknown>;
+	const rawItems = "value" in rawData ? rawData.value : rawData.items ?? [];
+	queue.items = (rawItems as any[]).map((item: any) => deserializeValue(item, type));
+	queue.paused = data.paused ?? false;
+	queue.concurrent = data.concurrent ?? false;
+	return queue;
 }
 
 export async function deserializeGraph(
@@ -383,6 +429,13 @@ export function deserializeNode(
 	const schema = graph.project.core.schema(data.schema.package, data.schema.id);
 
 	if (!schema) return null;
+
+	const isEvent = "event" in schema || ("type" in schema && schema.type === "event");
+	if (isEvent) {
+		const isFn = [...graph.project.functions].some(([, f]) => f.graphId === graph.id);
+		const isQueue = [...graph.project.queues].some(([, q]) => q.graphId === graph.id);
+		if (isFn || isQueue) return null;
+	}
 
 	const node = new runtime.Node({
 		id: data.id,

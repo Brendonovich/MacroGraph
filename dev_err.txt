@@ -1,0 +1,844 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+(node:35712) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Browserslist: browsers data (caniuse-lite) is 13 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerChevronDown is not defined
+    at get children (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:42:70)
+    at Object.get [as children] (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:435:28)
+    ... collapsed 6 duplicate lines matching above 1 lines 6 times...
+    at ssrElement (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/web/dist/server.js:864:27)
+    at Button (G:/coding/MacroGraph/packages/ui/src/button.tsx:33:46)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at as (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:36:66)
+    at createDynamic (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/web/dist/server.js:1152:34)
+    at Dynamic (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/web/dist/server.js:1160:10)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Polymorphic (G:/coding/MacroGraph/node_modules/.pnpm/@kobalte+core@0.13.7_patch_hash=ydksf54ocuiqvbunagt6kfibpq_solid-js@1.9.5/node_modules/@kobalte/core/dist/chunk/FLVHQV4A.jsx:14:46)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at ButtonRoot (G:/coding/MacroGraph/node_modules/.pnpm/@kobalte+core@0.13.7_patch_hash=ydksf54ocuiqvbunagt6kfibpq_solid-js@1.9.5/node_modules/@kobalte/core/dist/chunk/UKTBL2JL.jsx:49:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at MenuTrigger (G:/coding/MacroGraph/node_modules/.pnpm/@kobalte+core@0.13.7_patch_hash=ydksf54ocuiqvbunagt6kfibpq_solid-js@1.9.5/node_modules/@kobalte/core/dist/chunk/T6MP2HE7.jsx:354:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:35:56)
+    at get children (G:/coding/MacroGraph/apps/web/src/app/(landing)/DesktopDownloadDropdown.tsx:28:21)
+    at Object.get [as children] (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:435:28)
+    ... collapsed 7 duplicate lines matching above 1 lines 7 times...
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@kobalte+core@0.13.7_patch_hash=ydksf54ocuiqvbunagt6kfibpq_solid-js@1.9.5/node_modules/@kobalte/core/dist/chunk/KFH362HI.jsx:334:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at PopperRoot (G:/coding/MacroGraph/node_modules/.pnpm/@kobalte+core@0.13.7_patch_hash=ydksf54ocuiqvbunagt6kfibpq_solid-js@1.9.5/node_modules/@kobalte/core/dist/chunk/KFH362HI.jsx:331:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@kobalte+core@0.13.7_patch_hash=ydksf54ocuiqvbunagt6kfibpq_solid-js@1.9.5/node_modules/@kobalte/core/dist/chunk/T6MP2HE7.jsx:990:63)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:480:25)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@kobalte+core@0.13.7_patch_hash=ydksf54ocuiqvbunagt6kfibpq_solid-js@1.9.5/node_modules/@kobalte/core/dist/chunk/T6MP2HE7.jsx:984:59)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11
+ReferenceError: IconTablerSandbox is not defined
+    at __vite_ssr_exports__.default (G:/coding/MacroGraph/apps/web/src/app/(landing)/index.tsx?pick=default&pick=$css:28:99)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Promise.Comp [as resolved] (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+start@1.1.3_@testing-library+jest-dom@6.4.8_@types+node@22.10.2_jiti@2.4.1_solid-js@_crpcv27qpecozcw7aaogpfltx4/node_modules/@solidjs/start/dist/router/lazyRoute.js:32:130)
+    at wrap (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:655:30)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at Object.outlet (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routing.js:451:72)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:134:23)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:131:68)
+    at Show (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:481:9)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at eval (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:126:57)
+    at Routes (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:123:51)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:32:118)
+    at get children (G:/coding/MacroGraph/node_modules/.pnpm/@solidjs+router@0.14.10_solid-js@1.9.5/node_modules/@solidjs/router/dist/routers/components.jsx:71:22)
+    at get children (G:/coding/MacroGraph/apps/web/src/app.tsx:20:26)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:41
+    at catchError (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:152:12)
+    at get children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:742:18)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:35
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:49
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at children (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:179:16)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:216:14
+    at createMemo (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:95:9)
+    at provider (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:211:12)
+    at createComponent (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:413:15)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:739:7
+    at runWithOwner (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:190:12)
+    at runSuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:738:12)
+    at Object.completed (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:719:21)
+    at notifySuspense (file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:689:7)
+    at file:///G:/coding/MacroGraph/node_modules/.pnpm/solid-js@1.9.5/node_modules/solid-js/dist/server.js:669:11

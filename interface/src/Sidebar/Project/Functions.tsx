@@ -1,3 +1,4 @@
+import type { GraphFunction } from "@macrograph/runtime";
 import { ContextMenu } from "@kobalte/core/context-menu";
 import {
 	For,
@@ -18,7 +19,7 @@ import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor, InlineTextEditorContext } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
 
-export function Functions(props?: { onFunctionClicked?: (graphId: number) => void }) {
+export function Functions(props?: { onFunctionClicked?: (fn: GraphFunction) => void }) {
 	const ctx = useInterfaceContext();
 
 	const [search, setSearch] = createSignal("");
@@ -65,7 +66,7 @@ export function Functions(props?: { onFunctionClicked?: (graphId: number) => voi
 													as="button"
 													type="button"
 													onClick={() => {
-														props?.onFunctionClicked?.(fn.graphId);
+														props?.onFunctionClicked?.(fn);
 													}}
 												/>
 											)}

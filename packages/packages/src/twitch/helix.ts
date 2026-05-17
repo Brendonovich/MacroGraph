@@ -115,19 +115,29 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				});
 			},
 			async run(props) {
-				const account = props.ctx
-					.getProperty(
-						props.properties.account as SchemaProperties<
-							typeof defaultProperties
-						>["account"],
-					)
-					.expect("No Twitch account available!");
+				try {
+					const account = props.ctx
+						.getProperty(
+							props.properties.account as SchemaProperties<
+								typeof defaultProperties
+							>["account"],
+						)
+						.expect("No Twitch account available!");
 
-				return await s.run({
-					...props,
-					account,
-					credential: await account.credential(),
-				});
+					return await s.run({
+						...props,
+						account,
+						credential: await account.credential(),
+					});
+				} catch (e) {
+					const msg =
+						e instanceof Error ? e.message : "Unknown Twitch API error";
+					const node = (props as any).io?.node ?? props.graph;
+					props.graph.project.core.error(
+						`Twitch API Error (${s.name}): ${msg}`,
+						node,
+					);
+				}
 			},
 		});
 	}
@@ -1780,7 +1790,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				type: t.string(),
 			}),
 		}),
-		async run({ ctx, io, properties }) {
+		async run({ ctx, io, properties, graph }) {
 			const chat = ctx
 				.getProperty(properties.chat)
 				.expect("No Twitch channel available");
@@ -1789,15 +1799,38 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				.expect("No Twitch account available for chatter")
 				.credential();
 
-			console.log(chat);
-			console.log(chatter.displayName);
+			try {
+				await helix.call("POST /chat/messages", chatter, {
+					body: JSON.stringify({
+						broadcaster_id: chat,
+						sender_id: chatter.id,
+						message: ctx.getInput(io.message),
+						reply_parent_message_id: ctx.getInput(io.parentId),
+					}),
+				});
+			} catch (e) {
+				const msg = e instanceof Error ? e.message : "Unknown Twitch API error";
+				const node = (io as any)?.node ?? graph;
+				graph.project.core.error(`Twitch API Error (Send Chat Message): ${msg}`, node);
+			}
+		},
+	});
 
-			await helix.call("POST /chat/messages", chatter, {
-				body: JSON.stringify({
-					broadcaster_id: chat,
-					sender_id: chatter.id,
-					message: ctx.getInput(io.message),
-					reply_parent_message_id: ctx.getInput(io.parentId),
+	createHelixExecSchema({
+		name: "Delete Chat Message",
+		createIO: ({ io }) => ({
+			messageId: io.dataInput({
+				id: "messageId",
+				name: "Message ID",
+				type: t.string(),
+			}),
+		}),
+		async run({ ctx, io, account, credential }) {
+			await helix.call("DELETE /moderation/chat", credential, {
+				body: new URLSearchParams({
+					broadcaster_id: account.data.id,
+					moderator_id: account.data.id,
+					message_id: ctx.getInput(io.messageId),
 				}),
 			});
 		},

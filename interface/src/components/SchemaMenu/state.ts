@@ -1,13 +1,13 @@
 import type { Pin, XY } from "@macrograph/runtime";
 
-import type { GraphState } from "../Graph/Context";
+import type { GraphViewState } from "../Graph/Context";
 
 export type SchemaMenuState =
 	| { status: "closed" }
 	| {
 			status: "open";
 			position: XY;
-			graph: GraphState;
+			graph: GraphViewState;
 			suggestion?: { pin: Pin };
 	  };
 

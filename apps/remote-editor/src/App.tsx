@@ -238,7 +238,7 @@ export default function App() {
 		const r = (Math.random() * 16) | 0;
 		return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
 	});
-	const broadcastCursorToHost = (payload: { graphId: number; position: { x: number; y: number } }) => {
+	const broadcastCursorToHost = (payload: { graphId: number; position: { x: number; y: number }; viewportCenter?: { x: number; y: number } }) => {
 		if (joinPhase() !== "editor") return;
 		sendWs(stringifyCursorWire({ id: cursorId, ...payload }));
 	};
