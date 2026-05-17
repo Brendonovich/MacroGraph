@@ -286,7 +286,7 @@ export function installRemoteHostBridge(opts: {
 			void (async () => {
 				const [nodeInvocations, hostMirror] = await Promise.all([
 					exportInvocationLogForGraphs(
-						opts.core.project.graphOrder,
+						opts.core.project.allGraphOrder as number[],
 						opts.projectUrl() ?? "default",
 					).catch((): NodeInvocationFileRow[] => []),
 					collectHostMirrorPayload(opts.core).catch(

@@ -80,6 +80,19 @@ export function Functions(props?: { onFunctionClicked?: (fn: GraphFunction) => v
 											<ContextMenuItem
 												class="text-red-500"
 												onSelect={() => {
+													const fnQueues = [...ctx.core.project.functionQueues.values()];
+													const affected = fnQueues.filter((q) =>
+														q.items.some((i) => i.functionId === id),
+													);
+													let msg = `Are you sure you want to delete function "${fn.name}"?`;
+													if (affected.length > 0) {
+														const totalItems = affected.reduce(
+															(sum, q) => sum + q.items.filter((i) => i.functionId === id).length,
+															0,
+														);
+														msg += `\n\nThis function is queued in ${totalItems} item(s) across ${affected.length} function queue(s). Those items will be removed.`;
+													}
+													if (!window.confirm(msg)) return;
 													ctx.execute("deleteFunction", { functionId: id });
 												}}
 											>

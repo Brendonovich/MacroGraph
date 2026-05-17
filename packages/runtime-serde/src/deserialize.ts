@@ -26,6 +26,9 @@ export async function deserializeProject(
 		project.name = data.name ?? "New Project";
 
 		project.graphIdCounter = data.graphIdCounter;
+		project.functionGraphIdCounter = data.functionGraphIdCounter ?? data.graphIdCounter;
+		project.queueGraphIdCounter = data.queueGraphIdCounter ?? data.graphIdCounter;
+		project.functionQueueGraphIdCounter = data.functionQueueGraphIdCounter ?? data.graphIdCounter;
 
 		project.customTypeIdCounter = data.customTypeIdCounter;
 
@@ -63,6 +66,7 @@ export async function deserializeProject(
 
 		project.customEventIdCounter = data.customEventIdCounter;
 		project.functionIdCounter = data.functionIdCounter ?? 0;
+		project.queueIdCounter = data.queueIdCounter ?? 0;
 
 		project.functions = new ReactiveMap(
 			data.functions?.map((sfn) => {
@@ -118,22 +122,81 @@ export async function deserializeProject(
 			}),
 		);
 
+		project.functionQueues = new ReactiveMap(
+			(data.functionQueues ?? []).map((q) => {
+				const queue = deserializeFunctionQueue(q, project);
+				return [queue.id, queue] as [number, runtime.FunctionQueue];
+			}),
+		);
+
+		project.functionQueueIdCounter = data.functionQueueIdCounter ?? 0;
+
 		project.graphOrder = data.graphs.map((g) => g.id);
 	});
 
-	project.graphs = new ReactiveMap(
-		await Promise.all(
-			data.graphs
-				.map(async (serializedGraph) => {
-					const graph = await deserializeGraph(project, serializedGraph);
+	async function loadGraphArray(
+		serializedGraphs: serde.Graph[],
+	): Promise<Array<[number, runtime.Graph]>> {
+		const results: Array<[number, runtime.Graph]> = [];
+		for (const g of serializedGraphs) {
+			const graph = await deserializeGraph(project, g);
+			if (graph) results.push([graph.id, graph]);
+		}
+		return results;
+	}
 
-					if (graph === null) return null;
+	const allGraphs = new Map<number, runtime.Graph>();
 
-					return [graph.id, graph] as [number, runtime.Graph];
-				})
-				.filter(Boolean) as any,
-		),
-	);
+	for (const [id, graph] of await loadGraphArray(data.graphs)) {
+		allGraphs.set(id, graph);
+	}
+
+	const hasNewFormat =
+		(data.functionGraphs && data.functionGraphs.length > 0) ||
+		(data.queueGraphs && data.queueGraphs.length > 0) ||
+		(data.functionQueueGraphs && data.functionQueueGraphs.length > 0);
+
+	if (hasNewFormat) {
+		for (const [id, graph] of await loadGraphArray(data.functionGraphs ?? [])) {
+			allGraphs.set(id, graph);
+		}
+		project.functionGraphOrder = data.functionGraphs?.map((g) => g.id) ?? [];
+		for (const [id, graph] of await loadGraphArray(data.queueGraphs ?? [])) {
+			allGraphs.set(id, graph);
+		}
+		project.queueGraphOrder = data.queueGraphs?.map((g) => g.id) ?? [];
+		for (const [id, graph] of await loadGraphArray(data.functionQueueGraphs ?? [])) {
+			allGraphs.set(id, graph);
+		}
+		project.functionQueueGraphOrder = data.functionQueueGraphs?.map((g) => g.id) ?? [];
+	} else {
+		// Backward compat: old format — sort legacy `graphs` into correct order arrays
+		for (const id of project.graphOrder) {
+			const isFn = [...project.functions].some(([, f]) => f.graphId === id);
+			const isQ = [...project.queues].some(([, q]) => q.graphId === id);
+			const isFnQ = [...project.functionQueues].some(([, q]) => q.graphId === id);
+			if (isFn) project.functionGraphOrder.push(id);
+			else if (isQ) project.queueGraphOrder.push(id);
+			else if (isFnQ) project.functionQueueGraphOrder.push(id);
+		}
+		const fnGraphIds = new Set(
+			[...project.functions].map(([, f]) => f.graphId),
+		);
+		const queueGraphIds = new Set(
+			[...project.queues].map(([, q]) => q.graphId),
+		);
+		const fnQueueGraphIds = new Set(
+			[...project.functionQueues].map(([, q]) => q.graphId),
+		);
+		project.graphOrder = project.graphOrder.filter(
+			(id) =>
+				!fnGraphIds.has(id) &&
+				!queueGraphIds.has(id) &&
+				!fnQueueGraphIds.has(id),
+		);
+	}
+
+	project.graphs = new ReactiveMap([...allGraphs]);
 
 	project.disableSave = false;
 
@@ -286,6 +349,44 @@ export function deserializeVariable(
 	});
 }
 
+export function deserializeFunctionQueue(
+	data: serde.FunctionQueue,
+	owner: runtime.Project,
+): runtime.FunctionQueue {
+	let graphId = data.graphId;
+	if (graphId == null) {
+		graphId = owner.generateGraphId();
+	}
+
+	const queue = new runtime.FunctionQueue({
+		id: data.id,
+		name: data.name,
+		graphId,
+		owner,
+	});
+
+	if (data.graphId == null) {
+		const graph = new runtime.Graph({
+			id: graphId,
+			name: data.name,
+			project: owner,
+		});
+		owner.graphs.set(graphId, graph);
+		owner.graphOrder.push(graphId);
+		owner.functionQueues.set(queue.id, queue);
+	}
+
+	queue.items = data.items.map((item) => ({
+		functionId: item.functionId,
+		data: item.data,
+		waitingNodeId: item.waitingNodeId,
+		waitingGraphId: item.waitingGraphId,
+	}));
+	queue.paused = data.paused ?? false;
+	queue.concurrent = data.concurrent ?? false;
+	return queue;
+}
+
 export function deserializeQueue(
 	data: serde.Queue,
 	owner: runtime.Project,
@@ -293,7 +394,7 @@ export function deserializeQueue(
 	const type = deserializeType(data.type, owner.getType.bind(owner));
 
 	let graphId = data.graphId;
-	if (!graphId) {
+	if (graphId == null) {
 		graphId = owner.generateGraphId();
 	}
 
@@ -305,7 +406,7 @@ export function deserializeQueue(
 		owner,
 	});
 
-	if (!data.graphId) {
+	if (data.graphId == null) {
 		const graph = new runtime.Graph({
 			id: graphId,
 			name: data.name,
@@ -434,7 +535,8 @@ export function deserializeNode(
 	if (isEvent) {
 		const isFn = [...graph.project.functions].some(([, f]) => f.graphId === graph.id);
 		const isQueue = [...graph.project.queues].some(([, q]) => q.graphId === graph.id);
-		if (isFn || isQueue) return null;
+		const isFunctionQueue = [...graph.project.functionQueues].some(([, q]) => q.graphId === graph.id);
+		if (isFn || isQueue || isFunctionQueue) return null;
 	}
 
 	const node = new runtime.Node({

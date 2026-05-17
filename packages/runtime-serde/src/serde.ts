@@ -76,6 +76,24 @@ export const Variable = v.object({
 });
 export type Variable = v.InferOutput<typeof Variable>;
 
+export const FunctionQueueItem = v.object({
+	functionId: v.number(),
+	data: v.any(),
+	waitingNodeId: v.number(),
+	waitingGraphId: v.number(),
+});
+export type FunctionQueueItem = v.InferOutput<typeof FunctionQueueItem>;
+
+export const FunctionQueue = v.object({
+	id: v.number(),
+	name: v.string(),
+	graphId: v.optional(IntID, 0),
+	items: v.optional(v.array(FunctionQueueItem), []),
+	paused: v.optional(v.boolean(), false),
+	concurrent: v.optional(v.boolean(), false),
+});
+export type FunctionQueue = v.InferOutput<typeof FunctionQueue>;
+
 export const Queue = v.object({
 	id: v.number(),
 	name: v.string(),
@@ -244,7 +262,13 @@ export type NodeInvocationFileRow = v.InferOutput<typeof NodeInvocationFileRow>;
 export const Project = v.object({
 	name: v.optional(v.string()),
 	graphs: v.array(Graph),
+	functionGraphs: v.optional(v.array(Graph), []),
+	queueGraphs: v.optional(v.array(Graph), []),
+	functionQueueGraphs: v.optional(v.array(Graph), []),
 	graphIdCounter: v.pipe(v.number(), v.integer()),
+	functionGraphIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
+	queueGraphIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
+	functionQueueGraphIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	customEvents: v.optional(v.array(CustomEvent), []),
 	customEventIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	customTypeIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
@@ -252,10 +276,13 @@ export const Project = v.object({
 	customEnums: v.optional(v.array(CustomEnum), []),
 	functions: v.optional(v.array(GraphFunction), []),
 	functionIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
+	queueIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
+	functionQueueIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	counter: v.optional(v.number(), 0),
 	resources: v.optional(v.array(Resource), []),
 	variables: v.optional(v.array(Variable), []),
 	queues: v.optional(v.array(Queue), []),
+	functionQueues: v.optional(v.array(FunctionQueue), []),
 	nodeInvocations: v.optional(v.array(NodeInvocationFileRow), []),
 });
 export type Project = v.InferOutput<typeof Project>;
@@ -263,7 +290,13 @@ export type Project = v.InferOutput<typeof Project>;
 export const ProjectRoot = v.object({
 	name: v.optional(v.string()),
 	graphs: v.array(IntID),
+	functionGraphs: v.optional(v.array(IntID), []),
+	queueGraphs: v.optional(v.array(IntID), []),
+	functionQueueGraphs: v.optional(v.array(IntID), []),
 	graphIdCounter: v.pipe(v.number(), v.integer()),
+	functionGraphIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
+	queueGraphIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
+	functionQueueGraphIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	customEvents: v.optional(v.array(CustomEvent), []),
 	customEventIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	customTypeIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
@@ -271,12 +304,15 @@ export const ProjectRoot = v.object({
 	customEnums: v.optional(v.array(CustomEnum), []),
 	functions: v.optional(v.array(GraphFunction), []),
 	functionIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
+	queueIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
+	functionQueueIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	counter: v.optional(v.number(), 0),
 	resources: v.optional(v.array(Resource), []),
 	/** Sharded save: IDs only; bodies live under `project-variable-${id}` in localStorage. */
 	variables: v.optional(v.array(IntID), []),
 	/** Sharded save: IDs only; bodies live under `project-queue-${id}` in localStorage. */
 	queues: v.optional(v.array(IntID), []),
+	functionQueues: v.optional(v.array(FunctionQueue), []),
 	nodeInvocations: v.optional(v.array(NodeInvocationFileRow), []),
 });
 export type ProjectRoot = v.InferOutput<typeof ProjectRoot>;

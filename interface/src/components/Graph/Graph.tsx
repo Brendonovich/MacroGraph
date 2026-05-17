@@ -71,24 +71,58 @@ export const Graph = (props: Props) => {
 	const remotePinDragList = Solid.createMemo(() => getRemotePinDrags());
 	const remoteSelectionBoxList = Solid.createMemo(() => getRemoteSelectionBoxes());
 
-	createResizeObserver(ref, (bounds) => {
-		const value = {
-			width: bounds.width,
-			height: bounds.height,
-		};
+	// --- resize/position tracking ---
+	let prevScreenX = window.screenX;
+	let prevScreenY = window.screenY;
+	let prevInnerW = window.innerWidth;
+	let prevInnerH = window.innerHeight;
 
-		props.onSizeChange(value);
-		setState("size", value);
-	});
+	let typeCache: string | null = null;
+	let typeTime = 0;
+
+	function logResizeType() {
+		const sx = window.screenX, sy = window.screenY;
+		const iw = window.innerWidth, ih = window.innerHeight;
+		const now = performance.now();
+		const rect = ref()?.getBoundingClientRect();
+
+		if (rect && (rect.left !== state.bounds.x || rect.top !== state.bounds.y)) {
+			typeCache = "left sidebar"; typeTime = now;
+		} else if (sx !== prevScreenX) {
+			typeCache = "window left"; typeTime = now;
+			const s = props.state.scale;
+			const dx = (sx - prevScreenX) / s;
+			props.onTranslateChange({
+				x: props.state.translate.x + dx,
+				y: props.state.translate.y,
+			});
+		} else if (sy !== prevScreenY) {
+			typeCache = "window top"; typeTime = now;
+			const s = props.state.scale;
+			const dy = (sy - prevScreenY) / s;
+			props.onTranslateChange({
+				x: props.state.translate.x,
+				y: props.state.translate.y + dy,
+			});
+		} else if (iw !== prevInnerW) {
+			if (!typeCache || now - typeTime > 500) {
+				typeCache = "window right"; typeTime = now;
+			}
+		} else if (ih !== prevInnerH) {
+			if (!typeCache || now - typeTime > 500) {
+				typeCache = "window bottom"; typeTime = now;
+			}
+		}
+
+		prevScreenX = sx; prevScreenY = sy;
+		prevInnerW = iw; prevInnerH = ih;
+	}
 
 	function onResize() {
+		logResizeType();
+
 		const bounds = ref()!.getBoundingClientRect()!;
-
-		const value = {
-			x: bounds.left,
-			y: bounds.top,
-		};
-
+		const value = { x: bounds.left, y: bounds.top };
 		props.onBoundsChange(value);
 		setState("bounds", value);
 	}
@@ -124,8 +158,11 @@ export const Graph = (props: Props) => {
 		});
 	}
 
+	const [pan, setPan] = Solid.createSignal<PanState>("none");
+
 	Solid.onMount(() => {
 		createEventListener(window, "resize", onResize);
+		createResizeObserver(ref, onResize);
 
 		if (!isMobile)
 			createEventListener(ref, "gesturestart", () => {
@@ -155,8 +192,6 @@ export const Graph = (props: Props) => {
 				});
 			});
 	});
-
-	const [pan, setPan] = Solid.createSignal<PanState>("none");
 
 	createBodyCursor(() => pan() === "active" && "grabbing");
 

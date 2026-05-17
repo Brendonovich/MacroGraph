@@ -9,7 +9,7 @@ import {
 	type WireGraphPositionsEphemeral,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
-import { deserializeProject, parseJsonWithContext, serde } from "@macrograph/runtime-serde";
+import { deserializeProject, parseJsonWithContext, serde, serializeProject } from "@macrograph/runtime-serde";
 import { makePersisted } from "@solid-primitives/storage";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { Show, createSignal, onMount } from "solid-js";
@@ -87,6 +87,7 @@ const platform = createPlatform({
   pkgs.vtubeStudio.pkg,
   pkgs.voicemod.pkg,
   pkgs.functions.pkg,
+  pkgs.functionQueue.pkg,
 ].map((p) => core.registerPackage(p));
 
 export default function Editor() {
@@ -101,7 +102,7 @@ export default function Editor() {
     installRemoteHostBridge({ core, projectUrl });
 
     const savedProject = localStorage.getItem("project");
-    const savedProjectRoot = localStorage.getItem("project-root");
+    let savedProjectRoot = localStorage.getItem("project-root");
 
     if (savedProject) {
       const serializedProject = parseJsonWithContext(
@@ -121,6 +122,34 @@ export default function Editor() {
           setLoaded(true);
         });
     } else if (savedProjectRoot) {
+      // migrate from old sharded format to unified project key
+      // Repair any existing data where functionGraphs/queueGraphs/functionQueueGraphs
+      // contain full graph objects instead of IDs (from a previous save bug).
+      // Extract the objects into sharded keys, then replace with IDs.
+      try {
+        const parsed = JSON.parse(savedProjectRoot) as Record<string, unknown>;
+        let repaired = false;
+        const graphKeys: Record<string, string> = {
+          functionGraphs: "project-function-graph-",
+          queueGraphs: "project-queue-graph-",
+          functionQueueGraphs: "project-function-queue-graph-",
+        };
+        for (const [key, prefix] of Object.entries(graphKeys)) {
+          const arr = parsed[key];
+          if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === "object") {
+            for (const g of arr as Array<Record<string, unknown>>) {
+              localStorage.setItem(`${prefix}${g.id}`, JSON.stringify(g));
+            }
+            parsed[key] = (arr as Array<Record<string, unknown>>).map((g) => g.id);
+            repaired = true;
+          }
+        }
+        if (repaired) {
+          localStorage.setItem("project-root", JSON.stringify(parsed));
+          savedProjectRoot = JSON.stringify(parsed);
+        }
+      } catch { /* ignore */ }
+
       const serializedProjectRoot = parseJsonWithContext(
         "apps/desktop Editor onMount: localStorage key `project-root`",
         serde.ProjectRoot,
@@ -166,10 +195,54 @@ export default function Editor() {
         queues.push(queue);
       }
 
+      const root = serializedProjectRoot as any;
+
+      const functionGraphs: serde.Graph[] = [];
+
+      for (const graphId of (root.functionGraphs as number[]) ?? []) {
+        const data = localStorage.getItem(`project-function-graph-${graphId}`);
+        if (!data) continue;
+        const graph = parseJsonWithContext(
+          `apps/desktop Editor onMount: localStorage key project-function-graph-${graphId}`,
+          serde.Graph,
+          data,
+        );
+        functionGraphs.push(graph);
+      }
+
+      const queueGraphs: serde.Graph[] = [];
+
+      for (const graphId of (root.queueGraphs as number[]) ?? []) {
+        const data = localStorage.getItem(`project-queue-graph-${graphId}`);
+        if (!data) continue;
+        const graph = parseJsonWithContext(
+          `apps/desktop Editor onMount: localStorage key project-queue-graph-${graphId}`,
+          serde.Graph,
+          data,
+        );
+        queueGraphs.push(graph);
+      }
+
+      const functionQueueGraphs: serde.Graph[] = [];
+
+      for (const graphId of (root.functionQueueGraphs as number[]) ?? []) {
+        const data = localStorage.getItem(`project-function-queue-graph-${graphId}`);
+        if (!data) continue;
+        const graph = parseJsonWithContext(
+          `apps/desktop Editor onMount: localStorage key project-function-queue-graph-${graphId}`,
+          serde.Graph,
+          data,
+        );
+        functionQueueGraphs.push(graph);
+      }
+
       const merged = {
-        ...serializedProjectRoot,
+        ...root,
         graphs,
-        variables,
+        functionGraphs,
+        queueGraphs,
+        functionQueueGraphs,
+        variables: variables as any,
         queues,
       };
       core
@@ -181,6 +254,26 @@ export default function Editor() {
           ),
         )
         .finally(() => {
+          // save as unified format and clean up old sharded keys
+          const serialized = serializeProject(core.project);
+          // restore nodeInvocations from merged since serializeProject doesn't include them
+          localStorage.setItem(
+            "project",
+            JSON.stringify({ ...serialized, nodeInvocations: merged.nodeInvocations ?? [] }),
+          );
+          localStorage.removeItem("project-root");
+          for (const key of Object.keys(localStorage)) {
+            if (
+              key.startsWith("project-graph-") ||
+              key.startsWith("project-function-graph-") ||
+              key.startsWith("project-queue-graph-") ||
+              key.startsWith("project-function-queue-graph-") ||
+              key.startsWith("project-queue-") ||
+              key.startsWith("project-variable-")
+            ) {
+              localStorage.removeItem(key);
+            }
+          }
           setLoaded(true);
         });
     } else {

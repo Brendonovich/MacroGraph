@@ -1,39 +1,33 @@
-import type { Queue } from "@macrograph/runtime";
+import type { FunctionQueue } from "@macrograph/runtime";
+import { ContextMenu } from "@kobalte/core/context-menu";
 import {
 	For,
-	type JSX,
 	type ValidComponent,
 	createMemo,
 	createSignal,
 } from "solid-js";
 
-import { ContextMenu } from "@kobalte/core/context-menu";
 import {
 	ContextMenuContent,
 	ContextMenuItem,
 	ContextMenuRenameItem,
-} from "../components/Graph/ContextMenu";
-import { SidebarSection } from "../components/Sidebar";
-import { IconButton } from "../components/ui";
-import { createTokenisedSearchFilter, tokeniseString } from "../util";
-import {
-	InlineTextEditor,
-	InlineTextEditorContext,
-	useInlineTextEditorCtx,
-} from "./InlineTextEditor";
-import { SearchInput } from "./SearchInput";
+} from "../../components/Graph/ContextMenu";
+import { SidebarSection } from "../../components/Sidebar";
+import { IconButton } from "../../components/ui";
+import { useInterfaceContext } from "../../context";
+import { createTokenisedSearchFilter, tokeniseString } from "../../util";
+import { InlineTextEditor, InlineTextEditorContext } from "../InlineTextEditor";
+import { SearchInput } from "../SearchInput";
 
-export function Queues(props: {
-	queues: Map<number, Queue>;
-	onCreateQueue(): void;
-	onRemoveQueue(id: number): void;
-	onQueueNameChanged(id: number, name: string): void;
-	onQueueClicked(queue: Queue): void;
-	contextMenu?: (id: number) => JSX.Element;
+export function FunctionQueues(props: {
+	project: import("@macrograph/runtime").Project;
+	onFunctionQueueClicked(queue: FunctionQueue): void;
 }) {
+	const ctx = useInterfaceContext();
+
 	const [search, setSearch] = createSignal("");
 
-	const queuesList = createMemo(() => [...props.queues.values()]);
+	const queuesList = createMemo(() => [...props.project.functionQueues.values()]);
 
 	const tokenisedFilters = createMemo(() =>
 		queuesList().map((q) => [tokeniseString(q.name), q] as const),
@@ -45,7 +39,7 @@ export function Queues(props: {
 	);
 
 	return (
-		<SidebarSection title="Queues">
+		<SidebarSection title="Function Queues">
 			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
 				<SearchInput
 					value={search()}
@@ -58,7 +52,7 @@ export function Queues(props: {
 					type="button"
 					onClick={(e) => {
 						e.stopPropagation();
-						props.onCreateQueue();
+						ctx.execute("createFunctionQueue");
 					}}
 				>
 					<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
@@ -77,22 +71,26 @@ export function Queues(props: {
 													{...asProps}
 													as="button"
 													type="button"
-													onClick={() => props.onQueueClicked(queue)}
+													onClick={() => props.onFunctionQueueClicked(queue)}
 												/>
 											)}
 											value={queue.name}
 											onChange={(value) => {
-												props.onQueueNameChanged(queue.id, value);
+												ctx.execute("setFunctionQueueName", {
+													functionQueueId: queue.id,
+													name: value,
+												});
 											}}
 										/>
 										<ContextMenuContent>
 											<ContextMenuRenameItem />
-											{props.contextMenu?.(queue.id)}
 											<ContextMenuItem
 												class="text-red-500"
 												onSelect={() => {
-													if (!window.confirm(`Are you sure you want to delete queue "${queue.name}"?`)) return;
-													props.onRemoveQueue(queue.id);
+													if (!window.confirm(`Are you sure you want to delete function queue "${queue.name}"?`)) return;
+													ctx.execute("deleteFunctionQueue", {
+														functionQueueId: queue.id,
+													});
 												}}
 											>
 												<IconAntDesignDeleteOutlined />

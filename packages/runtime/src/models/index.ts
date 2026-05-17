@@ -10,5 +10,6 @@ export * from "./Core";
 export * from "./Package";
 export * from "./Project";
 export * from "./Queue";
+export * from "./FunctionQueue";
 export * from "./Variable";
 export * from "./Function";

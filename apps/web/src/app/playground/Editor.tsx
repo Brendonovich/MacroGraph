@@ -185,7 +185,7 @@ export function ExportButton() {
 			title="Export Project"
 			onClick={async () => {
 				const nodeInvocations = await exportInvocationLogForGraphs(
-					core.project.graphOrder,
+					core.project.allGraphOrder as number[],
 					"default",
 				).catch((): NodeInvocationFileRow[] => []);
 				saveJsonAsFile("project.json", {
@@ -209,7 +209,7 @@ export function ShareButton() {
 			title="Share Project"
 			onClick={async () => {
 				const nodeInvocations = await exportInvocationLogForGraphs(
-					core.project.graphOrder,
+					core.project.allGraphOrder as number[],
 					"default",
 				).catch((): NodeInvocationFileRow[] => []);
 				const id = await createProjectLink(

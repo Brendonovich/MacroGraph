@@ -15,11 +15,34 @@ export function serializeProject(
 	return {
 		name: project.name,
 		graphIdCounter: project.graphIdCounter,
+		functionGraphIdCounter: project.functionGraphIdCounter,
+		queueGraphIdCounter: project.queueGraphIdCounter,
+		functionQueueGraphIdCounter: project.functionQueueGraphIdCounter,
 		graphs: project.graphOrder
 			.map((id) => {
 				const graph = project.graphs.get(id);
 				if (!graph) return;
-
+				return serializeGraph(graph);
+			})
+			.filter(Boolean),
+		functionGraphs: project.functionGraphOrder
+			.map((id) => {
+				const graph = project.graphs.get(id);
+				if (!graph) return;
+				return serializeGraph(graph);
+			})
+			.filter(Boolean),
+		queueGraphs: project.queueGraphOrder
+			.map((id) => {
+				const graph = project.graphs.get(id);
+				if (!graph) return;
+				return serializeGraph(graph);
+			})
+			.filter(Boolean),
+		functionQueueGraphs: project.functionQueueGraphOrder
+			.map((id) => {
+				const graph = project.graphs.get(id);
+				if (!graph) return;
 				return serializeGraph(graph);
 			})
 			.filter(Boolean),
@@ -31,6 +54,8 @@ export function serializeProject(
 		),
 		customEnums: [...project.customEnums.values()].map(serializeCustomEnum),
 		functionIdCounter: project.functionIdCounter,
+		queueIdCounter: project.queueIdCounter,
+		functionQueueIdCounter: project.functionQueueIdCounter,
 		functions: [...project.functions.values()].map(serializeFunction),
 		counter: project.idCounter,
 		resources: [...project.resources].map(([type, entry]) =>
@@ -38,6 +63,7 @@ export function serializeProject(
 		),
 		variables: project.variables.map(serializeVariable),
 		queues: [...project.queues.values()].map(serializeQueue),
+		functionQueues: [...project.functionQueues.values()].map(serializeFunctionQueue),
 	};
 }
 
@@ -216,6 +242,24 @@ export function serializeQueue(
 		paused: q.paused,
 		concurrent: q.concurrent,
 		type: q.itemType.serialize(),
+	};
+}
+
+export function serializeFunctionQueue(
+	q: runtime.FunctionQueue,
+): v.InferInput<typeof serde.FunctionQueue> {
+	return {
+		id: q.id,
+		name: q.name,
+		graphId: q.graphId,
+		items: q.items.map((item) => ({
+			functionId: item.functionId,
+			data: item.data,
+			waitingNodeId: item.waitingNodeId,
+			waitingGraphId: item.waitingGraphId,
+		})),
+		paused: q.paused,
+		concurrent: q.concurrent,
 	};
 }
 

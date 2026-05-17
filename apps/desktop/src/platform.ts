@@ -37,7 +37,7 @@ export function createPlatform(props: {
 				const name = url.split("/").pop()?.split(".")[0];
 				if (name) props.core.project.name = name;
 
-				const graphIds = props.core.project.graphOrder;
+				const graphIds = props.core.project.allGraphOrder as number[];
 				const wk = (props.projectUrl() ?? url) as string;
 				const nodeInvocations = await exportInvocationLogForGraphs(
 					graphIds,

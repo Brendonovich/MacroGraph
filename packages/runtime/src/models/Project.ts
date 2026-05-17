@@ -14,6 +14,7 @@ import { Graph } from "./Graph";
 import { GraphFunction, type FunctionArgs } from "./Function";
 import type { ResourceType } from "./Package";
 import { Queue, type QueueArgs } from "./Queue";
+import { FunctionQueue, type FunctionQueueArgs } from "./FunctionQueue";
 import { Variable, type VariableArgs } from "./Variable";
 
 export interface ProjectArgs {
@@ -37,6 +38,9 @@ export class Project {
 
 	graphs = new ReactiveMap<number, Graph>();
 	graphOrder: Array<number> = [];
+	functionGraphOrder: Array<number> = [];
+	queueGraphOrder: Array<number> = [];
+	functionQueueGraphOrder: Array<number> = [];
 
 	customEvents = new ReactiveMap<number, CustomEvent>();
 	customStructs = new ReactiveMap<number, CustomStruct>();
@@ -45,16 +49,21 @@ export class Project {
 	resources = new ReactiveMap<ResourceType<any, any>, ResourceTypeEntry>();
 	variables: Array<Variable> = [];
 	queues = new ReactiveMap<number, Queue>();
+	functionQueues = new ReactiveMap<number, FunctionQueue>();
 	name = "New Project";
 	events = createEventBus<ProjectEvent>();
 
 	disableSave = false;
 
 	graphIdCounter = 0;
+	functionGraphIdCounter = 0;
+	queueGraphIdCounter = 0;
+	functionQueueGraphIdCounter = 0;
 	customEventIdCounter = 0;
 	customTypeIdCounter = 0;
 	functionIdCounter = 0;
 	queueIdCounter = 0;
+	functionQueueIdCounter = 0;
 	idCounter = 0;
 
 	constructor(args: ProjectArgs) {
@@ -108,6 +117,15 @@ export class Project {
 
 	graph(id: number) {
 		return this.graphs.get(id);
+	}
+
+	get allGraphOrder(): readonly number[] {
+		return [
+			...this.graphOrder,
+			...this.functionGraphOrder,
+			...this.queueGraphOrder,
+			...this.functionQueueGraphOrder,
+		];
 	}
 
 	createGraph(args?: { id?: number; name?: string }) {
@@ -177,7 +195,7 @@ export class Project {
 
 	createFunction(args?: { id?: number; name?: string }) {
 		const id = args?.id ?? this.functionIdCounter++;
-		const graphId = this.generateGraphId();
+		const graphId = this.functionGraphIdCounter++;
 		const name = args?.name ?? `Function ${id}`;
 		const graph = new Graph({
 			id: graphId,
@@ -185,7 +203,7 @@ export class Project {
 			project: this,
 		});
 		this.graphs.set(graphId, graph);
-		this.graphOrder.push(graphId);
+		this.functionGraphOrder.push(graphId);
 		const fn = new GraphFunction({ id, name, graphId, project: this });
 		this.functions.set(id, fn);
 		return fn;
@@ -194,9 +212,12 @@ export class Project {
 	deleteFunction(id: number) {
 		const fn = this.functions.get(id);
 		if (!fn) return;
+		for (const [, q] of this.functionQueues) {
+			q.removeItemsForFunction(id);
+		}
 		const graph = this.graphs.get(fn.graphId);
 		if (graph) {
-			this.graphOrder = this.graphOrder.filter((gid) => gid !== fn.graphId);
+			this.functionGraphOrder = this.functionGraphOrder.filter((gid) => gid !== fn.graphId);
 			this.graphs.delete(fn.graphId);
 			graph.dispose();
 		}
@@ -271,7 +292,7 @@ export class Project {
 
 	createQueue(args?: { id?: number; name?: string; itemType?: t.Any }) {
 		const id = args?.id ?? this.generateQueueId();
-		const graphId = this.generateGraphId();
+		const graphId = this.queueGraphIdCounter++;
 		const name = args?.name ?? `Queue ${id}`;
 		const graph = new Graph({
 			id: graphId,
@@ -279,7 +300,7 @@ export class Project {
 			project: this,
 		});
 		this.graphs.set(graphId, graph);
-		this.graphOrder.push(graphId);
+		this.queueGraphOrder.push(graphId);
 		const queue = new Queue({
 			id,
 			name,
@@ -301,11 +322,54 @@ export class Project {
 		if (!queue) return;
 		const graph = this.graphs.get(queue.graphId);
 		if (graph) {
-			this.graphOrder = this.graphOrder.filter((gid) => gid !== queue.graphId);
+			this.queueGraphOrder = this.queueGraphOrder.filter((gid) => gid !== queue.graphId);
 			this.graphs.delete(queue.graphId);
 			graph.dispose();
 		}
 		this.queues.delete(id);
+		queue.dispose();
+	}
+
+	generateFunctionQueueId() {
+		return this.functionQueueIdCounter++;
+	}
+
+	createFunctionQueue(args?: { id?: number; name?: string }) {
+		const id = args?.id ?? this.generateFunctionQueueId();
+		const graphId = this.functionQueueGraphIdCounter++;
+		const name = args?.name ?? `Function Queue ${id}`;
+		const graph = new Graph({
+			id: graphId,
+			name,
+			project: this,
+		});
+		this.graphs.set(graphId, graph);
+		this.functionQueueGraphOrder.push(graphId);
+		const queue = new FunctionQueue({
+			id,
+			name,
+			graphId,
+			owner: this,
+		});
+		this.functionQueues.set(id, queue);
+		return queue;
+	}
+
+	setFunctionQueueValue(id: number, items: any[]) {
+		const queue = this.functionQueues.get(id);
+		if (queue) queue.items = items;
+	}
+
+	removeFunctionQueue(id: number) {
+		const queue = this.functionQueues.get(id);
+		if (!queue) return;
+		const graph = this.graphs.get(queue.graphId);
+		if (graph) {
+			this.functionQueueGraphOrder = this.functionQueueGraphOrder.filter((gid) => gid !== queue.graphId);
+			this.graphs.delete(queue.graphId);
+			graph.dispose();
+		}
+		this.functionQueues.delete(id);
 		queue.dispose();
 	}
 

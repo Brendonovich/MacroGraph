@@ -17,6 +17,12 @@ export type Config = {
 		indicateConnectedNodes: "off" | "highlightConnected" | "dimUnconnected";
 		enableNumberGrouping: boolean;
 	};
+	tabColors: {
+		function: string;
+		queue: string;
+		functionQueue: string;
+		package: string;
+	};
 };
 
 const INDICATE_CONNECTED_NODES_OPTIONS = [
@@ -35,56 +41,97 @@ export const [config, setConfig] = makePersisted(
 			indicateConnectedNodes: "off",
 			enableNumberGrouping: true,
 		},
+		tabColors: {
+			function: "#86efac",
+			queue: "#93c5fd",
+			functionQueue: "#93c5fd",
+			package: "#22d3ee",
+		},
 	}),
 	{ name: "editor-config" },
 );
 
+function ColorSelect(props: {
+	value: string;
+	onChange: (v: string) => void;
+	label: string;
+}) {
+	return (
+		<div class="flex items-center gap-4">
+			<span>{props.label}</span>
+			<div class="ml-auto flex items-center gap-2">
+				<input
+					type="color"
+					value={props.value}
+					onInput={(e) => props.onChange(e.currentTarget.value)}
+					class="size-7 p-0.5 bg-neutral-800 border border-neutral-600 rounded cursor-pointer"
+				/>
+			</div>
+		</div>
+	);
+}
+
 export function ConfigContent() {
 	return (
-		<>
-			<div class="w-48 shrink-0 overflow-y-auto border-r border-neutral-700">
-				<div class="px-3 py-2 text-white font-medium">Nodes</div>
-			</div>
-			<div class="flex-1 overflow-y-auto p-4 text-white">
-				<div class="flex flex-col gap-3 max-w-lg">
-					<div class="flex items-center gap-4">
-						<span>Dim connections of unselected nodes</span>
-						<CheckBox
-							class="ml-auto"
-							value={config.nodes.dimUnselectedConnections}
-							onChange={(v) =>
-								setConfig("nodes", "dimUnselectedConnections", v)
-							}
-						/>
-					</div>
-					<div class="flex items-center gap-4">
-						<span>Indicate nodes connected to selected nodes</span>
-						<SelectInput
-							class="!w-fit ml-auto !text-right"
-							placement="bottom-end"
-							options={INDICATE_CONNECTED_NODES_OPTIONS}
-							optionValue="id"
-							optionTextValue="name"
-							getLabel={(o) => o?.name}
-							value={INDICATE_CONNECTED_NODES_OPTIONS.find(
-								(o) => o.id === config.nodes.indicateConnectedNodes,
-							)}
-							onChange={(v) =>
-								setConfig("nodes", "indicateConnectedNodes", v.id)
-							}
-						/>
-					</div>
-					<div class="flex items-center gap-4">
-						<span>Enable number grouping (comma separator in numbers)</span>
-						<CheckBox
-							class="ml-auto"
-							value={config.nodes.enableNumberGrouping}
-							onChange={(v) => setConfig("nodes", "enableNumberGrouping", v)}
-						/>
-					</div>
+		<div class="flex-1 overflow-y-auto p-4 text-white">
+			<div class="flex flex-col gap-3 max-w-lg">
+				<div class="flex items-center gap-4">
+					<span>Dim connections of unselected nodes</span>
+					<CheckBox
+						class="ml-auto"
+						value={config.nodes.dimUnselectedConnections}
+						onChange={(v) =>
+							setConfig("nodes", "dimUnselectedConnections", v)
+						}
+					/>
 				</div>
+				<div class="flex items-center gap-4">
+					<span>Indicate nodes connected to selected nodes</span>
+					<SelectInput
+						class="!w-fit ml-auto !text-right"
+						placement="bottom-end"
+						options={INDICATE_CONNECTED_NODES_OPTIONS}
+						optionValue="id"
+						optionTextValue="name"
+						getLabel={(o) => o?.name}
+						value={INDICATE_CONNECTED_NODES_OPTIONS.find(
+							(o) => o.id === config.nodes.indicateConnectedNodes,
+						)}
+						onChange={(v) =>
+							setConfig("nodes", "indicateConnectedNodes", v.id)
+						}
+					/>
+				</div>
+				<div class="flex items-center gap-4">
+					<span>Enable number grouping (comma separator in numbers)</span>
+					<CheckBox
+						class="ml-auto"
+						value={config.nodes.enableNumberGrouping}
+						onChange={(v) => setConfig("nodes", "enableNumberGrouping", v)}
+					/>
+				</div>
+				<ColorSelect
+					label="Functions tab colour"
+					value={config.tabColors.function}
+					onChange={(v) => setConfig("tabColors", "function", v)}
+				/>
+				<ColorSelect
+					label="Queues tab colour"
+					value={config.tabColors.queue}
+					onChange={(v) => setConfig("tabColors", "queue", v)}
+				/>
+				<ColorSelect
+					label="Function Queues tab colour"
+					value={config.tabColors.functionQueue}
+					onChange={(v) => setConfig("tabColors", "functionQueue", v)}
+				/>
+				<ColorSelect
+					label="Packages tab colour"
+					value={config.tabColors.package}
+					onChange={(v) => setConfig("tabColors", "package", v)}
+				/>
 			</div>
-		</>
+		</div>
 	);
 }
 

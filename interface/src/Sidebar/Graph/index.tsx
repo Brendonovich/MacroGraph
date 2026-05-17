@@ -2,6 +2,7 @@ import { createMemo } from "solid-js";
 
 import { useInterfaceContext } from "../../context";
 import { FunctionIO } from "./FunctionIO";
+import { FunctionQueueIO } from "./FunctionQueueIO";
 import { QueueIO } from "./QueueIO";
 import { Outline } from "./Outline";
 import { Variables } from "./Variables";
@@ -14,11 +15,15 @@ export function Sidebar(props: { graph: import("@macrograph/runtime").Graph }) {
 	const graphQueue = createMemo(() =>
 		[...ctx.core.project.queues].find(([, q]) => q.graphId === props.graph.id)?.[1],
 	);
+	const graphFunctionQueue = createMemo(() =>
+		[...ctx.core.project.functionQueues].find(([, q]) => q.graphId === props.graph.id)?.[1],
+	);
 
 	return (
 		<>
 			{graphFn() && <FunctionIO fn={graphFn()!} />}
 			{graphQueue() && <QueueIO queue={graphQueue()!} />}
+			{graphFunctionQueue() && <FunctionQueueIO queue={graphFunctionQueue()!} />}
 			<Variables graph={props.graph} />
 			<Outline graph={props.graph} />
 		</>
