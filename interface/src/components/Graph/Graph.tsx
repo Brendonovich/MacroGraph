@@ -35,6 +35,7 @@ import {
 import { DotGrid } from "./DotGrid";
 import { Node } from "./Node";
 import { GRID_SIZE } from "./util";
+import { isPointerOverGraphViewport } from "../../mosaicLayout";
 import { getRemoteCursors, broadcastCursorPosition, getFollowUserId, getRemotePinDrags, getRemoteSelectionBoxes, broadcastPinDrag, broadcastSelectionBox } from "../../remoteHistorySync";
 
 type PanState = "none" | "waiting" | "active";
@@ -47,6 +48,7 @@ const ZOOM_STEP = 1.05;
 interface Props extends Solid.ComponentProps<"div"> {
 	state: GraphViewState;
 	graph: GraphModel;
+	mosaicGroupId?: string;
 	onGraphDrag?(): void;
 	onMouseDown?: Solid.JSX.EventHandler<HTMLDivElement, MouseEvent>;
 	onMouseUp?: Solid.JSX.EventHandler<HTMLDivElement, MouseEvent>;
@@ -455,9 +457,12 @@ export const Graph = (props: Props) => {
 
 	// Follow a user's cursor (auto-pan camera with smooth lerp, auto-switch graph)
 	const lastFollowGraphRef = { kind: model().kind, id: model().id };
+	const isFocusedPane = () =>
+		!props.mosaicGroupId ||
+		props.mosaicGroupId === interfaceCtx.mosaicState.focusedGroupId;
 	Solid.createEffect(() => {
 		const followId = getFollowUserId();
-		if (!followId) return;
+		if (!followId || !isFocusedPane()) return;
 
 		let rafId: number;
 		const loop = () => {
@@ -505,7 +510,7 @@ export const Graph = (props: Props) => {
 						other.graphKind,
 						other.graphId,
 					);
-					if (graph?.kind === "graph") interfaceCtx.selectGraph(graph);
+					if (graph) interfaceCtx.selectGraph(graph);
 				}
 			}
 
@@ -574,6 +579,7 @@ export const Graph = (props: Props) => {
 		<GraphContextProvider value={ctx}>
 			<div
 				{...props}
+				data-graph-viewport
 				class={clsx(
 					"flex-1 w-full relative overflow-hidden bg-mg-graph",
 					props.class,
@@ -597,11 +603,15 @@ export const Graph = (props: Props) => {
 						},
 					});
 				}}
-				onPointerLeave={() => {
-					sendCursor?.({
-						id: "",
-						...graphRef(),
-						position: { x: -99999, y: -99999 },
+				onPointerLeave={(e) => {
+					const { clientX, clientY } = e;
+					requestAnimationFrame(() => {
+						if (isPointerOverGraphViewport(clientX, clientY)) return;
+						sendCursor?.({
+							id: "",
+							...graphRef(),
+							position: { x: -99999, y: -99999 },
+						});
 					});
 				}}
 				onPointerUp={(e) => {
@@ -616,11 +626,11 @@ export const Graph = (props: Props) => {
 
 						const state: SchemaMenuOpenState = {
 							status: "schemaMenuOpen",
-							// graph: props.state,
 							position: {
 								x: e.clientX,
 								y: e.clientY,
 							},
+							...graphRef(),
 						};
 
 						if (interfaceCtx.state.status === "connectionAssignMode")
@@ -670,6 +680,7 @@ export const Graph = (props: Props) => {
 								state: {
 									status: "schemaMenuOpen",
 									position: { x: e.clientX, y: e.clientY },
+									...graphRef(),
 								},
 							});
 						} else {

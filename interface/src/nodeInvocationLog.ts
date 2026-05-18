@@ -2,6 +2,8 @@ import type { GraphRef, NodeInvocationReport, PrintItem } from "@macrograph/runt
 import type { NodeInvocationFileRow } from "@macrograph/runtime-serde";
 import type { SetStoreFunction } from "solid-js/store";
 
+import { randomUUID } from "./randomUUID";
+
 export const MAX_NODE_INVOCATIONS = 20;
 
 const DB_NAME = "macrograph-node-invocation-log";
@@ -208,10 +210,7 @@ function toStored(report: NodeInvocationReport): StoredNodeInvocation {
 		report.eventData,
 	);
 	return {
-		id:
-			typeof crypto !== "undefined" && "randomUUID" in crypto
-				? crypto.randomUUID()
-				: `${report.startedAt}-${Math.random().toString(36).slice(2)}`,
+		id: randomUUID(),
 		entryType: "invocation",
 		startedAt: report.startedAt,
 		durationMs: Math.round(report.durationMs * 1000) / 1000,
@@ -235,10 +234,7 @@ function toStored(report: NodeInvocationReport): StoredNodeInvocation {
 
 function consoleToStored(item: PrintItem, now: number): StoredNodeInvocation {
 	return {
-		id:
-			typeof crypto !== "undefined" && "randomUUID" in crypto
-				? crypto.randomUUID()
-				: `${now}-${Math.random().toString(36).slice(2)}`,
+		id: randomUUID(),
 		entryType: item.type,
 		startedAt: now,
 		graphKind: item.graph.kind,
@@ -517,6 +513,15 @@ export function appendConsoleEntry(
 
 	dirtyKeys.add(key);
 	scheduleFlush(getRowSnapshot);
+}
+
+export async function readInvocationLogEntries(
+	workspaceKey: string,
+	ref: GraphRef,
+	nodeId: number,
+): Promise<StoredNodeInvocation[]> {
+	const key = invocationRowKey(workspaceKey, ref, nodeId);
+	return (await idbGet(key)) ?? [];
 }
 
 export async function loadInvocationsForNode(

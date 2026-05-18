@@ -22,8 +22,8 @@ export function FunctionQueuePanel(props: { queue: FunctionQueue }) {
 			<div>
 				<h1 class="text-xl font-semibold text-white">{props.queue.name}</h1>
 				<p class="text-sm text-neutral-400 mt-1">
-					Queued function calls run one after another (or concurrently when enabled).
-					Add items from graphs using Function Queue nodes.
+					Queued function calls run one after another. Use Advance Function Queue
+					nodes to run the next waiting item early.
 				</p>
 			</div>
 
@@ -45,20 +45,6 @@ export function FunctionQueuePanel(props: { queue: FunctionQueue }) {
 							class="rounded border-neutral-600"
 						/>
 						<span class="text-sm text-neutral-200">Paused</span>
-					</label>
-					<label class="flex flex-row items-center gap-2 cursor-pointer">
-						<input
-							type="checkbox"
-							checked={props.queue.concurrent}
-							onChange={(e) => {
-								ctx.execute("setFunctionQueueConcurrent", {
-									functionQueueId: props.queue.id,
-									concurrent: e.currentTarget.checked,
-								});
-							}}
-							class="rounded border-neutral-600"
-						/>
-						<span class="text-sm text-neutral-200">Concurrent execution</span>
 					</label>
 					<div class="text-xs text-neutral-400 pt-1">
 						{props.queue.items.length} item{props.queue.items.length !== 1 ? "s" : ""} in queue

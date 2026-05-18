@@ -25,9 +25,18 @@ import {
 	setPinDragBroadcastFn,
 	setSelectionBoxBroadcastFn,
 	setUserList,
+	setRemoteSyncDebugLogger,
 	type RemoteHistoryWireItem,
 	type WireGraphPositionsEphemeral,
 } from "@macrograph/interface";
+import {
+	isRemoteClientLogEnabled,
+	remoteInboundError,
+	remoteLog,
+	remoteWarn,
+	summarizeWireBody,
+	validateHistoryWireItems,
+} from "./remoteClientLog";
 import type { Platform } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import {
@@ -44,7 +53,7 @@ import {
 	type NodeInvocationFileRow,
 } from "@macrograph/runtime-serde";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
-import { Show, createEffect, createSignal, onCleanup } from "solid-js";
+import { Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import { Toaster } from "solid-sonner";
 
 import "@macrograph/ui/global.css";
@@ -190,12 +199,27 @@ export default function App() {
 	);
 	let ws: WebSocket | null = null;
 	let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+	let socketGeneration = 0;
 	let autoConnectAttempted = false;
-	let isReconnecting = false;
 	const reconnectState = { attempts: 0, startTime: 0, maxTime: 60_000 };
+	const [editorSessionActive, setEditorSessionActive] = createSignal(false);
 	const [projectReady, setProjectReady] = createSignal(false);
 
 	const [graphLiveFromLocal, setGraphLiveFromLocal] = createSignal(false);
+
+	onMount(() => {
+		if (isRemoteClientLogEnabled()) {
+			remoteLog(
+				"Remote client debug logging enabled (macrograph.remoteDebug=1 or ?remoteDebug=1)",
+			);
+		}
+		setRemoteSyncDebugLogger((level, message, data) => {
+			if (level === "log") remoteLog(message, data);
+			else if (level === "warn") remoteWarn(message, data);
+			else remoteInboundError("sync", new Error(String(message)), data as Record<string, unknown>);
+		});
+		onCleanup(() => setRemoteSyncDebugLogger(null));
+	});
 
 	function loadSavedCreds() {
 		if (typeof localStorage === "undefined") return false;
@@ -227,7 +251,7 @@ export default function App() {
 
 	const broadcastGraphPositionsToHost = (payload: WireGraphPositionsEphemeral) => {
 		if (joinPhase() !== "editor") return;
-		sendWs(stringifyGraphPositionsEphemeralWire(payload.graphId, payload.items));
+		sendWs(stringifyGraphPositionsEphemeralWire(payload, payload.items));
 	};
 
 	const broadcastHistoryToHost = (items: RemoteHistoryWireItem[]) => {
@@ -239,7 +263,9 @@ export default function App() {
 		const r = (Math.random() * 16) | 0;
 		return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
 	});
-	const broadcastCursorToHost = (payload: { graphId: number; position: { x: number; y: number }; viewportCenter?: { x: number; y: number } }) => {
+	const broadcastCursorToHost = (
+		payload: import("@macrograph/interface").WireCursorPosition,
+	) => {
 		if (joinPhase() !== "editor") return;
 		sendWs(stringifyCursorWire({ id: cursorId, ...payload }));
 	};
@@ -262,19 +288,64 @@ export default function App() {
 		}
 	});
 
-	onCleanup(() => {
-		clearRemoteRpc("Remote editor unloaded.");
-		ws?.close();
-	});
+	function clearReconnectTimer() {
+		if (reconnectTimer !== null) {
+			clearTimeout(reconnectTimer);
+			reconnectTimer = null;
+		}
+	}
 
-	const startSession = () => {
-		setAuthError("");
-		setJoinPhase("connecting");
-		setGraphLiveFromLocal(false);
-		ws?.close();
-		isReconnecting = false;
+	function resetReconnectState() {
 		reconnectState.attempts = 0;
 		reconnectState.startTime = 0;
+		clearReconnectTimer();
+	}
+
+	function scheduleReconnect() {
+		const phase = joinPhase();
+		if (phase === "form" || phase === "failed") return;
+		if (reconnectTimer !== null) return;
+
+		if (reconnectState.startTime === 0) reconnectState.startTime = Date.now();
+		const elapsed = Date.now() - reconnectState.startTime;
+		if (elapsed > reconnectState.maxTime) {
+			setJoinPhase("failed");
+			return;
+		}
+
+		const delay = Math.min(
+			1000 * Math.pow(2, reconnectState.attempts),
+			10_000,
+		);
+		reconnectState.attempts += 1;
+		setJoinPhase("reconnecting");
+
+		reconnectTimer = setTimeout(() => {
+			reconnectTimer = null;
+			openWebSocket({ reconnect: true });
+		}, delay);
+	}
+
+	function openWebSocket(opts: { reconnect?: boolean } = {}) {
+		setAuthError("");
+		clearReconnectTimer();
+		if (!opts.reconnect) {
+			resetReconnectState();
+			setJoinPhase("connecting");
+			setEditorSessionActive(false);
+			setProjectReady(false);
+		} else {
+			setJoinPhase("reconnecting");
+		}
+		setGraphLiveFromLocal(false);
+
+		const gen = ++socketGeneration;
+		try {
+			ws?.close();
+		} catch {
+			/* ignore */
+		}
+		ws = null;
 
 		const socket = new WebSocket(wsUrl());
 		ws = socket;
@@ -283,6 +354,7 @@ export default function App() {
 		let inboundTail = Promise.resolve();
 
 		socket.addEventListener("open", () => {
+			if (gen !== socketGeneration) return;
 			setRemoteHostRpcHandler((req) => {
 				if (socket.readyState !== WebSocket.OPEN) {
 					return Promise.reject(new Error("WebSocket is not open."));
@@ -316,13 +388,18 @@ export default function App() {
 			);
 		});
 
-		const enqueueInbound = (fn: () => void | Promise<void>) => {
+		const enqueueInbound = (
+			messageType: string,
+			fn: () => void | Promise<void>,
+			context?: Record<string, unknown>,
+		) => {
 			inboundTail = inboundTail.then(fn).catch((err) => {
-				console.error("remote-editor inbound", err);
+				remoteInboundError(messageType, err, context);
 			});
 		};
 
 		socket.addEventListener("message", (ev) => {
+			if (gen !== socketGeneration) return;
 			if (typeof ev.data !== "string") return;
 			let parsed: unknown;
 			try {
@@ -332,15 +409,23 @@ export default function App() {
 			}
 			if (typeof parsed !== "object" || parsed === null) return;
 			const body = parsed as Record<string, unknown>;
+			remoteLog(
+				`inbound message: ${typeof body.type === "string" ? body.type : "(no type)"}`,
+				summarizeWireBody(body),
+			);
+
 			if (body.type === "authError") {
 				clearRemoteRpc("Authentication failed.");
+				resetReconnectState();
+				setEditorSessionActive(false);
+				setProjectReady(false);
 				setAuthError("Wrong password or the host rejected this connection.");
 				setJoinPhase("form");
 				socket.close();
 				return;
 			}
 			if (body.type === "rpcResponse" && typeof body.id === "string") {
-				enqueueInbound(() => {
+				enqueueInbound("rpcResponse", () => {
 					const entry = rpcPending.get(body.id as string);
 					if (!entry) return;
 					rpcPending.delete(body.id as string);
@@ -358,58 +443,99 @@ export default function App() {
 				});
 				return;
 			}
-			if (body.type === "actions" && Array.isArray(body.items)) {
-				enqueueInbound(() => {
-					runAsRemoteHistoryInbound(() =>
-						applyRemoteHistoryItems(body.items as RemoteHistoryWireItem[]),
-					);
-				});
+			if (body.type === "actions") {
+				if (!Array.isArray(body.items)) {
+					remoteWarn("actions: items is not an array", {
+						itemsType: typeof body.items,
+						items: body.items,
+					});
+					return;
+				}
+				const validated = validateHistoryWireItems(body.items);
+				if (!validated.ok) {
+					remoteWarn(`actions: validation failed — ${validated.reason}`, {
+						summary: summarizeWireBody(body),
+					});
+				}
+				enqueueInbound(
+					"actions",
+					() => {
+						runAsRemoteHistoryInbound(() =>
+							applyRemoteHistoryItems(
+								body.items as RemoteHistoryWireItem[],
+							),
+						);
+					},
+					{ summary: summarizeWireBody(body) },
+				);
 				return;
 			}
 			if (body.type === "graphPositionsEphemeral") {
-				enqueueInbound(() => {
-					if (graphLiveFromLocal()) return;
-					const live = parseGraphPositionsEphemeralMessage(body);
-					if (!live) return;
-					runAsRemoteHistoryInbound(() => applySetGraphItemPositionsPerform(live));
-				});
+				enqueueInbound(
+					"graphPositionsEphemeral",
+					() => {
+						if (graphLiveFromLocal()) {
+							remoteLog("graphPositionsEphemeral skipped (local drag active)");
+							return;
+						}
+						const live = parseGraphPositionsEphemeralMessage(body);
+						if (!live) {
+							remoteWarn("graphPositionsEphemeral: parse failed", body);
+							return;
+						}
+						runAsRemoteHistoryInbound(() =>
+							applySetGraphItemPositionsPerform(live),
+						);
+					},
+					{ summary: summarizeWireBody(body) },
+				);
 				return;
 			}
 			if (body.type === "cursor") {
 				const cursor = parseCursorMessage(body);
-				if (cursor) {
-					enqueueInbound(() => {
-						if (cursor.position.x <= -9999) removeRemoteCursor(cursor.id);
-						else updateRemoteCursor(cursor);
-					});
+				if (!cursor) {
+					remoteWarn("cursor: parse failed", summarizeWireBody(body));
+					return;
 				}
+				enqueueInbound("cursor", () => {
+					if (cursor.position.x <= -9999) removeRemoteCursor(cursor.id);
+					else updateRemoteCursor(cursor);
+				});
 				return;
 			}
 			if (body.type === "pinDrag") {
 				const drag = parsePinDragMessage(body);
-				if (drag) {
-					enqueueInbound(() => {
-						if (drag.position.x <= -99999) removeRemotePinDrag(drag.id);
-						else updateRemotePinDrag(drag);
-					});
+				if (!drag) {
+					remoteWarn("pinDrag: parse failed", summarizeWireBody(body));
+					return;
 				}
+				enqueueInbound("pinDrag", () => {
+					if (drag.position.x <= -99999) removeRemotePinDrag(drag.id);
+					else updateRemotePinDrag(drag);
+				});
 				return;
 			}
 			if (body.type === "selectionBox") {
 				const box = parseSelectionBoxMessage(body);
-				if (box) {
-					enqueueInbound(() => {
-						if (box.width <= 0 && box.height <= 0) removeRemoteSelectionBox(box.id);
-						else updateRemoteSelectionBox(box);
-					});
+				if (!box) {
+					remoteWarn("selectionBox: parse failed", summarizeWireBody(body));
+					return;
 				}
+				enqueueInbound("selectionBox", () => {
+					if (box.width <= 0 && box.height <= 0)
+						removeRemoteSelectionBox(box.id);
+					else updateRemoteSelectionBox(box);
+				});
 				return;
 			}
 			if (body.type === "nodeExecute") {
-				enqueueInbound(() => {
+				enqueueInbound("nodeExecute", () => {
 					const msg = parseNodeExecuteMessage(body);
 					if (!msg) return;
-					const graph = core.project.graphs.get(msg.graphId);
+					const graph = core.project.getGraphByKind(
+						msg.graphKind,
+						msg.graphId,
+					);
 					if (!graph) return;
 					const node = graph.nodes.get(msg.nodeId);
 					if (!node) return;
@@ -417,8 +543,12 @@ export default function App() {
 				});
 				return;
 			}
-			if (body.type === "users" && Array.isArray(body.users)) {
-				enqueueInbound(() => {
+			if (body.type === "users") {
+				if (!Array.isArray(body.users)) {
+					remoteWarn("users: not an array", { users: body.users });
+					return;
+				}
+				enqueueInbound("users", () => {
 					setUserList((body.users as [string, string][]));
 					// Persist username if not set
 					if (!usernameInput()) {
@@ -436,8 +566,9 @@ export default function App() {
 					serde.Project,
 					JSON.stringify(body.project),
 				);
-				enqueueInbound(async () => {
+				enqueueInbound("project", async () => {
 					try {
+						remoteLog("project: loading");
 						await core.load((c) => deserializeProject(c, project));
 						if (Array.isArray(body.nodeInvocations))
 							await importInvocationLogFromProject(
@@ -461,10 +592,10 @@ export default function App() {
 						} catch {
 							/* ignore */
 						}
+						resetReconnectState();
+						setEditorSessionActive(true);
 						setJoinPhase("editor");
 						setProjectReady(true);
-						reconnectState.startTime = 0;
-						reconnectState.attempts = 0;
 						/* Let Solid mount Interface + sync registerRemoteHistoryActions before later queued WS work. */
 						await new Promise<void>((r) => queueMicrotask(r));
 					}
@@ -474,7 +605,7 @@ export default function App() {
 
 			// Second message with metadata (invocations, host mirror) for snappier load.
 			if (body.type === "projectMetadata") {
-				enqueueInbound(async () => {
+				enqueueInbound("projectMetadata", async () => {
 					if (Array.isArray(body.nodeInvocations))
 						await importInvocationLogFromProject(
 							body.nodeInvocations as NodeInvocationFileRow[],
@@ -488,60 +619,51 @@ export default function App() {
 			}
 
 			if (body.type === "hostMirror" && body.hostMirror) {
-				enqueueInbound(() => {
+				enqueueInbound("hostMirror", () => {
 					pkgs.applyHostMirrorPayloadToCore(core, body.hostMirror);
 				});
 				return;
 			}
+
+			remoteWarn("inbound: unhandled message type", summarizeWireBody(body));
 		});
 
-		const scheduleReconnect = () => {
-			if (reconnectState.startTime === 0) reconnectState.startTime = Date.now();
+		socket.addEventListener("close", () => {
+			if (gen !== socketGeneration) return;
+			ws = null;
+			clearRemoteRpc("Remote connection closed.");
+			if (joinPhase() === "form") return;
 
-			const elapsed = Date.now() - reconnectState.startTime;
-			if (elapsed > reconnectState.maxTime) {
-				setJoinPhase("failed");
+			if (!editorSessionActive()) {
+				setAuthError((msg) =>
+					msg || "Connection closed before the host sent a project.",
+				);
+				resetReconnectState();
+				setJoinPhase("form");
 				return;
 			}
-
-			const delay = Math.min(
-				1000 * Math.pow(2, reconnectState.attempts),
-				10_000,
-			);
-			reconnectState.attempts++;
-
-			setJoinPhase("reconnecting");
-			reconnectTimer = setTimeout(() => {
-				startSession();
-				isReconnecting = true;
-			}, delay);
-		};
-
-		socket.addEventListener("close", () => {
-			clearRemoteRpc("Remote connection closed.");
-			if (joinPhase() === "connecting" && !isReconnecting) {
-				setAuthError((msg) => msg || "Connection closed before the host sent a project.");
-				setJoinPhase("form");
-			} else {
-				isReconnecting = false;
-				scheduleReconnect();
-			}
+			scheduleReconnect();
 		});
 
 		socket.addEventListener("error", () => {
+			if (gen !== socketGeneration) return;
 			clearRemoteRpc("WebSocket error.");
-			if (joinPhase() === "connecting" && !isReconnecting) {
-				setAuthError("Could not open WebSocket (wrong URL or host offline).");
-				setJoinPhase("form");
-			} else {
-				isReconnecting = false;
-				scheduleReconnect();
-			}
+			// `close` always follows; reconnect is handled there to avoid double scheduling.
 		});
-	};
+	}
+
+	const startSession = () => openWebSocket();
 
 	onCleanup(() => {
-		if (reconnectTimer) clearTimeout(reconnectTimer);
+		clearRemoteRpc("Remote editor unloaded.");
+		clearReconnectTimer();
+		socketGeneration += 1;
+		try {
+			ws?.close();
+		} catch {
+			/* ignore */
+		}
+		ws = null;
 	});
 
 	// Auto-connect on mount if saved credentials exist
@@ -628,19 +750,15 @@ export default function App() {
 				</div>
 			</Show>
 
-			<Show when={joinPhase() === "connecting" || joinPhase() === "reconnecting"}>
+			<Show
+				when={
+					!editorSessionActive() &&
+					(joinPhase() === "connecting" || joinPhase() === "reconnecting")
+				}
+			>
 				<div class="w-screen h-screen flex flex-col items-center justify-center text-neutral-300 gap-3">
-					<Show when={joinPhase() === "reconnecting"}>
-						<IconSvgSpinners90Ring class="size-10" />
-						<span>Connection lost. Reconnecting…</span>
-						<span class="text-xs text-neutral-500">
-							Retry {reconnectState.attempts}
-						</span>
-					</Show>
-					<Show when={joinPhase() === "connecting"}>
-						<IconSvgSpinners90Ring class="size-10" />
-						<span>Connecting…</span>
-					</Show>
+					<IconSvgSpinners90Ring class="size-10" />
+					<span>Connecting…</span>
 				</div>
 			</Show>
 
@@ -655,14 +773,26 @@ export default function App() {
 					<button
 						type="button"
 						class="rounded bg-white text-neutral-900 px-4 py-2 text-sm font-medium hover:bg-neutral-200"
-						onClick={() => setJoinPhase("form")}
+						onClick={() => {
+							resetReconnectState();
+							setEditorSessionActive(false);
+							setProjectReady(false);
+							setJoinPhase("form");
+						}}
 					>
 						Back to login
 					</button>
 				</div>
 			</Show>
 
-			<Show when={joinPhase() === "editor" && core.project}>
+			<Show
+				when={
+					editorSessionActive() &&
+					joinPhase() !== "failed" &&
+					joinPhase() !== "form" &&
+					core.project
+				}
+			>
 				<div class="relative w-screen h-screen">
 					<PlatformContext.Provider value={remotePlatform}>
 						<Interface
@@ -676,11 +806,20 @@ export default function App() {
 						<ConnectionsDialog core={core} />
 						<ConfigDialog />
 					</PlatformContext.Provider>
-					{projectReady() ? null : (
+					<Show when={!projectReady()}>
 						<div class="absolute inset-0 z-50 flex items-center justify-center bg-neutral-950/60">
 							<IconSvgSpinners90Ring class="size-10" />
 						</div>
-					)}
+					</Show>
+					<Show when={joinPhase() === "reconnecting"}>
+						<div class="absolute inset-0 z-[60] flex flex-col items-center justify-center gap-3 bg-neutral-950/70 text-neutral-300">
+							<IconSvgSpinners90Ring class="size-10" />
+							<span>Connection lost. Reconnecting…</span>
+							<span class="text-xs text-neutral-500">
+								Attempt {reconnectState.attempts}
+							</span>
+						</div>
+					</Show>
 				</div>
 			</Show>
 		</QueryClientProvider>

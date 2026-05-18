@@ -126,6 +126,23 @@ export function pkg(core?: any) {
 	});
 
 	pkg.createSchema({
+		name: "Advance Queue",
+		type: "exec",
+		properties: { queue: queueProperty },
+		createIO() {
+			return {};
+		},
+		async run({ ctx, properties, graph, node }: any) {
+			const queueId = ctx.getProperty(properties.queue);
+			if (queueId === undefined) return;
+			const queue = graph.project.queues.get(queueId);
+			if (!queue) return;
+
+			queue.advance(node);
+		},
+	});
+
+	pkg.createSchema({
 		name: "Queue Length",
 		type: "pure",
 		properties: { queue: queueProperty },
@@ -200,9 +217,9 @@ export function pkg(core?: any) {
 			)?.[1];
 			if (!queue) return;
 
-			queue.iterateFired = true;
-
 			const item = ctx.getInput(io.item);
+
+			queue.completeItem(item);
 
 			pkg.emitEvent({
 				name: `iterated:${queue.id}`,

@@ -90,7 +90,6 @@ export const FunctionQueue = v.object({
 	graphId: v.optional(IntID),
 	items: v.optional(v.array(FunctionQueueItem), []),
 	paused: v.optional(v.boolean(), false),
-	concurrent: v.optional(v.boolean(), false),
 });
 export type FunctionQueue = v.InferOutput<typeof FunctionQueue>;
 
@@ -100,7 +99,6 @@ export const Queue = v.object({
 	graphId: v.optional(IntID),
 	items: v.optional(v.array(v.any()), []),
 	paused: v.optional(v.boolean(), false),
-	concurrent: v.optional(v.boolean(), false),
 	type: Type,
 });
 export type Queue = v.InferOutput<typeof Queue>;

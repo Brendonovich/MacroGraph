@@ -64,7 +64,9 @@ import {
 	ensureMosaicConsistency,
 	setMosaicWorkspaceState,
 	findGroupIndex,
+	findMosaicGroupWithGraphTab,
 	getGroupById,
+	isGraphEditorOpenInMosaic,
 	leafNode,
 	migrateGroupsToV2,
 	type MosaicNode,
@@ -689,9 +691,36 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			registerRemoteHistoryActions(null);
 		});
 
-		// Follow a user's cursor: auto-switch to their graph even when no graph tab is open.
-		// (Camera panning within the current graph is handled per-Graph in Graph.tsx.)
+		// Follow a user's cursor: focus the pane/tab showing their graph (multi-pane aware).
+		// Camera panning within the current graph is handled per-Graph in Graph.tsx.
 		const lastFollowedGraph = { kind: "graph" as const, id: -1 };
+
+		function focusFollowedGraph(graphKind: import("@macrograph/runtime").GraphKind, graphId: number) {
+			const existing = findMosaicGroupWithGraphTab(
+				mosaicState.groups,
+				graphKind,
+				graphId,
+			);
+			if (existing) {
+				const gi = findGroupIndex(mosaicState.groups, existing.groupId);
+				if (gi < 0) return;
+				const tab = mosaicState.groups[gi]?.tabs[existing.tabIndex];
+				setMosaicState("focusedGroupId", existing.groupId);
+				setMosaicState("groups", gi, "selectedIndex", existing.tabIndex);
+				setMosaicState(
+					"groups",
+					gi,
+					"selectedTabKey",
+					tab ? tabKey(tab) : undefined,
+				);
+				return;
+			}
+
+			const graph = props.core.project.getGraphByKind(graphKind, graphId);
+			if (!graph) return;
+			selectGraph(graph);
+		}
+
 		// Effect: opens the graph when follow is activated and cursors already exist.
 		createEffect(() => {
 			const followId = getFollowUserId();
@@ -710,29 +739,22 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			)
 				return;
 
-			const focusedGroup = getGroupById(
-				mosaicState.groups,
-				mosaicState.focusedGroupId,
-			);
 			if (
-				focusedGroup?.tabs.some(
-					(t) =>
-						isGraphEditorTab(t) &&
-						t.graphKind === cursor.graphKind &&
-						t.graphId === cursor.graphId,
+				isGraphEditorOpenInMosaic(
+					mosaicState.groups,
+					cursor.graphKind,
+					cursor.graphId,
 				)
-			)
+			) {
+				focusFollowedGraph(cursor.graphKind, cursor.graphId);
+				lastFollowedGraph.kind = cursor.graphKind;
+				lastFollowedGraph.id = cursor.graphId;
 				return;
-
-			const graph = props.core.project.getGraphByKind(
-				cursor.graphKind,
-				cursor.graphId,
-			);
-			if (!graph || graph.kind !== "graph") return;
+			}
 
 			lastFollowedGraph.kind = cursor.graphKind;
 			lastFollowedGraph.id = cursor.graphId;
-			selectGraph(graph);
+			focusFollowedGraph(cursor.graphKind, cursor.graphId);
 		});
 		// Callback: opens the graph on each new cursor update while following.
 		setOnCursorUpdate((cursor) => {
@@ -744,38 +766,19 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			)
 				return;
 
-			const focusedGroup = getGroupById(
-				mosaicState.groups,
-				mosaicState.focusedGroupId,
-			);
-			if (
-				focusedGroup?.tabs.some(
-					(t) =>
-						isGraphEditorTab(t) &&
-						t.graphKind === cursor.graphKind &&
-						t.graphId === cursor.graphId,
-				)
-			)
-				return;
-
-			const graph = props.core.project.getGraphByKind(
-				cursor.graphKind,
-				cursor.graphId,
-			);
-			if (!graph || graph.kind !== "graph") return;
-
+			focusFollowedGraph(cursor.graphKind, cursor.graphId);
 			lastFollowedGraph.kind = cursor.graphKind;
 			lastFollowedGraph.id = cursor.graphId;
-			selectGraph(graph);
 		});
 		onCleanup(() => setOnCursorUpdate(null));
 
-		function openTab(tab: TabState) {
+		function openTab(tab: TabState, targetGroupId?: string) {
 			const key = tabKey(tab);
-			const groupIdx = findGroupIndex(
-				mosaicState.groups,
-				mosaicState.focusedGroupId,
-			);
+			const groupId = targetGroupId ?? mosaicState.focusedGroupId;
+			if (targetGroupId && targetGroupId !== mosaicState.focusedGroupId) {
+				setMosaicState("focusedGroupId", targetGroupId);
+			}
+			const groupIdx = findGroupIndex(mosaicState.groups, groupId);
 			mosaicDebug("openTab", {
 				tabKey: key,
 				focusedGroupId: mosaicState.focusedGroupId,
@@ -837,6 +840,26 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			openGraph(graph);
 		}
 
+		function selectGraphInGroup(groupId: string, graph: Graph) {
+			if (graph.kind === "function") {
+				for (const [, fn] of props.core.project.functions) {
+					if (fn.graphId === graph.id) {
+						openTab(makeFunctionTab(fn), groupId);
+						return;
+					}
+				}
+			}
+			if (graph.kind === "queue") {
+				for (const [, queue] of props.core.project.queues) {
+					if (queue.graphId === graph.id) {
+						openTab(makeQueueTab(queue), groupId);
+						return;
+					}
+				}
+			}
+			openTab(makeGraphState(graph), groupId);
+		}
+
 		function selectFunction(fn: { id: number; graphId: number }) {
 			openTab(makeFunctionTab(fn));
 		}
@@ -885,6 +908,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 				setMosaicWorkspaceState(setMosaicState, next),
 			persistMosaicLayoutNow,
 			selectGraph,
+			selectGraphInGroup,
 			selectFunction,
 			selectQueue,
 			selectFunctionQueue,
@@ -923,6 +947,8 @@ export type InterfaceContext = ReturnType<typeof useInterfaceContext>;
 export type SchemaMenuOpenState = {
 	status: "schemaMenuOpen";
 	position: XY;
+	graphKind: import("@macrograph/runtime").GraphKind;
+	graphId: number;
 };
 
 // https://stately.ai/registry/editor/embed/1f1797a0-4d3f-4441-b8c7-292f3ed59008?machineId=62d40a42-0c7f-4c26-aa26-ef61b57f0b1b&mode=Design

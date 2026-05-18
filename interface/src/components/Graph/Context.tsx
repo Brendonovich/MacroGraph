@@ -85,6 +85,20 @@ export function coerceGraphScale(scale: unknown): number {
 	return 1;
 }
 
+/** Ensures persisted / wire-restored mosaic tabs have required graph view fields. */
+export function normalizeGraphEditorTab(tab: GraphEditorTab): GraphEditorTab {
+	const translate = tab.translate ?? { x: 0, y: 0 };
+	return {
+		...tab,
+		graphKind: tab.graphKind ?? tabGraphKind(tab),
+		translate: { x: translate.x ?? 0, y: translate.y ?? 0 },
+		scale: coerceGraphScale(tab.scale),
+		selectedItemIds: Array.isArray(tab.selectedItemIds)
+			? tab.selectedItemIds
+			: [],
+	};
+}
+
 export function makeGraphState(model: GraphModel): GraphTab {
 	return {
 		type: "graph",

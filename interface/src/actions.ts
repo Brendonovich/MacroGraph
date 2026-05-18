@@ -1025,7 +1025,8 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				const graph = getGraph(entry);
 				if (!graph) return;
 
-				for (const item of entry.items) {
+				const items = Array.isArray(entry.items) ? entry.items : [];
+				for (const item of items) {
 					if (item.itemVariant === "node") {
 						const node = graph.nodes.get(item.itemId);
 						if (!node) continue;
@@ -1050,7 +1051,8 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				const graph = getGraph(entry);
 				if (!graph) return;
 
-				for (const item of entry.items) {
+				const items = Array.isArray(entry.items) ? entry.items : [];
+				for (const item of items) {
 					if (!item.from) continue;
 
 					if (item.itemVariant === "node") {
@@ -3310,24 +3312,6 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				queue.setPaused(entry.prev);
 			},
 		}),
-		setQueueConcurrent: historyAction({
-			prepare(input: { queueId: number; concurrent: boolean }) {
-				const queue = core.project.queues.get(input.queueId);
-				if (!queue) return;
-
-				return { ...input, prev: queue.concurrent };
-			},
-			perform(entry) {
-				const queue = core.project.queues.get(entry.queueId);
-				if (!queue) return;
-				queue.concurrent = entry.concurrent;
-			},
-			rewind(entry) {
-				const queue = core.project.queues.get(entry.queueId);
-				if (!queue) return;
-				queue.concurrent = entry.prev;
-			},
-		}),
 		removeQueueItem: historyAction({
 			prepare(input: { queueId: number; index: number }) {
 				const queue = core.project.queues.get(input.queueId);
@@ -3453,24 +3437,6 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				const queue = core.project.functionQueues.get(entry.functionQueueId);
 				if (!queue) return;
 				queue.setPaused(entry.prev);
-			},
-		}),
-		setFunctionQueueConcurrent: historyAction({
-			prepare(input: { functionQueueId: number; concurrent: boolean }) {
-				const queue = core.project.functionQueues.get(input.functionQueueId);
-				if (!queue) return;
-
-				return { ...input, prev: queue.concurrent };
-			},
-			perform(entry) {
-				const queue = core.project.functionQueues.get(entry.functionQueueId);
-				if (!queue) return;
-				queue.concurrent = entry.concurrent;
-			},
-			rewind(entry) {
-				const queue = core.project.functionQueues.get(entry.functionQueueId);
-				if (!queue) return;
-				queue.concurrent = entry.prev;
 			},
 		}),
 		removeFunctionQueueItem: historyAction({
@@ -4090,7 +4056,8 @@ export const historyActions = (core: Core, editor: EditorState) => {
 
 				return {
 					...input,
-					prev: input.prev ?? [...graphState.selectedItemIds],
+					selection: Array.isArray(input.selection) ? input.selection : [],
+					prev: input.prev ?? [...(graphState.selectedItemIds ?? [])],
 				};
 			},
 			perform(entry) {
@@ -4113,7 +4080,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 					"tabs",
 					tabIdx,
 					"selectedItemIds",
-					[...entry.selection],
+					[...(Array.isArray(entry.selection) ? entry.selection : [])],
 				);
 			},
 			rewind(entry) {
@@ -4136,7 +4103,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 					"tabs",
 					tabIdx,
 					"selectedItemIds",
-					[...entry.prev],
+					[...(Array.isArray(entry.prev) ? entry.prev : [])],
 				);
 			},
 		}),

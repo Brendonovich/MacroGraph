@@ -8,7 +8,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@macrograph/ui";
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import {
@@ -32,14 +32,17 @@ export function RemoteHostDialog() {
 		});
 	};
 
-	createEffect(() => {
-		if (open()) syncDraftFromPersisted();
-	});
+	const onOpenChange = (next: boolean) => {
+		if (next) syncDraftFromPersisted();
+		setOpen(next);
+	};
 
 	const save = () => {
-		setRemoteHostSettings("enabled", draft.enabled);
-		setRemoteHostSettings("port", draft.port);
-		setRemoteHostSettings("password", draft.password);
+		setRemoteHostSettings({
+			enabled: draft.enabled,
+			port: draft.port,
+			password: draft.password,
+		});
 		setOpen(false);
 	};
 
@@ -49,7 +52,7 @@ export function RemoteHostDialog() {
 	};
 
 	return (
-		<Dialog open={open()} onOpenChange={setOpen}>
+		<Dialog open={open()} onOpenChange={onOpenChange}>
 			<DialogTrigger as={Button} size="icon" variant="ghost" title="Remote web editor">
 				<IconMdiConnection class="size-5" />
 			</DialogTrigger>

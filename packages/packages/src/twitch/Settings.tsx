@@ -7,6 +7,18 @@ import { For, Match, Show, Suspense, Switch } from "solid-js";
 import type { Ctx } from "./ctx";
 import { remoteTwitchDisableAccount, remoteTwitchEnableAccount } from "./remoteHost";
 
+const CREDENTIALS_URL = "https://www.macrograph.app/account/credentials";
+
+async function openCredentialsPage(e: MouseEvent) {
+	e.preventDefault();
+	if (typeof window !== "undefined" && "__TAURI_INVOKE__" in window) {
+		const { open } = await import("@tauri-apps/api/shell");
+		await open(CREDENTIALS_URL);
+		return;
+	}
+	window.open(CREDENTIALS_URL, "_blank", "noopener,noreferrer");
+}
+
 export default ({
 	core,
 	auth,
@@ -112,7 +124,7 @@ export default ({
 			</Show>
 			<span class="text-sm text-gray-300">
 				Access more accounts by{" "}
-				<a class="underline" href="/credentials" target="external">
+				<a class="underline" href={CREDENTIALS_URL} onClick={openCredentialsPage}>
 					adding credentials
 				</a>
 			</span>

@@ -7,11 +7,13 @@ import {
 import {
 	type Core,
 	type Graph as GraphModel,
+	type GraphRef,
 	type Node,
 	type XY,
 	getNodesInRect,
 	pinIsOutput,
 	graphRefOf,
+	graphRefsEqual,
 } from "@macrograph/runtime";
 import {
 	type serde,
@@ -44,6 +46,7 @@ import { SplitDropOverlay } from "./components/SplitDropOverlay";
 import {
 	graphRefFromTab,
 	isGraphEditorTab,
+	normalizeGraphEditorTab,
 	makeGraphState,
 	tabGraphKind,
 	type GraphViewState,
@@ -72,6 +75,8 @@ import {
 	closeTabInGroup,
 	collectLeafGroupIds,
 	detectDropTarget,
+	findMosaicGroupIdAtPoint,
+	getGraphViewportBounds,
 	mosaicLayoutKey,
 	setMosaicWorkspaceState,
 	duplicateTab,
@@ -80,6 +85,7 @@ import {
 	focusLeafByIndex,
 	moveTabInGroup,
 	splitFocusedGroup,
+	type MosaicWorkspaceState,
 } from "./mosaicLayout";
 import { MosaicPaneProvider, useMosaicPane } from "./mosaicPaneContext";
 import {
@@ -105,6 +111,7 @@ export * from "./ConfigDialog";
 export {
 	exportInvocationLogForGraphs,
 	importInvocationLogFromProject,
+	readInvocationLogEntries,
 } from "./nodeInvocationLog";
 export {
 	PROJECT_LOCAL_STORAGE_KEY,
@@ -116,10 +123,11 @@ export {
 	saveProjectToStorage,
 	saveProjectToLocalStorage,
 } from "./projectStorage";
-export type { RemoteHistoryWireItem, WireGraphPositionsEphemeral, RemoteCursor, RemotePinDrag, RemoteSelectionBox } from "./remoteHistorySync";
+export type { RemoteHistoryWireItem, WireGraphPositionsEphemeral, WireCursorPosition, RemoteCursor, RemotePinDrag, RemoteSelectionBox } from "./remoteHistorySync";
 export {
 	applyRemoteHistoryItems,
 	applySetGraphItemPositionsPerform,
+	setRemoteSyncDebugLogger,
 	parseGraphPositionsEphemeralMessage,
 	parseCursorMessage,
 	parseNodeExecuteMessage,
@@ -162,7 +170,7 @@ export function Interface(props: {
 	broadcastHistoryCommit?: (items: RemoteHistoryWireItem[]) => void;
 	broadcastGraphPositionsLive?: (payload: WireGraphPositionsEphemeral) => void;
 	onGraphLivePointerSession?: (active: boolean) => void;
-	broadcastCursorPosition?: (payload: { graphId: number; position: { x: number; y: number } }) => void;
+	broadcastCursorPosition?: (payload: import("./remoteHistorySync").WireCursorPosition) => void;
 }) {
 	return (
 		<InterfaceContextProvider
@@ -184,8 +192,91 @@ export function Interface(props: {
 type CurrentGraph = {
 	model: GraphModel;
 	state: GraphViewState;
-	size: GraphBounds;
 };
+
+function findGroupIdForGraphRef(
+	mosaicState: MosaicWorkspaceState,
+	ref: GraphRef,
+): string | undefined {
+	for (const group of mosaicState.groups) {
+		if (
+			group.tabs.some(
+				(t) => isGraphEditorTab(t) && graphRefsEqual(graphRefFromTab(t), ref),
+			)
+		) {
+			return group.id;
+		}
+	}
+	return mosaicState.focusedGroupId;
+}
+
+function resolveGraphEditorAtGroup(
+	mosaicState: MosaicWorkspaceState,
+	project: Core["project"],
+	groupId: string,
+): CurrentGraph | undefined {
+	const group = mosaicState.groups.find((g) => g.id === groupId);
+	if (!group) return;
+
+	const tab = group.tabs[group.selectedIndex ?? 0];
+	if (!tab || !isGraphEditorTab(tab)) return;
+
+	const ref = graphRefFromTab(tab);
+	const model = project.getGraphByKind(ref.graphKind, ref.graphId);
+	if (!model) return;
+
+	return { model, state: normalizeGraphEditorTab(tab) };
+}
+
+function resolveGraphEditorContext(
+	ctx: ReturnType<typeof useInterfaceContext>,
+	hoveredGroupId: string | null,
+	mouse: { x: number; y: number },
+): { groupId: string; graph: CurrentGraph; bounds: GraphBounds } | undefined {
+	const groupId =
+		findMosaicGroupIdAtPoint(mouse.x, mouse.y) ??
+		hoveredGroupId ??
+		ctx.mosaicState.focusedGroupId;
+
+	const graph = resolveGraphEditorAtGroup(
+		ctx.mosaicState,
+		ctx.core.project,
+		groupId,
+	);
+	if (!graph) return;
+
+	const viewportBounds = getGraphViewportBounds(groupId);
+	const bounds: GraphBounds = viewportBounds ?? ctx.graphBounds;
+
+	return { groupId, graph, bounds };
+}
+
+function resolveGraphEditorByRef(
+	ctx: ReturnType<typeof useInterfaceContext>,
+	ref: GraphRef,
+): { graph: CurrentGraph; bounds: GraphBounds; groupId: string } | undefined {
+	const model = ctx.core.project.getGraphByKind(ref.graphKind, ref.graphId);
+	if (!model) return;
+
+	const groupId = findGroupIdForGraphRef(ctx.mosaicState, ref) ?? ctx.mosaicState.focusedGroupId;
+	const group = ctx.mosaicState.groups.find((g) => g.id === groupId);
+	if (!group) return;
+
+	const tab =
+		group.tabs.find(
+			(t) => isGraphEditorTab(t) && graphRefsEqual(graphRefFromTab(t), ref),
+		) ??
+		group.tabs[group.selectedIndex ?? 0];
+	if (!tab || !isGraphEditorTab(tab)) return;
+
+	const bounds = getGraphViewportBounds(groupId) ?? ctx.graphBounds;
+
+	return {
+		groupId,
+		graph: { model, state: normalizeGraphEditorTab(tab) },
+		bounds,
+	};
+}
 
 // type MosaicItem = {
 //   type: "graph";
@@ -232,23 +323,19 @@ function ProjectInterface() {
 		const model = ctx.core.project.getGraphByKind(ref.graphKind, ref.graphId);
 		if (!model) return;
 
-		return { model, state: tab } as unknown as CurrentGraph;
+		return {
+			model,
+			state: normalizeGraphEditorTab(tab),
+		} as unknown as CurrentGraph;
 	});
 
 	const [hoveredGroupId, setHoveredGroupId] = Solid.createSignal<string | null>(
 		null,
 	);
 
-	const hoveredGraph = Solid.createMemo(() => {
-		const id = hoveredGroupId();
-		if (!id) return;
-		const group = mosaicState.groups.find((g) => g.id === id);
-		const tab = group?.tabs[group?.selectedIndex ?? 0];
-		if (!tab || !isGraphEditorTab(tab)) return;
-		const ref = graphRefFromTab(tab);
-		const model = ctx.core.project.getGraphByKind(ref.graphKind, ref.graphId);
-		if (!model) return;
-		return { model, state: tab } as unknown as CurrentGraph;
+	Solid.createEffect(() => {
+		if (!ctx.mosaicHydrated()) return;
+		setHoveredGroupId(mosaicState.focusedGroupId);
 	});
 
 	const setSplitRatioAtPath = (path: number[], ratio: number) => {
@@ -259,7 +346,7 @@ function ProjectInterface() {
 		);
 	};
 
-	createKeydownShortcuts(currentGraph, hoveredGraph, ctx.graphBounds, ctx);
+	createKeydownShortcuts(currentGraph, hoveredGroupId, ctx);
 
 	// const firstGraph = ctx.core.project.graphs.values().next().value;
 	// if (graphStates.length === 0 && firstGraph)
@@ -297,6 +384,7 @@ function ProjectInterface() {
 						width={leftSidebarWidth()}
 						name="Project"
 						initialValue={["Graphs"]}
+						toolbar={<Sidebars.ProjectSidebarToolbar />}
 					>
 						<Sidebars.Project
 							currentGraph={currentGraph()?.model}
@@ -472,49 +560,47 @@ function ProjectInterface() {
 
 			<Solid.Show
 				when={(() => {
-					const graph = currentGraph();
-					if (!graph) return;
-
 					const state = ctx.state;
+					let menu:
+						| import("./context").SchemaMenuOpenState
+						| undefined;
+					let suggestion: { pin: import("@macrograph/runtime").Pin } | undefined;
 
-					return (
-						(state.status === "schemaMenuOpen" && {
-							...state,
-							graph,
-							suggestion: undefined,
-						}) ||
-						(state.status === "connectionAssignMode" &&
-							state.state.status === "schemaMenuOpen" && {
-								...state.state,
-								graph,
-								suggestion: { pin: state.pin },
-							}) ||
-						(state.status === "pinDragMode" &&
-							state.state.status === "schemaMenuOpen" && {
-								...state.state,
-								graph,
-								suggestion: { pin: state.pin },
-							})
-					);
+					if (state.status === "schemaMenuOpen") menu = state;
+					else if (
+						state.status === "connectionAssignMode" &&
+						state.state.status === "schemaMenuOpen"
+					) {
+						menu = state.state;
+						suggestion = { pin: state.pin };
+					} else if (
+						state.status === "pinDragMode" &&
+						state.state.status === "schemaMenuOpen"
+					) {
+						menu = state.state;
+						suggestion = { pin: state.pin };
+					}
+
+					if (!menu) return;
+
+					const resolved = resolveGraphEditorByRef(ctx, menu);
+					if (!resolved) return;
+
+					return {
+						...menu,
+						graph: resolved.graph,
+						bounds: resolved.bounds,
+						groupId: resolved.groupId,
+						suggestion,
+					};
 				})()}
 			>
 				{(data) => {
-					const graph = currentGraph;
-					// Solid.createMemo(() => {
-					//   return ctx.core.project.graphs.get(data().graph.id);
-					// });
-
-					Solid.createEffect(() => {
-						if (!graph()) ctx.setState({ status: "idle" });
-					});
-
 					const graphPosition = () =>
-						toGraphSpace(data().position, ctx.graphBounds, data().graph.state);
+						toGraphSpace(data().position, data().bounds, data().graph.state);
 
 					return (
-						<Solid.Show when={graph()}>
-							{(graph) => (
-								<SchemaMenu
+						<SchemaMenu
 									suggestion={data().suggestion}
 									graphModel={data().graph.model}
 									position={{
@@ -547,17 +633,14 @@ function ProjectInterface() {
 										);
 
 										if (item.type === "selection") {
-											const graph = currentGraph();
-											if (!graph) return;
-
-											const { model, state } = graph;
+											const { model, state } = data().graph;
 
 											const mousePosition = toGraphSpace(
 												{
-													x: data().position.x - (rootBounds.left ?? 0),
-													y: data().position.y - (rootBounds.top ?? 0) + 40,
+													x: data().position.x,
+													y: data().position.y + 40,
 												},
-												ctx.graphBounds,
+												data().bounds,
 												state,
 											);
 
@@ -652,9 +735,7 @@ function ProjectInterface() {
 											}
 										});
 									}}
-								/>
-							)}
-						</Solid.Show>
+						/>
 					);
 				}}
 			</Solid.Show>
@@ -732,8 +813,7 @@ let mosaicChordTimer: ReturnType<typeof setTimeout> | undefined;
 
 function createKeydownShortcuts(
 	currentGraph: Solid.Accessor<CurrentGraph | undefined>,
-	hoveredGraph: Solid.Accessor<CurrentGraph | undefined>,
-	graphBounds: GraphBounds,
+	hoveredGroupId: Solid.Accessor<string | null>,
 	ctx: ReturnType<typeof useInterfaceContext>,
 ) {
 	const platform = usePlatform();
@@ -931,20 +1011,26 @@ function createKeydownShortcuts(
 					await platform.clipboard.readText(),
 				);
 
+				const target = resolveGraphEditorContext(
+					ctx,
+					hoveredGroupId(),
+					mouse,
+				);
+				if (!target) break;
+
+				if (target.groupId !== ctx.mosaicState.focusedGroupId) {
+					ctx.setMosaicState("focusedGroupId", target.groupId);
+				}
+
 				switch (item.type) {
 					case "selection": {
-						const graph = hoveredGraph();
-						if (!graph) return;
-
-						const { model, state } = graph;
+						const { model, state } = target.graph;
 
 						const mousePosition = toGraphSpace(
 							{ x: mouse.x - 10, y: mouse.y - 10 },
-							graphBounds,
+							target.bounds,
 							state,
 						);
-
-						console.log({ item, mousePosition });
 
 						ctx.execute("pasteGraphSelection", {
 							...graphRefOf(model),
@@ -955,7 +1041,12 @@ function createKeydownShortcuts(
 						break;
 					}
 					case "graph": {
-						ctx.execute("pasteGraph", item.graph);
+						await ctx.execute("pasteGraph", item.graph);
+						const graph = ctx.core.project.getGraphByKind(
+							"graph",
+							item.graph.id,
+						);
+						if (graph) ctx.selectGraphInGroup(target.groupId, graph);
 
 						break;
 					}
@@ -981,6 +1072,7 @@ function createKeydownShortcuts(
 					ctx.setState({
 						status: "schemaMenuOpen",
 						position: { x: mouse.x, y: mouse.y },
+						...graphRefOf(graph.model),
 					});
 				}
 
@@ -1465,6 +1557,11 @@ function GraphTabList(props: {
 					props.onFocus();
 				}, 1);
 			}}
+			onMouseEnter={() => props.setHoveredGroupId(props.groupId)}
+			onMouseMove={() => props.setHoveredGroupId(props.groupId)}
+			onMouseLeave={() =>
+				props.setHoveredGroupId(ctx.mosaicState.focusedGroupId)
+			}
 		>
 			<Solid.Show when={splitEdge()}>
 				{(edge) => <SplitDropOverlay edge={edge()} />}
@@ -1594,14 +1691,12 @@ function GraphTabList(props: {
 					return (
 						<Graph
 							graph={graph}
-							state={tab}
+							state={normalizeGraphEditorTab(tab)}
+							mosaicGroupId={props.groupId}
 							style={{
 								"background-color":
 									tabTintBackground(tint, "#262626") ?? undefined,
 							}}
-							onMouseEnter={() => props.setHoveredGroupId(props.groupId)}
-							onMouseMove={() => props.setHoveredGroupId(props.groupId)}
-							onMouseLeave={() => props.setHoveredGroupId(null)}
 							onBoundsChange={ctx.setGraphBounds}
 							onSizeChange={ctx.setGraphBounds}
 							onScaleChange={setGraphScale}

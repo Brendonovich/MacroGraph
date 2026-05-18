@@ -1,5 +1,5 @@
 import type { HistoryActions } from "@macrograph/action-history";
-import type { GraphKind } from "@macrograph/runtime";
+import type { GraphKind, GraphRef } from "@macrograph/runtime";
 import { batch, createRoot, createSignal } from "solid-js";
 
 export type RemoteHistoryWireItem = { type: string; entry: unknown };
@@ -69,6 +69,27 @@ export function runAsRemoteHistoryInbound<T>(fn: () => T): T {
 
 let actionsRef: HistoryActions | null = null;
 
+export type RemoteSyncDebugLogger = (
+	level: "log" | "warn" | "error",
+	message: string,
+	data?: unknown,
+) => void;
+
+let remoteSyncDebugLogger: RemoteSyncDebugLogger | null = null;
+
+/** Optional logger (e.g. remote editor sets this on connect). */
+export function setRemoteSyncDebugLogger(logger: RemoteSyncDebugLogger | null) {
+	remoteSyncDebugLogger = logger;
+}
+
+function syncDebug(
+	level: "log" | "warn" | "error",
+	message: string,
+	data?: unknown,
+) {
+	remoteSyncDebugLogger?.(level, message, data);
+}
+
 /** Registers perform handlers for the active editor session (cleared on unmount). */
 export function registerRemoteHistoryActions(actions: HistoryActions | null) {
 	actionsRef = actions;
@@ -80,17 +101,36 @@ export function applyRemoteHistoryItems(items: RemoteHistoryWireItem[]) {
 		console.warn("applyRemoteHistoryItems: no editor session registered");
 		return;
 	}
+	if (!Array.isArray(items)) {
+		const msg = "applyRemoteHistoryItems: items is not an array";
+		console.warn(msg, items);
+		syncDebug("warn", msg, { itemsType: typeof items, items });
+		return;
+	}
 	batch(() => {
-		for (const it of items) {
+		for (let i = 0; i < items.length; i++) {
+			const it = items[i]!;
+			syncDebug("log", `applyRemoteHistoryItems[${i}]`, {
+				type: it.type,
+				entry: it.entry,
+			});
 			const a = actions[it.type] as { perform: (e: unknown) => unknown } | undefined;
 			if (a?.perform) {
 				try {
 					a.perform(it.entry);
 				} catch (e) {
 					console.error("applyRemoteHistoryItems", it.type, e);
+					syncDebug("error", `applyRemoteHistoryItems failed: ${it.type}`, {
+						index: i,
+						entry: it.entry,
+						error: e instanceof Error ? e.message : String(e),
+						stack: e instanceof Error ? e.stack : undefined,
+					});
 				}
 			} else {
-				console.warn("Unknown remote history action:", it.type);
+				const msg = `Unknown remote history action: ${it.type}`;
+				console.warn(msg);
+				syncDebug("warn", msg, { index: i, entry: it.entry });
 			}
 		}
 	});
@@ -114,14 +154,35 @@ export function applySetGraphItemPositionsPerform(entry: WireGraphPositionsEphem
 		console.warn("applySetGraphItemPositionsPerform: no editor session registered");
 		return;
 	}
+	if (!entry?.items || !Array.isArray(entry.items)) {
+		const msg = "applySetGraphItemPositionsPerform: invalid items";
+		console.warn(msg, entry);
+		syncDebug("warn", msg, {
+			graphKind: entry?.graphKind,
+			graphId: entry?.graphId,
+			itemsType: typeof entry?.items,
+			items: entry?.items,
+		});
+		return;
+	}
 	batch(() => {
 		try {
+			syncDebug("log", "applySetGraphItemPositionsPerform", {
+				graphKind: entry.graphKind,
+				graphId: entry.graphId,
+				itemCount: entry.items.length,
+			});
 			const act = actions as unknown as {
 				setGraphItemPositions: { perform: (e: unknown) => unknown };
 			};
 			act.setGraphItemPositions.perform(entry);
 		} catch (e) {
 			console.error("applySetGraphItemPositionsPerform", e);
+			syncDebug("error", "applySetGraphItemPositionsPerform failed", {
+				entry,
+				error: e instanceof Error ? e.message : String(e),
+				stack: e instanceof Error ? e.stack : undefined,
+			});
 		}
 	});
 }
@@ -336,18 +397,27 @@ export function parseCursorMessage(
 	return { id, graphKind, graphId, position, viewportCenter: viewportCenter ?? undefined };
 }
 
-export function stringifyNodeExecuteWire(graphId: number, nodeId: number): string {
-	return JSON.stringify({ type: "nodeExecute", graphId, nodeId });
+export function stringifyNodeExecuteWire(
+	ref: Pick<GraphRef, "graphKind" | "graphId">,
+	nodeId: number,
+): string {
+	return JSON.stringify({
+		type: "nodeExecute",
+		graphKind: ref.graphKind,
+		graphId: ref.graphId,
+		nodeId,
+	});
 }
 
 export function parseNodeExecuteMessage(
 	body: Record<string, unknown>,
-): { graphId: number; nodeId: number } | null {
+): { graphKind: GraphKind; graphId: number; nodeId: number } | null {
 	if (body.type !== "nodeExecute") return null;
 	const graphId = parseWireNumber(body.graphId);
 	const nodeId = parseWireNumber(body.nodeId);
 	if (graphId == null || nodeId == null) return null;
-	return { graphId, nodeId };
+	const graphKind = parseWireGraphKind(body.graphKind);
+	return { graphKind, graphId, nodeId };
 }
 
 export function parseGraphPositionsEphemeralMessage(

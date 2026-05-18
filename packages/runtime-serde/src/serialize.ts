@@ -240,7 +240,6 @@ export function serializeQueue(
 		graphId: q.graphId,
 		items: q.items.map((item) => serializeValue(item, q.itemType)),
 		paused: q.paused,
-		concurrent: q.concurrent,
 		type: q.itemType.serialize(),
 	};
 }
@@ -259,7 +258,6 @@ export function serializeFunctionQueue(
 			waitingGraphId: item.waitingGraphId,
 		})),
 		paused: q.paused,
-		concurrent: q.concurrent,
 	};
 }
 

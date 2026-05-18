@@ -154,6 +154,23 @@ export function pkg(core?: any) {
 	});
 
 	pkg.createSchema({
+		name: "Advance Function Queue",
+		type: "exec",
+		properties: { queue: functionQueueProperty },
+		createIO() {
+			return {};
+		},
+		async run({ ctx, properties, graph, node }: any) {
+			const queueId = ctx.getProperty(properties.queue);
+			if (queueId === undefined) return;
+			const queue = graph.project.functionQueues.get(queueId);
+			if (!queue) return;
+
+			queue.advance(node);
+		},
+	});
+
+	pkg.createSchema({
 		name: "Function Queue Length",
 		type: "pure",
 		properties: { queue: functionQueueProperty },

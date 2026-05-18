@@ -6,6 +6,7 @@ import {
 	parseCursorMessage,
 	parsePinDragMessage,
 	parseSelectionBoxMessage,
+	readInvocationLogEntries,
 	runAsRemoteHistoryInbound,
 	stringifyGraphPositionsEphemeralWire,
 	stringifyCursorWire,
@@ -19,6 +20,7 @@ import {
 	removeRemoteSelectionBox,
 	setUserList,
 	type RemoteHistoryWireItem,
+	type WireCursorPosition,
 	type WireGraphPositionsEphemeral,
 } from "@macrograph/interface";
 import {
@@ -28,7 +30,13 @@ import {
 	setHostMirrorBroadcast,
 	type HostMirrorPayload,
 } from "@macrograph/packages";
-import { NODE_EMIT, rerunNodeFromInvocationSnapshot, type Core } from "@macrograph/runtime";
+import {
+	graphRefOf,
+	NODE_EMIT,
+	rerunNodeFromInvocationSnapshot,
+	type Core,
+	type GraphKind,
+} from "@macrograph/runtime";
 import {
 	serializeProject,
 	type NodeInvocationFileRow,
@@ -46,6 +54,18 @@ export function setHostGraphLivePointerSession(active: boolean) {
 }
 
 const userNames = new Map<number, string>();
+
+function parseRpcGraphKind(v: unknown): GraphKind {
+	if (
+		v === "graph" ||
+		v === "function" ||
+		v === "queue" ||
+		v === "functionQueue"
+	) {
+		return v;
+	}
+	return "graph";
+}
 
 const OBS_PKG_NAME = "OBS Websocket";
 const TWITCH_PKG_NAME = "Twitch Events";
@@ -134,12 +154,19 @@ async function handleRemoteRpcRequest(opts: {
 			}
 			result = await obs.callBatch(p.requests);
 		} else if (method === "rerunNode") {
-			const p = params as { graphId?: number; nodeId?: number; inputs?: Record<string, unknown>; eventData?: unknown };
+			const p = params as {
+				graphKind?: unknown;
+				graphId?: number;
+				nodeId?: number;
+				inputs?: Record<string, unknown>;
+				eventData?: unknown;
+			};
 			if (typeof p.graphId !== "number" || typeof p.nodeId !== "number") {
 				throw new Error("Invalid rerunNode params.");
 			}
-			const graph = core.project.graphs.get(p.graphId);
-			if (!graph) throw new Error(`Graph ${p.graphId} not found`);
+			const graphKind = parseRpcGraphKind(p.graphKind);
+			const graph = core.project.getGraphByKind(graphKind, p.graphId);
+			if (!graph) throw new Error(`Graph ${graphKind}:${p.graphId} not found`);
 			const node = graph.nodes.get(p.nodeId);
 			if (!node) throw new Error(`Node ${p.nodeId} not found`);
 			await rerunNodeFromInvocationSnapshot(node, {
@@ -148,16 +175,17 @@ async function handleRemoteRpcRequest(opts: {
 			});
 			result = undefined;
 		} else if (method === "getNodeInvocations") {
-			const p = params as { graphId?: number; nodeId?: number };
+			const p = params as { graphKind?: unknown; graphId?: number; nodeId?: number };
 			if (typeof p.graphId !== "number" || typeof p.nodeId !== "number") {
 				throw new Error("Invalid getNodeInvocations params.");
 			}
-			const rows = await exportInvocationLogForGraphs(
-				[p.graphId],
+			const graphKind = parseRpcGraphKind(p.graphKind);
+			const entries = await readInvocationLogEntries(
 				workspaceKey,
-			).catch((): NodeInvocationFileRow[] => []);
-			const match = rows.find((r) => r.nodeId === p.nodeId);
-			result = { entries: match?.entries ?? [] };
+				{ graphKind, graphId: p.graphId },
+				p.nodeId,
+			).catch(() => []);
+			result = { entries };
 		} else if (method === "twitch.enableAccount") {
 			const p = params as { credentialId?: string };
 			if (typeof p.credentialId !== "string") {
@@ -199,7 +227,7 @@ export function broadcastRemoteHostGraphPositionsLive(
 ) {
 	if (!remoteHostSettings.enabled) return;
 	const port = remoteHostSettings.port;
-	const data = stringifyGraphPositionsEphemeralWire(payload.graphId, payload.items);
+	const data = stringifyGraphPositionsEphemeralWire(payload, payload.items);
 	void client.mutation([
 		"remoteHost.send",
 		{
@@ -238,7 +266,9 @@ function flushCursorRelays() {
 }
 
 /** Broadcast host cursor position to all remote clients. */
-export function broadcastRemoteHostCursorPosition(payload: { graphId: number; position: { x: number; y: number }; viewportCenter?: { x: number; y: number } }) {
+export function broadcastRemoteHostCursorPosition(
+	payload: Omit<WireCursorPosition, "id">,
+) {
 	if (!remoteHostSettings.enabled) return;
 	const port = remoteHostSettings.port;
 	const data = stringifyCursorWire({ id: "host", ...payload });
@@ -343,7 +373,13 @@ export function installRemoteHostBridge(opts: {
 						opts.projectUrl() ?? "default",
 					).catch((): NodeInvocationFileRow[] => []),
 					collectHostMirrorPayload(opts.core).catch(
-						(): HostMirrorPayload => ({ v: 2, credentials: [], twitchUsers: [], twitchPersisted: {}, slices: [] }),
+						(): HostMirrorPayload => ({
+							v: 2,
+							credentials: [],
+							twitchUsers: [],
+							twitchPersisted: {},
+							slices: {},
+						}),
 					),
 				]);
 				await client.mutation([
@@ -373,7 +409,13 @@ export function installRemoteHostBridge(opts: {
 					return;
 				}
 				if (msg === "Disconnected") {
+					const name = userNames.get(clientId);
 					userNames.delete(clientId);
+					if (name) {
+						removeRemoteCursor(name);
+						removeRemotePinDrag(name);
+						removeRemoteSelectionBox(name);
+					}
 					broadcastUserList(port);
 					return;
 				}
@@ -443,10 +485,7 @@ export function installRemoteHostBridge(opts: {
 					if (hostGraphLiveFromLocal()) return;
 					runAsRemoteHistoryInbound(() => applySetGraphItemPositionsPerform(live));
 					const relayPort = port;
-					const relayData = stringifyGraphPositionsEphemeralWire(
-						live.graphId,
-						live.items,
-					);
+					const relayData = stringifyGraphPositionsEphemeralWire(live, live.items);
 					void client.mutation([
 						"remoteHost.send",
 						{
@@ -541,7 +580,7 @@ export function installRemoteHostBridge(opts: {
 		if (!remoteHostSettings.enabled) return;
 		cleanupNodeEmit = NODE_EMIT.onAny((node) => {
 			const port = remoteHostSettings.port;
-			const data = stringifyNodeExecuteWire(node.graph.id, node.id);
+			const data = stringifyNodeExecuteWire(graphRefOf(node.graph), node.id);
 			void client.mutation([
 				"remoteHost.send",
 				{ port, client: null, data },

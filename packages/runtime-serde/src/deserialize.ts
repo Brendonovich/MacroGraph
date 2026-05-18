@@ -411,7 +411,6 @@ export function deserializeFunctionQueue(
 		waitingGraphId: item.waitingGraphId,
 	}));
 	queue.paused = data.paused ?? false;
-	queue.concurrent = data.concurrent ?? false;
 	return queue;
 }
 
@@ -468,7 +467,6 @@ export function deserializeQueue(
 	const rawItems = "value" in rawData ? rawData.value : rawData.items ?? [];
 	queue.items = (rawItems as any[]).map((item: any) => deserializeValue(item, type));
 	queue.paused = data.paused ?? false;
-	queue.concurrent = data.concurrent ?? false;
 	return queue;
 }
 

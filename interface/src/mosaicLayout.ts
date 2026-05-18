@@ -1,7 +1,10 @@
 import type { SetStoreFunction } from "solid-js/store";
 import { reconcile } from "solid-js/store";
 
-import type { TabState } from "./components/Graph/Context";
+import type { GraphKind } from "@macrograph/runtime";
+
+import { isGraphEditorTab, type TabState } from "./components/Graph/Context";
+import { randomUUID } from "./randomUUID";
 
 export type MosaicLeaf = { type: "leaf"; groupId: string };
 export type MosaicSplit = {
@@ -59,7 +62,7 @@ const MAX_RATIO = 0.85;
 const DEFAULT_RATIO = 0.5;
 
 export function createGroupId(): string {
-	return crypto.randomUUID();
+	return randomUUID();
 }
 
 export function createLeafGroup(): TabListState {
@@ -677,4 +680,101 @@ export function detectDropTarget(
 		return { kind: "content", groupId };
 	}
 	return null;
+}
+
+export function isGraphEditorOpenInMosaic(
+	groups: TabListState[],
+	graphKind: GraphKind,
+	graphId: number,
+): boolean {
+	return groups.some((g) =>
+		g.tabs.some(
+			(t) =>
+				isGraphEditorTab(t) &&
+				t.graphKind === graphKind &&
+				t.graphId === graphId,
+		),
+	);
+}
+
+export function findMosaicGroupWithGraphTab(
+	groups: TabListState[],
+	graphKind: GraphKind,
+	graphId: number,
+): { groupId: string; tabIndex: number } | undefined {
+	for (const group of groups) {
+		const tabIndex = group.tabs.findIndex(
+			(t) =>
+				isGraphEditorTab(t) &&
+				t.graphKind === graphKind &&
+				t.graphId === graphId,
+		);
+		if (tabIndex >= 0) return { groupId: group.id, tabIndex };
+	}
+	return undefined;
+}
+
+/** True when the pointer is over any graph editor viewport (multi-pane safe). */
+export function isPointerOverGraphViewport(
+	clientX: number,
+	clientY: number,
+): boolean {
+	const viewports = document.querySelectorAll<HTMLElement>(
+		"[data-graph-viewport]",
+	);
+	for (const viewport of viewports) {
+		const rect = viewport.getBoundingClientRect();
+		if (
+			clientX >= rect.left &&
+			clientX <= rect.right &&
+			clientY >= rect.top &&
+			clientY <= rect.bottom
+		) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/** Mosaic pane under the cursor (tab bar or graph content). */
+export function findMosaicGroupIdAtPoint(
+	clientX: number,
+	clientY: number,
+): string | null {
+	const panes = document.querySelectorAll<HTMLElement>("[data-mosaic-group-id]");
+	for (const pane of panes) {
+		const groupId = pane.dataset.mosaicGroupId;
+		if (!groupId) continue;
+		const rect = pane.getBoundingClientRect();
+		if (
+			clientX >= rect.left &&
+			clientX <= rect.right &&
+			clientY >= rect.top &&
+			clientY <= rect.bottom
+		) {
+			return groupId;
+		}
+	}
+	return null;
+}
+
+export function getGraphViewportBounds(groupId: string): {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+} | null {
+	const pane = document.querySelector<HTMLElement>(
+		`[data-mosaic-group-id="${CSS.escape(groupId)}"]`,
+	);
+	const viewport = pane?.querySelector<HTMLElement>("[data-graph-viewport]");
+	if (!viewport) return null;
+	const rect = viewport.getBoundingClientRect();
+	if (rect.width <= 0 || rect.height <= 0) return null;
+	return {
+		x: rect.left,
+		y: rect.top,
+		width: rect.width,
+		height: rect.height,
+	};
 }

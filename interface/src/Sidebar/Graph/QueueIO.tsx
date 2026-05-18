@@ -43,22 +43,6 @@ function QueueSettings(props: { queue: Queue }) {
 						/>
 						<span class="text-sm text-neutral-200">Paused</span>
 					</label>
-					<label class="flex flex-row items-center gap-2 cursor-pointer">
-						<input
-							type="checkbox"
-							checked={props.queue.concurrent}
-							onChange={(e) => {
-								ctx.execute("setQueueConcurrent", {
-									queueId: props.queue.id,
-									concurrent: e.currentTarget.checked,
-								});
-							}}
-							class="rounded border-neutral-600"
-						/>
-						<span class="text-sm text-neutral-200">
-							Concurrent Execution
-						</span>
-					</label>
 					<div class="text-xs text-neutral-400">
 						{props.queue.items.length} item{props.queue.items.length !== 1 ? 's' : ''} in queue
 					</div>

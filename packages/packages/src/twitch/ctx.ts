@@ -59,6 +59,7 @@ export function createCtx(core: Core) {
 	return {
 		core,
 		auth,
+		persisted,
 		helixClient,
 		eventSub,
 		setup,

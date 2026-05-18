@@ -133,13 +133,14 @@ export function NodeInfo(props: { node: Node }) {
 				void ctx.hydrateNodeInvocationLog(graphRefOf(props.node.graph), nodeId);
 
 				if (props.node.graph.project.core.remoteShell) {
+					const ref = graphRefOf(props.node.graph);
 					remoteHostRpcRequest({
 						method: "getNodeInvocations",
-						params: { graphId, nodeId },
+						params: { ...ref, nodeId },
 					})
 						.then((result) => {
 							ctx.setNodeInvocationEntries(
-								graphId,
+								ref,
 								nodeId,
 								(result as { entries: StoredNodeInvocation[] }).entries,
 							);

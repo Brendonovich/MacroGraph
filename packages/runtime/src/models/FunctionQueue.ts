@@ -3,6 +3,7 @@ import { createMutable } from "solid-js/store";
 
 import { trackDeep } from "@solid-primitives/deep";
 import { createEffect, createRoot, getOwner, on, runWithOwner } from "solid-js";
+import type { Node } from "./Node";
 import { ExecutionContext } from "./Core";
 import type { Project } from "./Project";
 import { DataOutput } from "./IO";
@@ -30,9 +31,11 @@ export class FunctionQueue extends Disposable {
 
 	items: FnQueueItem[] = [];
 	paused: boolean = false;
-	concurrent: boolean = false;
 	processing: boolean = false;
-	iterateFired: boolean = false;
+	inFlight: number = 0;
+
+	private runningItems = new Set<FnQueueItem>();
+	private drainWaiters: Array<() => void> = [];
 
 	constructor(args: FunctionQueueArgs) {
 		super();
@@ -66,11 +69,11 @@ export class FunctionQueue extends Disposable {
 	}
 
 	addItem(item: FnQueueItem): Promise<Record<string, any>> {
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			item.resolve = resolve;
 			this.items = [...this.items, item];
 			if (!this.paused) {
-				this.startProcessing();
+				void this.startProcessing();
 			}
 		});
 	}
@@ -78,7 +81,7 @@ export class FunctionQueue extends Disposable {
 	setPaused(value: boolean) {
 		this.paused = value;
 		if (!value && this.items.length > 0) {
-			this.startProcessing();
+			void this.startProcessing();
 		}
 	}
 
@@ -91,69 +94,144 @@ export class FunctionQueue extends Disposable {
 		this.items = this.items.filter((i) => i.functionId !== functionId);
 	}
 
+	advance(node?: Node): boolean {
+		if (this.paused) {
+			this.owner.core.error("Function queue is paused", node);
+			return false;
+		}
+
+		const next = this.items.find((item) => !this.runningItems.has(item));
+		if (!next) {
+			this.owner.core.error("No waiting items to advance", node);
+			return false;
+		}
+
+		void this.runFunctionItem(next);
+
+		if (!this.processing && this.items.length > 0 && !this.paused) {
+			void this.startProcessing();
+		}
+
+		return true;
+	}
+
+	private async drainInFlight() {
+		if (this.inFlight === 0) return;
+		await new Promise<void>((resolve) => {
+			this.drainWaiters.push(resolve);
+		});
+	}
+
+	private notifyDrain() {
+		if (this.inFlight === 0) {
+			const waiters = this.drainWaiters;
+			this.drainWaiters = [];
+			for (const resolve of waiters) resolve();
+		}
+	}
+
 	async startProcessing() {
 		if (this.processing) return;
 
 		this.processing = true;
 		try {
 			while (this.items.length > 0 && !this.paused) {
+				if (this.inFlight > 0) {
+					await this.drainInFlight();
+				}
+
 				const item = this.items[0];
-				if (item.functionId === undefined) {
-					this.items.shift();
+				if (!item || this.runningItems.has(item)) {
+					if (this.inFlight > 0) await this.drainInFlight();
+					if (this.items.length === 0 || this.paused) break;
+					const head = this.items[0];
+					if (!head || this.runningItems.has(head)) break;
 					continue;
 				}
 
-				const fn = this.owner.functions.get(item.functionId);
-				if (!fn) {
-					if (item.resolve) item.resolve({});
-					this.items.shift();
-					continue;
-				}
-
-				const fnGraph = this.owner.getGraphByKind("function", fn.graphId);
-				if (!fnGraph) {
-					if (item.resolve) item.resolve({});
-					this.items.shift();
-					continue;
-				}
-
-				const inNode = [...fnGraph.nodes.values()].find(
-					(n: any) => n.schema.name === "Function Input",
-				) ?? [...fnGraph.nodes.values()][0];
-				if (!inNode) {
-					if (item.resolve) item.resolve({});
-					this.items.shift();
-					continue;
-				}
-
-				const execCtx = new ExecutionContext(inNode);
-
-				const scope = new Map<string, any>();
-				execCtx.variableScope = scope;
-				for (const v of fnGraph.variables ?? []) {
-					scope.set(`graph:${v.id}`, v.type.default());
-				}
-
-				for (const [key, value] of Object.entries(item.data ?? {})) {
-					for (const n of fnGraph.nodes.values()) {
-						if (n.schema.name !== "Function Input") continue;
-						const out = n.state.outputs.find((o: any) => o.id === `gin:${key}`);
-						if (out) execCtx.data.set(out, value);
-					}
-				}
-
-				if (this.concurrent) {
-					this.items.shift();
-					const promise = execCtx.runAsync({});
-					promise.then(() => this.finishItem(item, execCtx, fnGraph));
-				} else {
-					await execCtx.runAsync({});
-					this.items.shift();
-					await this.finishItem(item, execCtx, fnGraph);
-				}
+				await this.runFunctionItem(item);
 			}
 		} finally {
 			this.processing = false;
+			if (this.items.length > 0 && !this.paused && this.inFlight === 0) {
+				void this.startProcessing();
+			}
+		}
+	}
+
+	private async runFunctionItem(item: FnQueueItem) {
+		if (this.runningItems.has(item)) return;
+
+		if (item.functionId === undefined) {
+			this.removeItem(item);
+			return;
+		}
+
+		const fn = this.owner.functions.get(item.functionId);
+		if (!fn) {
+			if (item.resolve) item.resolve({});
+			this.removeItem(item);
+			return;
+		}
+
+		const fnGraph = this.owner.getGraphByKind("function", fn.graphId);
+		if (!fnGraph) {
+			if (item.resolve) item.resolve({});
+			this.removeItem(item);
+			return;
+		}
+
+		const inNode =
+			[...fnGraph.nodes.values()].find(
+				(n: any) => n.schema.name === "Function Input",
+			) ?? [...fnGraph.nodes.values()][0];
+		if (!inNode) {
+			if (item.resolve) item.resolve({});
+			this.removeItem(item);
+			return;
+		}
+
+		this.runningItems.add(item);
+		this.inFlight++;
+
+		try {
+			const execCtx = new ExecutionContext(inNode);
+
+			const scope = new Map<string, any>();
+			execCtx.variableScope = scope;
+			for (const v of fnGraph.variables ?? []) {
+				scope.set(`graph:${v.id}`, v.type.default());
+			}
+
+			for (const [key, value] of Object.entries(item.data ?? {})) {
+				for (const n of fnGraph.nodes.values()) {
+					if (n.schema.name !== "Function Input") continue;
+					const out = n.state.outputs.find((o: any) => o.id === `gin:${key}`);
+					if (out) execCtx.data.set(out, value);
+				}
+			}
+
+			await execCtx.runAsync({});
+			await this.finishItem(item, execCtx, fnGraph);
+		} finally {
+			this.runningItems.delete(item);
+			this.removeItem(item);
+			this.inFlight--;
+			this.notifyDrain();
+
+			if (!this.processing && this.items.length > 0 && !this.paused) {
+				void this.startProcessing();
+			}
+		}
+	}
+
+	private removeItem(item: FnQueueItem) {
+		const idx = this.items.indexOf(item);
+		if (idx >= 0) {
+			this.items = [
+				...this.items.slice(0, idx),
+				...this.items.slice(idx + 1),
+			];
 		}
 	}
 
@@ -212,8 +290,6 @@ export class FunctionQueue extends Disposable {
 				}
 			}
 		}
-
-		this.iterateFired = true;
 
 		const queuePkg = this.owner.core.packages.find(
 			(p) => p.name === "Function Queue",

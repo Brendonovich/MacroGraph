@@ -154,7 +154,20 @@ export function createCtx() {
 				voiceChanger?: boolean;
 				hearVoice?: boolean;
 			};
-			setVoices(new Map(d.voiceEntries ?? []));
+			const voiceEntries = d.voiceEntries;
+			setVoices(
+				new Map(
+					Array.isArray(voiceEntries)
+						? voiceEntries.filter(
+								(e): e is [string, string] =>
+									Array.isArray(e) &&
+									e.length === 2 &&
+									typeof e[0] === "string" &&
+									typeof e[1] === "string",
+							)
+						: [],
+				),
+			);
 			if (typeof d.voiceChanger === "boolean") setVoiceChanger(d.voiceChanger);
 			if (typeof d.hearVoice === "boolean") setHearVoice(d.hearVoice);
 		},
