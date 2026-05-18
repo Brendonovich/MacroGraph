@@ -26,6 +26,9 @@ import {
 } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
 
+const IO_ROW_REM = 5.5;
+const IO_SCROLL_AFTER = 6;
+
 export function FieldList(props: {
 	title: string;
 	items: IoFieldDef[];
@@ -33,6 +36,8 @@ export function FieldList(props: {
 	onDelete: (id: string) => void;
 	onRename: (id: string, name: string) => void;
 	onTypeChange: (id: string, type: t.Any) => void;
+	/** Size to content instead of a fixed sidebar height (for script resources). */
+	fitContent?: boolean;
 }) {
 	const ctx = useInterfaceContext();
 	const [search, setSearch] = createSignal("");
@@ -45,8 +50,11 @@ export function FieldList(props: {
 	const resolveType = (field: IoFieldDef) =>
 		deserializeType(field.type, ctx.core.project.getType.bind(ctx.core.project));
 
+	const fitContent = () => props.fitContent ?? false;
+	const itemCount = () => filtered().length;
+
 	return (
-		<SidebarSection title={props.title}>
+		<SidebarSection title={props.title} fitContent={fitContent()}>
 			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
 				<SearchInput
 					value={search()}
@@ -67,7 +75,16 @@ export function FieldList(props: {
 					<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
 				</IconButton>
 			</div>
-			<div class="flex-1 overflow-y-auto max-h-64">
+			<div
+				class="overflow-y-auto"
+				style={
+					fitContent()
+						? itemCount() > IO_SCROLL_AFTER
+							? { "max-height": `${IO_SCROLL_AFTER * IO_ROW_REM}rem` }
+							: undefined
+						: { "max-height": "16rem" }
+				}
+			>
 				<ul class="flex flex-col divide-y divide-neutral-700 px-2">
 					<For each={filtered()}>
 						{(item) => (

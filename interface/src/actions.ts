@@ -1,4 +1,5 @@
 import { abort, historyAction } from "@macrograph/action-history";
+import { DEFAULT_SCRIPT_RESOURCE_JSON } from "@macrograph/packages/src/script";
 import type { ClipboardItem } from "@macrograph/clipboard";
 import type { Option } from "@macrograph/option";
 import {
@@ -3533,11 +3534,23 @@ export const historyActions = (core: Core, editor: EditorState) => {
 					?.resource(entry.type);
 				if (!type) return;
 
-				return core.project.createResource({
+				core.project.createResource({
 					id: entry.id,
 					type,
-					name: "New Resource",
+					name:
+						entry.package === "Script" && entry.type === "Script"
+							? "New Script"
+							: "New Resource",
 				});
+
+				if (entry.package === "Script" && entry.type === "Script") {
+					const item = core.project.resources
+						.get(type)
+						?.items.find((i) => i.id === entry.id);
+					if (item && "value" in item) {
+						item.value = DEFAULT_SCRIPT_RESOURCE_JSON;
+					}
+				}
 			},
 			rewind(entry) {
 				const type = core.packages
@@ -3654,26 +3667,52 @@ export const historyActions = (core: Core, editor: EditorState) => {
 			perform(entry) {
 				const type = getResourceType(entry);
 				if (!type) return;
-				const item = core.project.resources
-					.get(type)
-					?.items.find((i) => i.id === entry.resourceId);
-				if (!item) return;
+				const resource = core.project.resources.get(type);
+				const item = resource?.items.find((i) => i.id === entry.resourceId);
+				if (!item || !resource) return;
 
-				if ("value" in (entry as any) && "value" in item) item.value = (entry as any).value;
-				else if ("sourceId" in item && "sourceId" in (entry as any))
-					item.sourceId = (entry as any).sourceId;
+				if ("value" in (entry as any) && "value" in item) {
+					const idx = resource.items.indexOf(item);
+					if (idx !== -1) {
+						resource.items[idx] = {
+							...item,
+							value: (entry as any).value,
+						};
+					}
+				} else if ("sourceId" in item && "sourceId" in (entry as any)) {
+					const idx = resource.items.indexOf(item);
+					if (idx !== -1) {
+						resource.items[idx] = {
+							...item,
+							sourceId: (entry as any).sourceId,
+						};
+					}
+				}
 			},
 			rewind(entry) {
 				const type = getResourceType(entry);
 				if (!type) return;
-				const item = core.project.resources
-					.get(type)
-					?.items.find((i) => i.id === entry.resourceId);
-				if (!item) return;
+				const resource = core.project.resources.get(type);
+				const item = resource?.items.find((i) => i.id === entry.resourceId);
+				if (!item || !resource) return;
 
-				if ("value" in (entry as any) && "value" in item) item.value = (entry as any).prevValue;
-				else if ("sourceId" in item && "sourceId" in (entry as any))
-					item.sourceId = (entry as any).prevSourceId;
+				if ("value" in (entry as any) && "value" in item) {
+					const idx = resource.items.indexOf(item);
+					if (idx !== -1) {
+						resource.items[idx] = {
+							...item,
+							value: (entry as any).prevValue,
+						};
+					}
+				} else if ("sourceId" in item && "sourceId" in (entry as any)) {
+					const idx = resource.items.indexOf(item);
+					if (idx !== -1) {
+						resource.items[idx] = {
+							...item,
+							sourceId: (entry as any).prevSourceId,
+						};
+					}
+				}
 			},
 		}),
 		deleteResource: historyAction({

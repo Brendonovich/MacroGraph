@@ -3,6 +3,7 @@ import { createEventListenerMap } from "@solid-primitives/event-listener";
 import { makePersisted } from "@solid-primitives/storage";
 import clsx from "clsx";
 import {
+	Show,
 	type ParentProps,
 	createRoot,
 	createSignal,
@@ -47,7 +48,7 @@ export function Sidebar(props: SidebarProps) {
 const MIN_HEIGHT = 250;
 
 export function SidebarSection(
-	props: ParentProps<{ title: string; class?: string }>,
+	props: ParentProps<{ title: string; class?: string; fitContent?: boolean }>,
 ) {
 	const [height, setHeight] = makePersisted(createSignal(MIN_HEIGHT), {
 		name: `sidebar-section-${props.title}-height`,
@@ -69,40 +70,42 @@ export function SidebarSection(
 			<Accordion.Content class="ui-closed:animate-accordion-up ui-expanded:animate-accordion-down transition-all overflow-hidden">
 				<div
 					class={clsx("flex flex-col text-sm", props.class)}
-					style={{ height: `${height()}px` }}
+					style={props.fitContent ? undefined : { height: `${height()}px` }}
 				>
 					{props.children}
 				</div>
-				<div
-					onMouseDown={(downEvent) => {
-						downEvent.stopPropagation();
-						if (downEvent.button !== 0) return;
+				<Show when={!props.fitContent}>
+					<div
+						onMouseDown={(downEvent) => {
+							downEvent.stopPropagation();
+							if (downEvent.button !== 0) return;
 
-						createRoot((dispose) => {
-							document.body.style.cursor = "ns-resize";
-							onCleanup(() => {
-								document.body.style.cursor = "auto";
+							createRoot((dispose) => {
+								document.body.style.cursor = "ns-resize";
+								onCleanup(() => {
+									document.body.style.cursor = "auto";
+								});
+
+								const startHeight = height();
+
+								createEventListenerMap(window, {
+									mouseup: dispose,
+									mousemove: (moveEvent) => {
+										setHeight(
+											Math.max(
+												MIN_HEIGHT,
+												startHeight + (moveEvent.clientY - downEvent.clientY),
+											),
+										);
+									},
+								});
 							});
-
-							const startHeight = height();
-
-							createEventListenerMap(window, {
-								mouseup: dispose,
-								mousemove: (moveEvent) => {
-									setHeight(
-										Math.max(
-											MIN_HEIGHT,
-											startHeight + (moveEvent.clientY - downEvent.clientY),
-										),
-									);
-								},
-							});
-						});
-					}}
-					class="h-px w-full relative cursor-ns-resize bg-neutral-700 overflow-visible"
-				>
-					<div class="-top-0.5 -bottom-0.5 w-full absolute z-10" />
-				</div>
+						}}
+						class="h-px w-full relative cursor-ns-resize bg-neutral-700 overflow-visible"
+					>
+						<div class="-top-0.5 -bottom-0.5 w-full absolute z-10" />
+					</div>
+				</Show>
 			</Accordion.Content>
 		</Accordion.Item>
 	);

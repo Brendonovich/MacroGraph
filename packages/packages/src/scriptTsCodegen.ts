@@ -10,7 +10,6 @@ import {
 } from "@macrograph/typesystem";
 import type { EnumBase, EnumVariants, StructBase } from "@macrograph/typesystem";
 
-import { scriptLog, scriptLogDts, scriptLogGroup } from "./scriptDebug";
 import type { IoDefinition, IoFieldDef, SerializedFieldType } from "./scriptIoTypes";
 import { JSONEnum, isScriptJsonSerializedType, isValidJsIdentifier } from "./scriptIoTypes";
 
@@ -91,44 +90,14 @@ function anyTypeToTs(type: AnyType): string {
 	return "unknown";
 }
 
-function fieldTypeTs(
-	field: IoFieldDef,
-	getType: ScriptGetTypeFn,
-	ctx: "inputs" | "outputs",
-): string {
+function fieldTypeTs(field: IoFieldDef, getType: ScriptGetTypeFn): string {
 	const fromSerialized = serializedToTs(field.type);
-	if (fromSerialized !== "unknown") {
-		scriptLogGroup(`fieldTypeTs ${ctx}.${field.name}`, {
-			id: field.id,
-			"field.type (raw)": field.type,
-			path: "serializedToTs",
-			tsType: fromSerialized,
-		});
-		return fromSerialized;
-	}
+	if (fromSerialized !== "unknown") return fromSerialized;
 
 	try {
 		const resolved = deserializeType(field.type, getType);
-		const tsType = anyTypeToTs(resolved);
-		scriptLogGroup(`fieldTypeTs ${ctx}.${field.name}`, {
-			id: field.id,
-			"field.type (raw)": field.type,
-			path: "deserializeType + anyTypeToTs",
-			"resolved.variant()": resolved.variant(),
-			tsType,
-		});
-		return tsType;
-	} catch (err) {
-		scriptLogGroup(
-			`fieldTypeTs ${ctx}.${field.name}`,
-			{
-				id: field.id,
-				"field.type (raw)": field.type,
-				path: "failed — using unknown",
-				error: err instanceof Error ? err.message : String(err),
-			},
-			"warn",
-		);
+		return anyTypeToTs(resolved);
+	} catch {
 		return "unknown";
 	}
 }
@@ -143,11 +112,7 @@ function fieldInterface(
 	const seenNames = new Set<string>();
 
 	for (const field of fields) {
-		const tsType = fieldTypeTs(
-			field,
-			getType,
-			name === "MacroGraphInputs" ? "inputs" : "outputs",
-		);
+		const tsType = fieldTypeTs(field, getType);
 		const optional = writable ? "?" : "";
 		const doc = `  /** ${name}: ${field.name} (id: ${field.id}) */`;
 
@@ -171,17 +136,9 @@ export function generateScriptTypeDeclarations(
 	def: IoDefinition,
 	getType: ScriptGetTypeFn,
 ): string {
-	scriptLogGroup("generateScriptTypeDeclarations — ioDefinition", {
-		inputs: def.inputs,
-		outputs: def.outputs,
-	});
-
-	const dts = [
+	return [
 		MG_JSON_TYPE,
 		fieldInterface("MacroGraphInputs", def.inputs, false, getType),
 		fieldInterface("MacroGraphOutputs", def.outputs, true, getType),
 	].join("\n\n");
-
-	scriptLogDts("generated type declarations", dts);
-	return dts;
 }

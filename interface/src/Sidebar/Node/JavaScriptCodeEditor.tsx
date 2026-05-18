@@ -4,7 +4,6 @@ import {
 	getScriptTsCompletions,
 	type IoDefinition,
 } from "@macrograph/packages/src/script";
-import { scriptLog } from "@macrograph/packages/src/scriptDebug";
 import type { ScriptGetTypeFn } from "@macrograph/packages/src/scriptTsCodegen";
 import {
 	scriptHasErrors,
@@ -136,12 +135,7 @@ function createTsLinter(
 		(view) => {
 			const code = view.state.doc.toString();
 			const def = ioDefinition();
-			scriptLog("linter run", {
-				codePreview: code.slice(0, 80),
-				ioDefinition: def,
-			});
 			const diags = validateScriptSource(code, def, getType());
-			scriptLog("linter result", { errorCount: diags.length, diags });
 			return diagnosticsToCm(code, diags);
 		},
 		{ delay: 400 },

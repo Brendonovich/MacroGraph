@@ -1,5 +1,6 @@
 import type { Option } from "@macrograph/option";
 import {
+	DEFAULT,
 	DataInput,
 	DataOutput,
 	getRemoteShellMode,
@@ -18,21 +19,35 @@ import {
 import type * as v from "valibot";
 
 import {
+	DEFAULT_CODE,
+	DEFAULT_IO_DEFINITION,
+	parseScriptResource,
+	serializeScriptResource,
+	ScriptResource,
+	type ScriptResourceData,
+} from "./scriptResource";
+import {
 	type IoDefinition,
 	type IoFieldDef,
 	type SerializedFieldType,
 	isValidJsIdentifier,
 	sanitizeScriptIoDefinition,
 } from "./scriptIoTypes";
-import { scriptLog, scriptLogGroup } from "./scriptDebug";
 import { transpileScriptSource } from "./scriptTsValidate";
 
 export type { IoDefinition, IoFieldDef, SerializedFieldType } from "./scriptIoTypes";
+export type { ScriptResourceData } from "./scriptResource";
+export {
+	ScriptResource,
+	DEFAULT_SCRIPT_RESOURCE_JSON,
+	isScriptResourceType,
+	parseScriptResource,
+	serializeScriptResource,
+} from "./scriptResource";
 export {
 	generateScriptTypeDeclarations,
 	type ScriptGetTypeFn,
 } from "./scriptTsCodegen";
-export { scriptDebugEnabled, scriptLog, scriptLogGroup } from "./scriptDebug";
 export {
 	scriptHasErrors,
 	transpileScriptSource,
@@ -40,81 +55,67 @@ export {
 	type ScriptDiagnostic,
 } from "./scriptTsValidate";
 
-export const DEFAULT_IO_DEFINITION: IoDefinition = {
-	inputs: [{ id: "0", name: "A", type: "int" }],
-	outputs: [{ id: "0", name: "Result", type: "string" }],
-};
+export {
+	DEFAULT_CODE,
+	DEFAULT_IO_DEFINITION,
+	DEFAULT_IO_DEFINITION_JSON,
+} from "./scriptResource";
 
-export const DEFAULT_IO_DEFINITION_JSON = JSON.stringify(DEFAULT_IO_DEFINITION);
+/** Reads script data with explicit reactive deps so node pins update when the resource changes. */
+export function resolveScriptForNode(node: Node): ScriptResourceData {
+	const scriptProp = node.schema.properties?.script;
+	if (scriptProp && "resource" in scriptProp) {
+		const scriptRef = node.state.properties[scriptProp.id];
+		const entry = node.graph.project.resources.get(ScriptResource);
+		if (entry) {
+			const itemId = scriptRef === DEFAULT ? entry.default : scriptRef;
+			const item = entry.items.find((i) => i.id === itemId);
+			if (item && "value" in item) {
+				return parseScriptResource(item.value);
+			}
+		}
+	}
 
-export const DEFAULT_CODE = `// TypeScript — \`inputs\` / \`outputs\` are typed from your pins.
-outputs.Result = String(inputs.A ?? inputs["0"]);
-`;
+	const legacyCode = node.state.properties.code;
+	if (legacyCode !== undefined || node.state.properties.ioDefinition !== undefined) {
+		return {
+			code: (legacyCode as string | undefined) ?? DEFAULT_CODE,
+			ioDefinition: parseIoDefinition(
+				node.state.properties.ioDefinition as string | undefined,
+			),
+		};
+	}
 
-/** IO definition for the script editor, with pin types as the source of truth. */
+	return parseScriptResource(undefined);
+}
+
+/** IO definition for the script editor; pin types override stored types when present. */
 export function ioDefinitionForNode(node: Node): IoDefinition {
-	const rawProperty = node.state.properties.ioDefinition;
-	const def = parseIoDefinition(rawProperty as string | undefined);
-
-	const pinSync: Record<string, unknown> = {
-		"node.id": node.id,
-		"ioDefinition property (raw)": rawProperty,
-		"typeof property": typeof rawProperty,
-	};
+	const def = structuredClone(resolveScriptForNode(node).ioDefinition);
 
 	for (const pin of node.state.inputs) {
 		if (!(pin instanceof DataInput)) continue;
 		const field = def.inputs.find((f) => f.id === pin.id);
-		if (!field) {
-			pinSync[`input pin ${pin.id}`] = "no matching field in ioDefinition";
-			continue;
-		}
-		const before = field.type;
+		if (!field) continue;
 		try {
 			field.type = pin.type.serialize() as SerializedFieldType;
-			pinSync[`input ${field.name} (${pin.id})`] = {
-				"pin.type": pin.type.toString(),
-				"stored before": before,
-				"after pin.serialize()": field.type,
-			};
-		} catch (err) {
-			pinSync[`input ${field.name} (${pin.id})`] = {
-				"pin.type": pin.type.toString(),
-				"stored (kept)": before,
-				"serialize error": err instanceof Error ? err.message : String(err),
-			};
+		} catch {
+			// keep stored type when pin type cannot be serialized
 		}
 	}
 
 	for (const pin of node.state.outputs) {
 		if (!(pin instanceof DataOutput)) continue;
 		const field = def.outputs.find((f) => f.id === pin.id);
-		if (!field) {
-			pinSync[`output pin ${pin.id}`] = "no matching field in ioDefinition";
-			continue;
-		}
-		const before = field.type;
+		if (!field) continue;
 		try {
 			field.type = pin.type.serialize() as SerializedFieldType;
-			pinSync[`output ${field.name} (${pin.id})`] = {
-				"pin.type": pin.type.toString(),
-				"stored before": before,
-				"after pin.serialize()": field.type,
-			};
-		} catch (err) {
-			pinSync[`output ${field.name} (${pin.id})`] = {
-				"pin.type": pin.type.toString(),
-				"stored (kept)": before,
-				"serialize error": err instanceof Error ? err.message : String(err),
-			};
+		} catch {
+			// keep stored type when pin type cannot be serialized
 		}
 	}
 
-	const sanitized = sanitizeScriptIoDefinition(def);
-	pinSync["final ioDefinition (after sanitize)"] = sanitized;
-	scriptLogGroup("ioDefinitionForNode", pinSync);
-
-	return sanitized;
+	return sanitizeScriptIoDefinition(def);
 }
 
 export function parseIoDefinition(raw: string | undefined): IoDefinition {
@@ -263,23 +264,20 @@ export function pkg() {
 		name: "Script",
 	});
 
+	pkg.registerResourceType(ScriptResource);
+
 	pkg.createSchema({
 		name: "JavaScript",
 		type: "exec",
 		properties: {
-			code: {
-				name: "Code",
-				type: t.string(),
-				default: DEFAULT_CODE,
-			},
-			ioDefinition: {
-				name: "IO Definition",
-				type: t.string(),
-				default: DEFAULT_IO_DEFINITION_JSON,
+			script: {
+				name: "Script",
+				resource: ScriptResource,
 			},
 		},
-		createIO({ io, ctx, properties }) {
-			const def = parseIoDefinition(ctx.getProperty(properties.ioDefinition));
+		createIO({ io, ctx }) {
+			const data = resolveScriptForNode(io.node);
+			const def = data.ioDefinition;
 
 			return {
 				inputs: def.inputs.map((field) =>
@@ -305,8 +303,9 @@ export function pkg() {
 			const node = io.inputs[0]?.node ?? io.outputs[0]?.node;
 			if (!node) return;
 
-			const def = parseIoDefinition(ctx.getProperty(properties.ioDefinition));
-			const code = ctx.getProperty(properties.code) ?? "";
+			const data = resolveScriptForNode(node);
+			const def = data.ioDefinition;
+			const code = data.code;
 
 			const inputs: Record<string, unknown> = {};
 			const { outputs, wasAssigned, getAssigned } = createTrackedOutputs();

@@ -1,4 +1,5 @@
 import { DropdownMenu } from "@kobalte/core";
+import { isScriptResourceType } from "@macrograph/packages/src/script";
 import type { ResourceType, ResourceTypeEntry } from "@macrograph/runtime";
 import { For, Match, Switch, createMemo, createSignal } from "solid-js";
 
@@ -8,6 +9,7 @@ import { useInterfaceContext } from "../../context";
 import { filterWithTokenisedSearch, tokeniseString } from "../../util";
 import { InlineTextEditor } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
+import { ScriptResourceEditor } from "./ScriptResourceEditor";
 
 export function Resources() {
 	const interfaceCtx = useInterfaceContext();
@@ -146,7 +148,27 @@ export function Resources() {
 														}}
 													</Match>
 													<Match
-														when={"type" in type && "value" in item && item}
+														when={
+															isScriptResourceType(type) &&
+															"value" in item &&
+															item
+														}
+														keyed
+													>
+														{(item) => (
+															<ScriptResourceEditor
+																resourceId={item.id}
+																resourceType={type}
+															/>
+														)}
+													</Match>
+													<Match
+														when={
+															"type" in type &&
+															!isScriptResourceType(type) &&
+															"value" in item &&
+															item
+														}
 														keyed
 													>
 														{(item) => (

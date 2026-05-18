@@ -1,6 +1,5 @@
 import ts from "typescript";
 
-import { scriptLogGroup } from "./scriptDebug";
 import type { ScriptGetTypeFn } from "./scriptTsCodegen";
 import { buildScriptSources, SCRIPT_FILE } from "./scriptSource";
 import type { IoDefinition } from "./scriptIoTypes";
@@ -101,24 +100,6 @@ export function validateScriptSource(
 	const host = createVirtualCompilerHost(sources);
 
 	const program = ts.createProgram([SCRIPT_FILE, "/lib.d.ts"], options, host);
-	const checker = program.getTypeChecker();
-	const sourceFile = program.getSourceFile(SCRIPT_FILE);
-
-	let resolvedInputsA: string | undefined;
-	if (sourceFile) {
-		const visit = (node: ts.Node) => {
-			if (
-				ts.isPropertyAccessExpression(node) &&
-				ts.isIdentifier(node.expression) &&
-				node.expression.text === "inputs" &&
-				node.name.text === "A"
-			) {
-				resolvedInputsA = checker.typeToString(checker.getTypeAtLocation(node));
-			}
-			ts.forEachChild(node, visit);
-		};
-		visit(sourceFile);
-	}
 
 	const diagnostics = [
 		...program.getSyntacticDiagnostics(),
@@ -130,17 +111,6 @@ export function validateScriptSource(
 		const mapped = mapDiagnostic(d, userCode, userCodeOffset);
 		if (mapped) results.push(mapped);
 	}
-
-	scriptLogGroup("validateScriptSource", {
-		"userCode (first line)": userCode.split("\n")[0] ?? "",
-		userCodeOffset,
-		"checker type of inputs.A": resolvedInputsA,
-		diagnosticCount: results.length,
-		diagnostics: results,
-		"all TS diagnostics (incl. lib)": diagnostics.map((d) =>
-			ts.flattenDiagnosticMessageText(d.messageText, "\n"),
-		),
-	});
 
 	return results;
 }
