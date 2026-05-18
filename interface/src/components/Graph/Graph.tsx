@@ -32,13 +32,15 @@ import {
 	toGraphSpace,
 	toScreenSpace,
 } from "./Context";
+import { DotGrid } from "./DotGrid";
 import { Node } from "./Node";
 import { GRID_SIZE } from "./util";
 import { getRemoteCursors, broadcastCursorPosition, getFollowUserId, getRemotePinDrags, getRemoteSelectionBoxes, broadcastPinDrag, broadcastSelectionBox } from "../../remoteHistorySync";
 
 type PanState = "none" | "waiting" | "active";
 
-const MAX_ZOOM_IN = 2.5;
+/** 0.2 → 1.6 (×2 each step: 0.2, 0.4, 0.8, 1.6) */
+const MAX_ZOOM_IN = 1.6;
 const MAX_ZOOM_OUT = 5;
 const ZOOM_STEP = 1.05;
 
@@ -864,6 +866,10 @@ export const Graph = (props: Props) => {
 					}, 1);
 				}}
 			>
+				<DotGrid
+					width={() => state.size.width}
+					height={() => state.size.height}
+				/>
 				<ConnectionRenderer
 					graphBounds={{
 						get x() {

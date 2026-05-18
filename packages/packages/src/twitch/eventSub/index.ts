@@ -93,6 +93,7 @@ export function createEventSub(
 	core: Core,
 	helixClient: Helix,
 	isEventSubDesired: (userId: string) => boolean,
+	onSessionChange?: () => void,
 ) {
 	const listenerTargets = new Map<string, EventTarget>();
 	const sessions = new ReactiveMap<
@@ -154,7 +155,10 @@ export function createEventSub(
 
 	function bumpSession(userId: string, patch: Partial<{ status: "idle" | "connecting" | "live" }>) {
 		const prev = sessions.get(userId) ?? { status: "idle" as const };
-		sessions.set(userId, { ...prev, ...patch });
+		const next = { ...prev, ...patch };
+		if (prev.status === next.status) return;
+		sessions.set(userId, next);
+		onSessionChange?.();
 	}
 
 	function backoffMs(userId: string) {

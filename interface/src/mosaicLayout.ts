@@ -629,10 +629,37 @@ export function detectDropTarget(
 			continue;
 		}
 
+		const tabBar = pane.querySelector<HTMLElement>("[data-mosaic-tab-bar]");
+		if (tabBar) {
+			const tabBarRect = tabBar.getBoundingClientRect();
+			if (
+				clientX >= tabBarRect.left &&
+				clientX <= tabBarRect.right &&
+				clientY >= tabBarRect.top &&
+				clientY <= tabBarRect.bottom
+			) {
+				const tabEls = [
+					...tabBar.querySelectorAll<HTMLElement>("[data-tab-index]"),
+				];
+				let insertIndex = tabEls.length;
+				for (let i = 0; i < tabEls.length; i++) {
+					const r = tabEls[i]!.getBoundingClientRect();
+					if (clientX < r.left + r.width / 2) {
+						insertIndex = Number(tabEls[i]!.dataset.tabIndex);
+						break;
+					}
+				}
+				return { kind: "tabBar", groupId, insertIndex };
+			}
+		}
+
 		const w = rect.width;
 		const h = rect.height;
 		const edgeW = w * EDGE_ZONE_FRACTION;
 		const edgeH = h * EDGE_ZONE_FRACTION;
+		const contentTop = tabBar
+			? tabBar.getBoundingClientRect().bottom
+			: rect.top;
 
 		if (clientX - rect.left < edgeW) {
 			return { kind: "content", groupId, edge: "left" };
@@ -640,27 +667,11 @@ export function detectDropTarget(
 		if (rect.right - clientX < edgeW) {
 			return { kind: "content", groupId, edge: "right" };
 		}
-		if (clientY - rect.top < edgeH) {
+		if (clientY >= contentTop && clientY - contentTop < edgeH) {
 			return { kind: "content", groupId, edge: "top" };
 		}
 		if (rect.bottom - clientY < edgeH) {
 			return { kind: "content", groupId, edge: "bottom" };
-		}
-
-		const tabBar = pane.querySelector<HTMLElement>("[data-mosaic-tab-bar]");
-		if (tabBar) {
-			const tabEls = [
-				...tabBar.querySelectorAll<HTMLElement>("[data-tab-index]"),
-			];
-			let insertIndex = tabEls.length;
-			for (let i = 0; i < tabEls.length; i++) {
-				const r = tabEls[i]!.getBoundingClientRect();
-				if (clientX < r.left + r.width / 2) {
-					insertIndex = Number(tabEls[i]!.dataset.tabIndex);
-					break;
-				}
-			}
-			return { kind: "tabBar", groupId, insertIndex };
 		}
 
 		return { kind: "content", groupId };

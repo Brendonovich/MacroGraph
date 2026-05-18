@@ -45,3 +45,9 @@ export {
 	parseHostMirrorPayload,
 	type HostMirrorPayload,
 } from "./hostMirror/wire";
+export {
+	registerHostMirrorCore,
+	requestHostMirrorSync,
+	scheduleHostMirrorSync,
+	setHostMirrorBroadcast,
+} from "./hostMirror/sync";

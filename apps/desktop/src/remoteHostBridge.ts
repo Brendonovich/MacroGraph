@@ -21,7 +21,13 @@ import {
 	type RemoteHistoryWireItem,
 	type WireGraphPositionsEphemeral,
 } from "@macrograph/interface";
-import { collectHostMirrorPayload } from "@macrograph/packages";
+import {
+	collectHostMirrorPayload,
+	registerHostMirrorCore,
+	scheduleHostMirrorSync,
+	setHostMirrorBroadcast,
+	type HostMirrorPayload,
+} from "@macrograph/packages";
 import { NODE_EMIT, rerunNodeFromInvocationSnapshot, type Core } from "@macrograph/runtime";
 import {
 	serializeProject,
@@ -42,6 +48,13 @@ export function setHostGraphLivePointerSession(active: boolean) {
 const userNames = new Map<number, string>();
 
 const OBS_PKG_NAME = "OBS Websocket";
+const TWITCH_PKG_NAME = "Twitch Events";
+
+function twitchPkg(core: Core) {
+	return core.packages.find((p) => p.name === TWITCH_PKG_NAME) as
+		| { ctx?: { auth: { enableAccount(id: string): Promise<void>; disableAccount(id: string): void } } }
+		| undefined;
+}
 
 type ObsHostCtx = {
 	instances: Map<
@@ -145,6 +158,26 @@ async function handleRemoteRpcRequest(opts: {
 			).catch((): NodeInvocationFileRow[] => []);
 			const match = rows.find((r) => r.nodeId === p.nodeId);
 			result = { entries: match?.entries ?? [] };
+		} else if (method === "twitch.enableAccount") {
+			const p = params as { credentialId?: string };
+			if (typeof p.credentialId !== "string") {
+				throw new Error("Invalid twitch.enableAccount params.");
+			}
+			const twitch = twitchPkg(core);
+			if (!twitch?.ctx) throw new Error("Twitch package is not loaded on the host.");
+			await twitch.ctx.auth.enableAccount(p.credentialId);
+			scheduleHostMirrorSync(core);
+			result = undefined;
+		} else if (method === "twitch.disableAccount") {
+			const p = params as { credentialId?: string };
+			if (typeof p.credentialId !== "string") {
+				throw new Error("Invalid twitch.disableAccount params.");
+			}
+			const twitch = twitchPkg(core);
+			if (!twitch?.ctx) throw new Error("Twitch package is not loaded on the host.");
+			twitch.ctx.auth.disableAccount(p.credentialId);
+			scheduleHostMirrorSync(core);
+			result = undefined;
 		} else {
 			throw new Error(`Unknown RPC method: ${method}`);
 		}
@@ -235,6 +268,19 @@ export function broadcastRemoteHostSelectionBox(box: import("@macrograph/interfa
 	]);
 }
 
+function broadcastHostMirrorToRemotes(hostMirror: HostMirrorPayload) {
+	if (!remoteHostSettings.enabled) return;
+	const port = remoteHostSettings.port;
+	void client.mutation([
+		"remoteHost.send",
+		{
+			port,
+			client: null,
+			data: JSON.stringify({ type: "hostMirror", hostMirror }),
+		},
+	]);
+}
+
 /** Broadcast committed editor actions from the host desktop to all remote clients. */
 export function broadcastRemoteHostHistoryActions(items: RemoteHistoryWireItem[]) {
 	if (!remoteHostSettings.enabled) return;
@@ -269,7 +315,14 @@ export function installRemoteHostBridge(opts: {
 		prevEnabled = enabled;
 		prevPort = port;
 
-		if (!enabled) return;
+		if (!enabled) {
+			setHostMirrorBroadcast(null);
+			registerHostMirrorCore(null);
+			return;
+		}
+
+		registerHostMirrorCore(opts.core);
+		setHostMirrorBroadcast(broadcastHostMirrorToRemotes);
 
 		const sendSnapshot = (clientId: number | null) => {
 			// Send the project immediately so the remote client can start loading.

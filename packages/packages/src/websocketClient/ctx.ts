@@ -1,5 +1,7 @@
 import { getRemoteShellMode, type OutboundWsBridge } from "@macrograph/runtime";
 import { Maybe } from "@macrograph/option";
+
+import { requestHostMirrorSync } from "../hostMirror/sync";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createSignal } from "solid-js";
 
@@ -179,12 +181,14 @@ export function createCtx(
 				state: "connected",
 				socket: ws,
 			});
+			requestHostMirrorSync();
 		};
 
 		ws.onclose = () => {
 			if (!websockets.has(url)) return;
 
 			websockets.set(url, { state: "disconnected", retried: false });
+			requestHostMirrorSync();
 
 			const n = (failureCount.get(url) ?? 0) + 1;
 			failureCount.set(url, n);
@@ -222,6 +226,7 @@ export function createCtx(
 			name: wsNames.get(url) ?? defaultNameFromUrl(url),
 		}));
 		localStorage.setItem(WS_IPS_LOCALSTORAGE, JSON.stringify(rows));
+		requestHostMirrorSync();
 	}
 
 	function removeWebsocket(url: string) {

@@ -44,16 +44,57 @@ const DEFAULT_CONFIG: Config = {
 		enableNumberGrouping: true,
 	},
 	tabColors: {
-		function: "#86efac",
-		queue: "#93c5fd",
-		functionQueue: "#93c5fd",
-		package: "#22d3ee",
+		function: "#7dd3fc",
+		queue: "#fca5a5",
+		functionQueue: "#fdba74",
+		package: "#86efac",
 	},
 };
 
 export const [config, setConfig] = createStore<Config>(
 	structuredClone(DEFAULT_CONFIG),
 );
+
+const TAB_TINT_MIX = 2.5;
+
+export function tabColorForType(
+	type: string,
+): string | undefined {
+	switch (type) {
+		case "function":
+			return config.tabColors.function;
+		case "queue":
+			return config.tabColors.queue;
+		case "functionQueue":
+			return config.tabColors.functionQueue;
+		case "package":
+			return config.tabColors.package;
+		default:
+			return undefined;
+	}
+}
+
+/** Base gray + `mixPercent` of accent (default 2.5%). */
+export function tabTintBackground(
+	color: string | undefined,
+	base: string,
+	mixPercent = TAB_TINT_MIX,
+): string | undefined {
+	if (!color) return undefined;
+	return `color-mix(in srgb, ${color} ${mixPercent}%, ${base})`;
+}
+
+export function tabButtonBackground(
+	color: string | undefined,
+	selected: boolean,
+	focused: boolean,
+): string | undefined {
+	const tint = tabTintBackground(color, "#1a1a1a");
+	if (!tint) return undefined;
+	if (!selected) return tint;
+	const overlay = focused ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)";
+	return `linear-gradient(${overlay}, ${overlay}), ${tint}`;
+}
 
 export async function initEditorConfigStorage() {
 	await hydrateEditorConfig(setConfig, DEFAULT_CONFIG);
@@ -72,7 +113,7 @@ function ColorSelect(props: {
 				<input
 					type="color"
 					value={props.value}
-					onInput={(e) => props.onChange(e.currentTarget.value)}
+					onChange={(e) => props.onChange(e.currentTarget.value)}
 					class="size-7 p-0.5 bg-neutral-800 border border-neutral-600 rounded cursor-pointer"
 				/>
 			</div>

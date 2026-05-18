@@ -486,6 +486,13 @@ export default function App() {
 				});
 				return;
 			}
+
+			if (body.type === "hostMirror" && body.hostMirror) {
+				enqueueInbound(() => {
+					pkgs.applyHostMirrorPayloadToCore(core, body.hostMirror);
+				});
+				return;
+			}
 		});
 
 		const scheduleReconnect = () => {

@@ -21,7 +21,15 @@ export async function hydrateEditorConfig(
 	const raw = await loadEditorConfigJson();
 	if (raw) {
 		try {
-			setConfig(reconcile(JSON.parse(raw) as Config));
+			const parsed = JSON.parse(raw) as Partial<Config>;
+			setConfig(
+				reconcile({
+					...structuredClone(defaultConfig),
+					...parsed,
+					nodes: { ...defaultConfig.nodes, ...parsed.nodes },
+					tabColors: { ...defaultConfig.tabColors, ...parsed.tabColors },
+				}),
+			);
 		} catch {
 			setConfig(reconcile(structuredClone(defaultConfig)));
 		}

@@ -14,7 +14,7 @@ import { useInterfaceContext } from "../../context";
 import { filterWithTokenisedSearch, tokeniseString } from "../../util";
 
 /** Keep in sync with `components/Graph/Graph.tsx` zoom clamps. */
-const GRAPH_MAX_ZOOM_IN = 2.5;
+const GRAPH_MAX_ZOOM_IN = 1.6;
 const GRAPH_MAX_ZOOM_OUT = 5;
 const GRAPH_MIN_SCALE = 1 / GRAPH_MAX_ZOOM_OUT;
 

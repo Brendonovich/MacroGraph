@@ -1,4 +1,6 @@
 import { getRemoteShellMode, type ObsNativeBridge } from "@macrograph/runtime";
+
+import { requestHostMirrorSync } from "../hostMirror/sync";
 import { Maybe } from "@macrograph/option";
 import { parseJsonWithContext } from "@macrograph/runtime-serde";
 import { ReactiveMap } from "@solid-primitives/map";
@@ -55,6 +57,7 @@ export function createCtx(obsNative?: ObsNativeBridge) {
 				state: "disconnected",
 				password: instance.password,
 			});
+			requestHostMirrorSync();
 
 			setTimeout(() => {
 				console.log("disconnect running");
@@ -160,6 +163,7 @@ export function createCtx(obsNative?: ObsNativeBridge) {
 				})),
 			),
 		);
+		requestHostMirrorSync();
 	}
 
 	return {

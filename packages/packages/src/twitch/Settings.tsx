@@ -1,16 +1,23 @@
 import { Tooltip } from "@kobalte/core";
 import { AsyncButton, Button } from "@macrograph/ui";
+import { getRemoteShellMode } from "@macrograph/runtime";
 import { createAsync } from "@solidjs/router";
 import { For, Match, Show, Suspense, Switch } from "solid-js";
 
 import type { Ctx } from "./ctx";
+import { remoteTwitchDisableAccount, remoteTwitchEnableAccount } from "./remoteHost";
 
 export default ({
 	core,
 	auth,
 	eventSub,
+	hostMirrorTwitch,
 }: Ctx) => {
 	const credentials = createAsync(() => core.getCredentials());
+	const remote = () => getRemoteShellMode();
+
+	const mirrorSession = (credentialId: string) =>
+		hostMirrorTwitch().find((r) => r.credentialId === credentialId)?.sessionStatus;
 
 	return (
 		<Suspense>
@@ -37,13 +44,23 @@ export default ({
 											<Show
 												when={account()}
 												children={
-													<Button onClick={() => auth.disableAccount(cred.id)}>
+													<Button
+														onClick={() =>
+															remote()
+																? void remoteTwitchDisableAccount(cred.id)
+																: auth.disableAccount(cred.id)
+														}
+													>
 														Disable
 													</Button>
 												}
 												fallback={
 													<AsyncButton
-														onClick={() => auth.enableAccount(cred.id)}
+														onClick={() =>
+															remote()
+																? remoteTwitchEnableAccount(cred.id)
+																: auth.enableAccount(cred.id)
+														}
 														loadingChildren="Enabling..."
 													>
 														Enable
@@ -53,17 +70,26 @@ export default ({
 										</div>
 										<Show when={account()?.()}>
 											{(account) => {
-												const eventSubSocket = () =>
-													eventSub.isLive(account().data.id);
+												const userId = () => account().data.id;
 
 												return (
 													<div class="space-x-2">
-														<Switch fallback="Connecting...">
-															<Match when={eventSubSocket()}>
+														<Switch fallback="Disconnected">
+															<Match
+																when={
+																	remote()
+																		? mirrorSession(cred.id) === "live"
+																		: eventSub.isLive(userId())
+																}
+															>
 																<span>Connected</span>
 															</Match>
 															<Match
-																when={eventSub.isConnecting(account().data.id)}
+																when={
+																	remote()
+																		? mirrorSession(cred.id) === "connecting"
+																		: eventSub.isConnecting(userId())
+																}
 															>
 																<span>Connecting...</span>
 															</Match>
@@ -79,6 +105,11 @@ export default ({
 					)}
 				</Show>
 			</ul>
+			<Show when={remote()}>
+				<p class="text-sm text-neutral-500 mb-2">
+					Twitch connections run on the host; status updates live from the desktop app.
+				</p>
+			</Show>
 			<span class="text-sm text-gray-300">
 				Access more accounts by{" "}
 				<a class="underline" href="/credentials" target="external">

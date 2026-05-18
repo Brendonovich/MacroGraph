@@ -141,6 +141,22 @@ export const HOST_MIRROR_INTEGRATION_SLICES: HostMirrorIntegrationSlice[] = [
 			p?.ctx?.clearHostMirror?.();
 		},
 	},
+	{
+		id: "twitch",
+		async collect(core) {
+			const p = pkg(core, "Twitch Events");
+			if (!p?.ctx?.collectHostMirror) return null;
+			return p.ctx.collectHostMirror();
+		},
+		apply(core, data) {
+			const p = pkg(core, "Twitch Events");
+			p?.ctx?.applyHostMirror?.(data);
+		},
+		clear(core) {
+			const p = pkg(core, "Twitch Events");
+			p?.ctx?.clearHostMirror?.();
+		},
+	},
 ];
 
 export async function collectIntegrationSlices(

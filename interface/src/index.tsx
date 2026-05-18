@@ -92,6 +92,11 @@ import {
 	updateTabDropTarget,
 } from "./tabDragSession";
 import { isCtrlEvent, isEditingText } from "./util";
+import {
+	tabButtonBackground,
+	tabColorForType,
+	tabTintBackground,
+} from "./ConfigDialog";
 import { PlatformContext, usePlatform } from "./platform";
 
 export * from "./platform";
@@ -1266,6 +1271,10 @@ function TabDragGhost() {
 						left: `${getTabDragGhostPos().x}px`,
 						top: `${getTabDragGhostPos().y}px`,
 						transform: "translate(8px, 8px)",
+						color: tabColorForType(s().tab.type) ?? undefined,
+						background:
+							tabTintBackground(tabColorForType(s().tab.type), "#262626") ??
+							undefined,
 					}}
 				>
 					{s().label}
@@ -1356,7 +1365,19 @@ function GraphTabList(props: {
 			}
 
 			updateTabDragGhost(ev.clientX, ev.clientY);
-			updateTabDropTarget(detectDropTarget(ev.clientX, ev.clientY, true));
+			const dropTarget = detectDropTarget(ev.clientX, ev.clientY, true);
+			updateTabDropTarget(dropTarget);
+			if (
+				!ev.altKey &&
+				dropTarget?.kind === "tabBar" &&
+				dropTarget.groupId === props.groupId &&
+				dropTarget.insertIndex !== undefined &&
+				dragFromIndex !== null
+			) {
+				let to = dropTarget.insertIndex;
+				if (to > dragFromIndex) to -= 1;
+				if (to !== dragFromIndex) reorderTabs(dragFromIndex, to);
+			}
 		};
 
 		const onUp = (ev: PointerEvent) => {
@@ -1378,7 +1399,7 @@ function GraphTabList(props: {
 					const next = applyTabDrop(ctx.mosaicState, {
 						tab: tabForDrop,
 						sourceGroupId: session.sourceGroupId,
-						sourceIndex: session.sourceIndex,
+						sourceIndex: dragFromIndex ?? session.sourceIndex,
 						duplicate: session.duplicate,
 						dropTarget,
 					});
@@ -1427,6 +1448,14 @@ function GraphTabList(props: {
 		return { tab, graph };
 	};
 
+	const selectedTabContentTint = () => {
+		const tab = selectedTab();
+		if (!tab || tab.type === "package" || tab.type === "functionQueue") {
+			return undefined;
+		}
+		return tabColorForType(tab.type);
+	};
+
 	return (
 		<div
 			data-mosaic-group-id={props.groupId}
@@ -1450,7 +1479,10 @@ function GraphTabList(props: {
 				}}
 			>
 				<Solid.For each={group()?.tabs ?? []}>
-					{(tab, index) => (
+					{(tab, index) => {
+						const color = () => tabColorForType(tab.type);
+						const selected = () => group()?.selectedIndex === index();
+						return (
 						<button
 							type="button"
 							data-tab-index={index()}
@@ -1458,24 +1490,23 @@ function GraphTabList(props: {
 								"py-2 px-4 flex flex-row items-center relative group shrink-0 whitespace-nowrap transition-colors touch-none",
 								dragActive() && dragIndex() === index() && "opacity-40",
 								!dragActive() && "cursor-grab active:cursor-grabbing",
-								group()?.selectedIndex === index()
-									? clsx(
-										props.focused ? "bg-white/20" : "bg-white/10",
-										tab.type === "function" && "text-sky-200",
-										tab.type === "queue" && "text-amber-200",
-										tab.type === "functionQueue" && "text-blue-200",
-										tab.type === "settings" && "text-purple-200",
-										tab.type === "package" && "text-cyan-200",
-									)
-									: clsx(
-										"hover:bg-white/5",
-										tab.type === "function" && "text-sky-300",
-										tab.type === "queue" && "text-amber-300",
-										tab.type === "functionQueue" && "text-blue-300",
-										tab.type === "settings" && "text-purple-300",
-										tab.type === "package" && "text-cyan-300",
-									),
+								selected() && !color() && (props.focused ? "bg-white/20" : "bg-white/10"),
+								!selected() && "hover:bg-white/5",
+								!color() && selected() && tab.type === "settings" && "text-purple-200",
+								!color() && !selected() && tab.type === "settings" && "text-purple-300",
 							)}
+							style={
+								color()
+									? {
+											color: color(),
+											background: tabButtonBackground(
+												color(),
+												selected(),
+												props.focused,
+											),
+										}
+									: undefined
+							}
 							onPointerDown={(e) => handleTabPointerDown(e, index())}
 							onClick={() => {
 								if (suppressClick) {
@@ -1485,7 +1516,16 @@ function GraphTabList(props: {
 								props.onSelectedChanged(index());
 							}}
 						>
-							<span class="font-medium">{tabLabel(tab, ctx)}</span>
+							<span
+								class="font-medium"
+								style={
+									color() && !selected()
+										? { opacity: 0.85 }
+										: undefined
+								}
+							>
+								{tabLabel(tab, ctx)}
+							</span>
 							<span
 								data-tab-close
 								class="ml-1 hover:bg-white/20 rounded-[0.125rem] opacity-0 group-hover:opacity-100 cursor-pointer"
@@ -1500,13 +1540,19 @@ function GraphTabList(props: {
 								/>
 							</span>
 						</button>
-					)}
+						);
+					}}
 				</Solid.For>
 				<div class="flex-1" />
 			</div>
 			<div
 				class="flex-1 flex flex-col min-h-0 w-full relative"
 				classList={{ "ring-1 ring-inset ring-sky-400/60": isDropTarget() }}
+				style={{
+					"background-color":
+						tabTintBackground(selectedTabContentTint(), "#262626") ??
+						undefined,
+				}}
 			>
 			{(() => {
 				const tab = selectedTab();
@@ -1544,10 +1590,15 @@ function GraphTabList(props: {
 								s,
 							);
 					};
+					const tint = tabColorForType(tab.type);
 					return (
 						<Graph
 							graph={graph}
 							state={tab}
+							style={{
+								"background-color":
+									tabTintBackground(tint, "#262626") ?? undefined,
+							}}
 							onMouseEnter={() => props.setHoveredGroupId(props.groupId)}
 							onMouseMove={() => props.setHoveredGroupId(props.groupId)}
 							onMouseLeave={() => props.setHoveredGroupId(null)}
