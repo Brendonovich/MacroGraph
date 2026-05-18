@@ -14,6 +14,12 @@ import {
 	useContext,
 } from "solid-js";
 
+import {
+	normalizeScriptIoType,
+	SCRIPT_IO_CONTAINERS,
+	SCRIPT_IO_PRIMITIVES,
+} from "@macrograph/packages/src/scriptIoTypes";
+
 import { useInterfaceContext } from "../context";
 import { tw } from "../util";
 
@@ -50,9 +56,21 @@ const TypeItem = tw.button`text-left hover:bg-white/10 px-1 py-0.5 rounded`;
 export function TypeEditor(props: {
 	type: t.Any;
 	onChange?: (type: t.Any) => void;
+	/** JavaScript node: primitives, JSON, and containers only (no structs/enums). */
+	scriptIoOnly?: boolean;
 }) {
 	const interfaceCtx = useInterfaceContext();
 	const ctx = createContextValue();
+
+	const primitives = () =>
+		props.scriptIoOnly ? [...SCRIPT_IO_PRIMITIVES] : PRIMITIVES;
+	const containers = () =>
+		props.scriptIoOnly ? [...SCRIPT_IO_CONTAINERS] : CONTAINERS;
+
+	const applyType = (type: t.Any) => {
+		const next = props.scriptIoOnly ? normalizeScriptIoType(type) : type;
+		props.onChange?.(next);
+	};
 
 	return (
 		<TypeEditorContext.Provider value={ctx}>
@@ -63,14 +81,15 @@ export function TypeEditor(props: {
 				<DropdownMenu.Trigger class="py-px overflow-x-auto overflow-y-hidden no-scrollbar font-mono flex flex-row text-sm bg-black rounded-lg">
 					<TypeEditorSegment
 						type={props.type}
-						onChange={(type) => props.onChange?.(type)}
+						scriptIoOnly={props.scriptIoOnly}
+						onChange={applyType}
 					/>
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Portal>
 					<DropdownMenu.Content class="text-sm mt-1 p-2 bg-neutral-900 rounded w-48 max-h-52 flex flex-col overflow-y-auto text-white ui-expanded:animate-in ui-expanded:fade-in ui-expanded:slide-in-from-top-1 ui-closed:animate-out ui-closed:fade-out ui-closed:slide-out-to-top-1 duration-100 shadow">
 						<CategoryLabel>Primitives</CategoryLabel>
 						<div class="flex flex-col mb-1">
-							{PRIMITIVES.map((p) => (
+							{primitives().map((p) => (
 								<TypeItem
 									type="button"
 									onClick={() => {
@@ -84,14 +103,19 @@ export function TypeEditor(props: {
 						</div>
 						<CategoryLabel>Containers</CategoryLabel>
 						<div class="flex flex-col mb-1">
-							{CONTAINERS.map(([name, apply]) => (
+							{containers().map(([name, apply]) => (
 								<TypeItem
 									type="button"
 									onClick={() => {
+										const inner = ctx.typeDialogState()?.innerType!;
 										ctx
 											.typeDialogState()
 											?.onTypeSelected(
-												apply(ctx.typeDialogState()?.innerType!),
+												apply(
+													props.scriptIoOnly
+														? normalizeScriptIoType(inner)
+														: inner,
+												),
 											);
 										ctx.setTypeDialogState(null);
 									}}
@@ -100,6 +124,7 @@ export function TypeEditor(props: {
 								</TypeItem>
 							))}
 						</div>
+						<Show when={!props.scriptIoOnly}>
 						<CategoryLabel>Structs</CategoryLabel>
 						<div class="flex flex-col pl-2 mb-1">
 							<Show when={interfaceCtx.core.project.customStructs.size > 0}>
@@ -187,6 +212,7 @@ export function TypeEditor(props: {
 								)}
 							</For>
 						</div>
+						</Show>
 					</DropdownMenu.Content>
 				</DropdownMenu.Portal>
 			</DropdownMenu.Root>
@@ -220,6 +246,7 @@ const TypeEditorSegmentContext = createContext<
 function TypeEditorSegment(props: {
 	type: t.Any;
 	onChange?: (type: t.Any) => void;
+	scriptIoOnly?: boolean;
 }) {
 	const ctx = useContext(TypeEditorContext)!;
 
@@ -256,6 +283,7 @@ function TypeEditorSegment(props: {
 								<PaddedSpan>Option</PaddedSpan>
 								<TypeEditorSegment
 									type={optionType().inner}
+									scriptIoOnly={props.scriptIoOnly}
 									onChange={(type) => props.onChange?.(t.option(type))}
 								/>
 							</Span>
@@ -271,6 +299,7 @@ function TypeEditorSegment(props: {
 								<PaddedSpan>List</PaddedSpan>
 								<TypeEditorSegment
 									type={listType().item}
+									scriptIoOnly={props.scriptIoOnly}
 									onChange={(type) => props.onChange?.(t.list(type))}
 								/>
 							</Span>
@@ -286,6 +315,7 @@ function TypeEditorSegment(props: {
 								<PaddedSpan>Map</PaddedSpan>
 								<TypeEditorSegment
 									type={mapType().value}
+									scriptIoOnly={props.scriptIoOnly}
 									onChange={(type) => props.onChange?.(t.map(type))}
 								/>
 							</Span>

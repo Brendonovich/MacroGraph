@@ -106,38 +106,6 @@ export function tabKey(tab: TabState) {
 	return tab.type;
 }
 
-const MOSAIC_TAB_LOG = "[mosaic-tab]";
-
-function mosaicTabSelectionSummary(groups: TabListState[]) {
-	return groups.map((g) => ({
-		groupId: g.id,
-		selectedIndex: g.selectedIndex,
-		selectedTabKey: g.selectedTabKey,
-		activeTabKey: g.tabs[g.selectedIndex]
-			? tabKey(g.tabs[g.selectedIndex])
-			: null,
-		tabKeys: g.tabs.map(tabKey),
-	}));
-}
-
-export function logMosaicTabSelection(
-	phase:
-		| "select"
-		| "select-after"
-		| "persist"
-		| "persist-skipped"
-		| "load-raw"
-		| "load-parsed",
-	workspaceKey: string,
-	groups: TabListState[],
-	extra?: Record<string, unknown>,
-) {
-	console.log(MOSAIC_TAB_LOG, phase, workspaceKey, {
-		...mosaicTabSelectionSummary(groups),
-		...extra,
-	});
-}
-
 function filterTabToProject(tab: TabState, project: Project): TabState | null {
 	if (tab.type === "functionQueue") {
 		if (
@@ -421,53 +389,7 @@ async function loadMosaicForWorkspace(
 	project: Project,
 ): Promise<MosaicWorkspaceState> {
 	const raw = await loadMosaicJson(workspaceKey);
-	if (raw) {
-		try {
-			const parsed = JSON.parse(raw) as {
-				groups?: Array<{
-					selectedIndex?: number;
-					selectedTabKey?: string | null;
-					tabs?: unknown[];
-				}>;
-				focusedIndex?: number;
-				focusedGroupId?: string;
-				version?: number;
-			};
-			logMosaicTabSelection(
-				"load-raw",
-				workspaceKey,
-				(parsed.groups ?? []).map((g) => ({
-					id: "pending",
-					tabs: [],
-					selectedIndex:
-						typeof g.selectedIndex === "number" ? g.selectedIndex : 0,
-					selectedTabKey:
-						typeof g.selectedTabKey === "string"
-							? g.selectedTabKey
-							: undefined,
-				})),
-				{
-					focusedIndex: parsed.focusedIndex,
-					focusedGroupId: parsed.focusedGroupId,
-					version: parsed.version,
-					rawTabCount: (parsed.groups ?? []).map((g) =>
-						Array.isArray(g.tabs) ? g.tabs.length : 0,
-					),
-					rawSelectedTabKeys: (parsed.groups ?? []).map((g) => g.selectedTabKey),
-					rawSelectedIndexes: (parsed.groups ?? []).map((g) => g.selectedIndex),
-				},
-			);
-		} catch {
-			console.log(MOSAIC_TAB_LOG, "load-raw", workspaceKey, { parseError: true });
-		}
-	} else {
-		console.log(MOSAIC_TAB_LOG, "load-raw", workspaceKey, { empty: true });
-	}
-	const state = parseMosaicJson(raw, project);
-	logMosaicTabSelection("load-parsed", workspaceKey, state.groups, {
-		focusedGroupId: state.focusedGroupId,
-	});
-	return state;
+	return parseMosaicJson(raw, project);
 }
 
 function createEditorState(initialMosaic: MosaicWorkspaceState) {
@@ -636,26 +558,14 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			return JSON.parse(JSON.stringify(payload)) as MosaicWorkspaceState;
 		}
 
-		function persistMosaicLayoutNow(reason: string) {
+		function persistMosaicLayoutNow(_reason: string) {
 			const k = workspaceKey();
 			if (!mosaicHydrated() || k !== loadedWorkspaceKey) {
-				logMosaicTabSelection("persist-skipped", k, mosaicState.groups, {
-					reason,
-					mosaicHydrated: mosaicHydrated(),
-					loadedWorkspaceKey,
-				});
 				return;
 			}
 			const payload = buildMosaicPersistPayload();
-			logMosaicTabSelection("persist", k, payload.groups, {
-				reason,
-				focusedGroupId: payload.focusedGroupId,
-				inMemorySelectedTabKeys: mosaicState.groups.map(
-					(g) => g.selectedTabKey,
-				),
-			});
 			void saveMosaicJson(k, JSON.stringify(payload)).catch((err) => {
-				console.warn(MOSAIC_TAB_LOG, "persist-error", reason, err);
+				console.warn("Failed to persist mosaic layout", err);
 			});
 		}
 

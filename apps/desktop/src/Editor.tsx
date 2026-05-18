@@ -90,6 +90,7 @@ const platform = createPlatform({
   pkgs.voicemod.pkg,
   pkgs.functions.pkg,
   pkgs.functionQueue.pkg,
+  pkgs.script.pkg,
 ].map((p) => core.registerPackage(p));
 
 export default function Editor() {

@@ -61,7 +61,6 @@ import {
 	type GraphBounds,
 	type TabListState,
 	InterfaceContextProvider,
-	logMosaicTabSelection,
 	tabKey,
 	useInterfaceContext,
 } from "./context";
@@ -92,7 +91,7 @@ import {
 	updateTabDragGhost,
 	updateTabDropTarget,
 } from "./tabDragSession";
-import { isCtrlEvent } from "./util";
+import { isCtrlEvent, isEditingText } from "./util";
 import { PlatformContext, usePlatform } from "./platform";
 
 export * from "./platform";
@@ -736,6 +735,8 @@ function createKeydownShortcuts(
 	const mouse = createMousePosition(window);
 
 	createEventListener(window, "keydown", async (e) => {
+		if (isEditingText(e)) return;
+
 		if (isCtrlEvent(e) && e.code === "KeyK" && !e.shiftKey) {
 			mosaicChordPending = true;
 			clearTimeout(mosaicChordTimer);
@@ -1236,25 +1237,9 @@ function MosaicPaneHost(props: { groupId: string }) {
 				if (gi < 0) return;
 				const tab = ctx.mosaicState.groups[gi]?.tabs[tabIndex];
 				const key = tab ? tabKey(tab) : undefined;
-				logMosaicTabSelection(
-					"select",
-					ctx.mosaicWorkspaceKey(),
-					ctx.mosaicState.groups,
-					{
-						groupId: props.groupId,
-						clickedIndex: tabIndex,
-						clickedTabKey: key,
-					},
-				);
 				ctx.setMosaicState("groups", gi, "selectedIndex", tabIndex);
 				ctx.setMosaicState("groups", gi, "selectedTabKey", key);
 				queueMicrotask(() => {
-					logMosaicTabSelection(
-						"select-after",
-						ctx.mosaicWorkspaceKey(),
-						ctx.mosaicState.groups,
-						{ groupId: props.groupId },
-					);
 					ctx.persistMosaicLayoutNow("tab-click");
 				});
 			}}

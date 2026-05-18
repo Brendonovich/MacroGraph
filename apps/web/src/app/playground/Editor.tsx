@@ -98,6 +98,7 @@ const core = new Core({
 	pkgs.midi.pkg,
 	pkgs.vtubeStudio.pkg,
 	pkgs.voicemod.pkg,
+	pkgs.script.pkg,
 ].map((p) => p && core.registerPackage(p));
 
 export default () => {

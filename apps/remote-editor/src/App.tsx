@@ -143,6 +143,7 @@ const remotePlatform: Platform = {
 	pkgs.vtubeStudio.pkg,
 	pkgs.voicemod.pkg,
 	pkgs.functions.pkg,
+	pkgs.script.pkg,
 ].map((p) => core.registerPackage(p));
 
 function wsUrl() {

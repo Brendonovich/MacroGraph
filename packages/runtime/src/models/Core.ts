@@ -380,7 +380,7 @@ export class ExecutionContext {
 				});
 			},
 			setOutput: (output, value) => {
-				this.data.set(output, value);
+				setDataForOutput(this.data, output, value);
 			},
 			getInput: (input) => {
 				if (
@@ -409,7 +409,7 @@ export class ExecutionContext {
 							return input.defaultValue ?? input.type.default();
 					},
 					(conn) => {
-						const data = this.data.get(conn);
+						const data = getDataForOutput(this.data, conn);
 
 						if (data === undefined)
 							throw new Error(`Data not found for input '${input.id}'!`);
@@ -494,7 +494,7 @@ export class ExecutionContext {
 							} else {
 								// Value should already be present for non-pure nodes
 
-								const value = this.data.get(conn);
+								const value = getDataForOutput(this.data, conn);
 
 								if (value === undefined)
 									throw new Error(
@@ -630,6 +630,40 @@ export async function rerunNodeFromInvocationSnapshot(
 	await ctx.execNode(node, { replaySnapshotInputs: snapshot.inputs });
 }
 
+/** IO pins can be recreated when types change; resolve the live pin on the node. */
+function resolveDataOutputPin(pin: DataOutput<any>): DataOutput<any> {
+	const latest = pin.node.output(pin.id);
+	return latest instanceof DataOutput ? latest : pin;
+}
+
+function getDataForOutput(
+	data: Map<DataOutput<any> | ScopeOutput, unknown>,
+	pin: DataOutput<any> | ScopeOutput,
+): unknown {
+	if (pin instanceof DataOutput) {
+		const resolved = resolveDataOutputPin(pin);
+		const value = data.get(resolved);
+		if (value !== undefined) return value;
+		if (resolved !== pin) return data.get(pin);
+		return undefined;
+	}
+	return data.get(pin);
+}
+
+function setDataForOutput(
+	data: Map<DataOutput<any> | ScopeOutput, unknown>,
+	pin: DataOutput<any> | ScopeOutput,
+	value: unknown,
+) {
+	if (pin instanceof DataOutput) {
+		const resolved = resolveDataOutputPin(pin);
+		data.set(resolved, value);
+		if (resolved !== pin) data.set(pin, value);
+		return;
+	}
+	data.set(pin, value);
+}
+
 function snapshotInvocationInputs(ctx: RunCtx, node: Node) {
 	const inputs: Record<string, unknown> = {};
 
@@ -654,7 +688,8 @@ function snapshotInvocationOutputs(ctx: ExecutionContext, node: Node) {
 
 	for (const pin of node.state.outputs) {
 		if (pin instanceof DataOutput || pin instanceof ScopeOutput) {
-			if (ctx.data.has(pin)) outputs[pin.id] = ctx.data.get(pin);
+			const value = getDataForOutput(ctx.data, pin);
+			if (value !== undefined) outputs[pin.id] = value;
 		}
 	}
 

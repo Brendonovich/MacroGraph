@@ -62,3 +62,14 @@ export const tw = new Proxy((() => {}) as unknown as TailwindFactory, {
 export function isCtrlEvent(e: MouseEvent | KeyboardEvent) {
 	return e.ctrlKey || e.metaKey;
 }
+
+/** True when the event target is an input the user is typing in (skip graph shortcuts). */
+export function isEditingText(e: KeyboardEvent) {
+	const el = e.target;
+	if (!(el instanceof HTMLElement)) return false;
+	if (el.closest(".cm-editor")) return true;
+	if (el.isContentEditable) return true;
+	const tag = el.tagName;
+	if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+	return !!el.closest("[contenteditable='true']");
+}

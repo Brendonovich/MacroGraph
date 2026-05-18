@@ -35,6 +35,7 @@ export * as functionQueue from "./functionQueue";
 export * as variables from "./variables";
 export * as voicemod from "./voicemod";
 export * as functions from "./functions";
+export * as script from "./script";
 
 export {
 	applyHostMirrorPayloadToCore,

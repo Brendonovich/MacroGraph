@@ -211,6 +211,14 @@ export const Graph = (props: Props) => {
 		});
 
 	createEventListener(window, "keydown", (e) => {
+		const target = e.target;
+		if (
+			target instanceof HTMLElement &&
+			(target.closest(".cm-editor") || target.isContentEditable)
+		) {
+			return;
+		}
+
 		switch (e.code) {
 			case "BracketLeft": {
 				const fold = (e.metaKey || e.shiftKey) && e.altKey;
