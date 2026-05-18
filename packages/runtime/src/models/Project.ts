@@ -11,6 +11,10 @@ import { CustomEnum } from "./CustomEnum";
 import { CustomEvent } from "./CustomEvent";
 import { CustomStruct } from "./CustomStruct";
 import { Graph } from "./Graph";
+import { type GraphRef, graphRefKey } from "./graphRef";
+
+export type { GraphRef } from "./graphRef";
+export { graphRefKey, graphRefsEqual } from "./graphRef";
 import { GraphFunction, type FunctionArgs } from "./Function";
 import type { ResourceType } from "./Package";
 import { Queue, type QueueArgs } from "./Queue";
@@ -33,10 +37,15 @@ export type ResourceTypeEntry = {
 
 export type ProjectEvent = "modified";
 
+export type GraphKind = "graph" | "function" | "queue" | "functionQueue";
+
 export class Project {
 	core: Core;
 
 	graphs = new ReactiveMap<number, Graph>();
+	functionGraphs = new ReactiveMap<number, Graph>();
+	queueGraphs = new ReactiveMap<number, Graph>();
+	functionQueueGraphs = new ReactiveMap<number, Graph>();
 	graphOrder: Array<number> = [];
 	functionGraphOrder: Array<number> = [];
 	queueGraphOrder: Array<number> = [];
@@ -115,8 +124,82 @@ export class Project {
 		return Maybe(this.customEnums.get(data.id));
 	}
 
-	graph(id: number) {
-		return this.graphs.get(id);
+	graphMapForKind(kind: GraphKind): ReactiveMap<number, Graph> {
+		switch (kind) {
+			case "function":
+				return this.functionGraphs;
+			case "queue":
+				return this.queueGraphs;
+			case "functionQueue":
+				return this.functionQueueGraphs;
+			default:
+				return this.graphs;
+		}
+	}
+
+	getGraphByKind(kind: GraphKind, id: number): Graph | undefined {
+		return this.graphMapForKind(kind).get(id);
+	}
+
+	setGraphByKind(kind: GraphKind, graph: Graph): void {
+		this.graphMapForKind(kind).set(graph.id, graph);
+	}
+
+	deleteGraphByKind(kind: GraphKind, id: number): void {
+		this.graphMapForKind(kind).delete(id);
+	}
+
+	/** @deprecated Use `getGraphByKind(kind, id)` — graph IDs are only unique per kind. */
+	graph(id: number, kind: GraphKind) {
+		return this.getGraphByKind(kind, id);
+	}
+
+	kindOfGraph(graph: Graph): GraphKind {
+		return graph.kind;
+	}
+
+	graphKind(graphId: number): GraphKind {
+		if (this.graphOrder.includes(graphId) && this.graphs.has(graphId)) return "graph";
+		if (this.functionGraphOrder.includes(graphId) && this.functionGraphs.has(graphId))
+			return "function";
+		if (this.queueGraphOrder.includes(graphId) && this.queueGraphs.has(graphId))
+			return "queue";
+		if (
+			this.functionQueueGraphOrder.includes(graphId) &&
+			this.functionQueueGraphs.has(graphId)
+		)
+			return "functionQueue";
+		if (this.functionGraphs.has(graphId)) return "function";
+		if (this.queueGraphs.has(graphId)) return "queue";
+		if (this.functionQueueGraphs.has(graphId)) return "functionQueue";
+		if (this.graphs.has(graphId)) return "graph";
+		// Fallback when maps are out of sync (e.g. partial rollback / legacy saves)
+		if (this.functionGraphOrder.includes(graphId)) return "function";
+		if (this.queueGraphOrder.includes(graphId)) return "queue";
+		if (this.functionQueueGraphOrder.includes(graphId)) return "functionQueue";
+		for (const [, fn] of this.functions) {
+			if (fn.graphId === graphId) return "function";
+		}
+		for (const [, queue] of this.queues) {
+			if (queue.graphId === graphId) return "queue";
+		}
+		for (const [, queue] of this.functionQueues) {
+			if (queue.graphId === graphId) return "functionQueue";
+		}
+		return "graph";
+	}
+
+	graphOrderForKind(kind: GraphKind): number[] {
+		switch (kind) {
+			case "function":
+				return this.functionGraphOrder;
+			case "queue":
+				return this.queueGraphOrder;
+			case "functionQueue":
+				return this.functionQueueGraphOrder;
+			default:
+				return this.graphOrder;
+		}
 	}
 
 	get allGraphOrder(): readonly number[] {
@@ -134,6 +217,7 @@ export class Project {
 		const graph = new Graph({
 			name: `Graph ${id}`,
 			id,
+			kind: "graph",
 			project: this,
 			...args,
 		});
@@ -200,9 +284,10 @@ export class Project {
 		const graph = new Graph({
 			id: graphId,
 			name,
+			kind: "function",
 			project: this,
 		});
-		this.graphs.set(graphId, graph);
+		this.functionGraphs.set(graphId, graph);
 		this.functionGraphOrder.push(graphId);
 		const fn = new GraphFunction({ id, name, graphId, project: this });
 		this.functions.set(id, fn);
@@ -215,10 +300,10 @@ export class Project {
 		for (const [, q] of this.functionQueues) {
 			q.removeItemsForFunction(id);
 		}
-		const graph = this.graphs.get(fn.graphId);
+		const graph = this.functionGraphs.get(fn.graphId);
 		if (graph) {
 			this.functionGraphOrder = this.functionGraphOrder.filter((gid) => gid !== fn.graphId);
-			this.graphs.delete(fn.graphId);
+			this.functionGraphs.delete(fn.graphId);
 			graph.dispose();
 		}
 		this.functions.delete(id);
@@ -297,9 +382,10 @@ export class Project {
 		const graph = new Graph({
 			id: graphId,
 			name,
+			kind: "queue",
 			project: this,
 		});
-		this.graphs.set(graphId, graph);
+		this.queueGraphs.set(graphId, graph);
 		this.queueGraphOrder.push(graphId);
 		const queue = new Queue({
 			id,
@@ -320,10 +406,10 @@ export class Project {
 	removeQueue(id: number) {
 		const queue = this.queues.get(id);
 		if (!queue) return;
-		const graph = this.graphs.get(queue.graphId);
+		const graph = this.queueGraphs.get(queue.graphId);
 		if (graph) {
 			this.queueGraphOrder = this.queueGraphOrder.filter((gid) => gid !== queue.graphId);
-			this.graphs.delete(queue.graphId);
+			this.queueGraphs.delete(queue.graphId);
 			graph.dispose();
 		}
 		this.queues.delete(id);
@@ -341,9 +427,10 @@ export class Project {
 		const graph = new Graph({
 			id: graphId,
 			name,
+			kind: "functionQueue",
 			project: this,
 		});
-		this.graphs.set(graphId, graph);
+		this.functionQueueGraphs.set(graphId, graph);
 		this.functionQueueGraphOrder.push(graphId);
 		const queue = new FunctionQueue({
 			id,
@@ -363,10 +450,10 @@ export class Project {
 	removeFunctionQueue(id: number) {
 		const queue = this.functionQueues.get(id);
 		if (!queue) return;
-		const graph = this.graphs.get(queue.graphId);
+		const graph = this.functionQueueGraphs.get(queue.graphId);
 		if (graph) {
 			this.functionQueueGraphOrder = this.functionQueueGraphOrder.filter((gid) => gid !== queue.graphId);
-			this.graphs.delete(queue.graphId);
+			this.functionQueueGraphs.delete(queue.graphId);
 			graph.dispose();
 		}
 		this.functionQueues.delete(id);

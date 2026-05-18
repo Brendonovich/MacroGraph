@@ -1,4 +1,5 @@
 import type { HistoryActions } from "@macrograph/action-history";
+import type { GraphKind } from "@macrograph/runtime";
 import { batch, createRoot, createSignal } from "solid-js";
 
 export type RemoteHistoryWireItem = { type: string; entry: unknown };
@@ -97,6 +98,7 @@ export function applyRemoteHistoryItems(items: RemoteHistoryWireItem[]) {
 
 /** Same payload shape as `setGraphItemPositions` perform (no `from` required for forward apply). */
 export type WireGraphPositionsEphemeral = {
+	graphKind: GraphKind;
 	graphId: number;
 	items: Array<{
 		itemId: number;
@@ -125,16 +127,29 @@ export function applySetGraphItemPositionsPerform(entry: WireGraphPositionsEphem
 }
 
 export function stringifyGraphPositionsEphemeralWire(
-	graphId: number,
+	ref: Pick<WireGraphPositionsEphemeral, "graphKind" | "graphId">,
 	items: WireGraphPositionsEphemeral["items"],
 ): string {
 	return JSON.stringify(
 		toWireJsonSerializable({
 			type: "graphPositionsEphemeral",
-			graphId,
+			graphKind: ref.graphKind,
+			graphId: ref.graphId,
 			items,
 		}),
 	);
+}
+
+function parseWireGraphKind(v: unknown): GraphKind {
+	if (
+		v === "graph" ||
+		v === "function" ||
+		v === "queue" ||
+		v === "functionQueue"
+	) {
+		return v;
+	}
+	return "graph";
 }
 
 function parseWireNumber(n: unknown): number | null {
@@ -161,6 +176,7 @@ function parseWirePosition(pos: unknown): { x: number; y: number } | null {
 
 export type WireCursorPosition = {
 	id: string;
+	graphKind: GraphKind;
 	graphId: number;
 	position: { x: number; y: number };
 	viewportCenter?: { x: number; y: number };
@@ -210,6 +226,7 @@ export function removeRemoteCursor(id: string) {
 // Remote pin drag state — ephemeral wire preview shown on other clients.
 export type RemotePinDrag = {
 	id: string;
+	graphKind: GraphKind;
 	graphId: number;
 	pinNodeId: number;
 	pinId: string;
@@ -237,6 +254,7 @@ export function removeRemotePinDrag(id: string) {
 // Remote selection box state — drag-select rectangle shown on other clients.
 export type RemoteSelectionBox = {
 	id: string;
+	graphKind: GraphKind;
 	graphId: number;
 	x: number;
 	y: number;
@@ -267,12 +285,12 @@ export function setOnCursorUpdate(fn: typeof onCursorUpdate) {
 }
 
 // Broadcast callbacks registered by host/remote editors
-let cursorBroadcastFn: ((pos: { graphId: number; position: { x: number; y: number }; viewportCenter?: { x: number; y: number } }) => void) | null = null;
+let cursorBroadcastFn: ((pos: WireCursorPosition) => void) | null = null;
 export function setCursorBroadcastFn(fn: typeof cursorBroadcastFn) {
 	cursorBroadcastFn = fn;
 }
 
-export function broadcastCursorPosition(pos: { graphId: number; position: { x: number; y: number }; viewportCenter?: { x: number; y: number } }) {
+export function broadcastCursorPosition(pos: WireCursorPosition) {
 	cursorBroadcastFn?.(pos);
 }
 
@@ -311,10 +329,11 @@ export function parseCursorMessage(
 	if (!id) return null;
 	const graphId = parseWireNumber(body.graphId);
 	if (graphId == null) return null;
+	const graphKind = parseWireGraphKind(body.graphKind);
 	const position = parseWirePosition(body.position);
 	if (!position) return null;
 	const viewportCenter = parseWirePosition(body.viewportCenter);
-	return { id, graphId, position, viewportCenter: viewportCenter ?? undefined };
+	return { id, graphKind, graphId, position, viewportCenter: viewportCenter ?? undefined };
 }
 
 export function stringifyNodeExecuteWire(graphId: number, nodeId: number): string {
@@ -337,6 +356,7 @@ export function parseGraphPositionsEphemeralMessage(
 	if (body.type !== "graphPositionsEphemeral") return null;
 	const graphId = parseWireNumber(body.graphId);
 	if (graphId == null || !Array.isArray(body.items)) return null;
+	const graphKind = parseWireGraphKind(body.graphKind);
 	const items: WireGraphPositionsEphemeral["items"] = [];
 	for (const raw of body.items) {
 		if (typeof raw !== "object" || raw === null) return null;
@@ -352,7 +372,7 @@ export function parseGraphPositionsEphemeralMessage(
 			position,
 		});
 	}
-	return { graphId, items };
+	return { graphKind, graphId, items };
 }
 
 export function stringifyPinDragWire(payload: RemotePinDrag): string {
@@ -373,7 +393,8 @@ export function parsePinDragMessage(
 	const isOutput = body.isOutput === true;
 	const position = parseWirePosition(body.position);
 	if (graphId == null || pinNodeId == null || !pinId || !position) return null;
-	return { id, graphId, pinNodeId, pinId, isOutput, position };
+	const graphKind = parseWireGraphKind(body.graphKind);
+	return { id, graphKind, graphId, pinNodeId, pinId, isOutput, position };
 }
 
 export function stringifySelectionBoxWire(payload: RemoteSelectionBox): string {
@@ -395,5 +416,6 @@ export function parseSelectionBoxMessage(
 	const height = parseWireNumber(body.height);
 	if (graphId == null || x == null || y == null || width == null || height == null)
 		return null;
-	return { id, graphId, x, y, width, height };
+	const graphKind = parseWireGraphKind(body.graphKind);
+	return { id, graphKind, graphId, x, y, width, height };
 }

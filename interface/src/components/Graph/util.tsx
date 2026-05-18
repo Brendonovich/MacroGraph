@@ -17,6 +17,8 @@ import { createRoot } from "solid-js";
 import type { GraphItemPositionInput } from "../../actions";
 import type { InterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
+import { graphRefOf } from "@macrograph/runtime";
+
 import type { GraphContext, SelectedItemID } from "./Context";
 
 export const GRID_SIZE = 15;
@@ -72,7 +74,7 @@ export function handleSelectableItemPointerDown(
 		interfaceCtx.execute(
 			"setGraphSelection",
 			{
-				graphId: graph.model().id,
+				...graphRefOf(graph.model()),
 				selection: [...graph.state.selectedItemIds, id],
 			},
 			{ ephemeral: true },
@@ -80,7 +82,7 @@ export function handleSelectableItemPointerDown(
 	else if (prevSelection.length === 0 || !isSelected)
 		interfaceCtx.execute(
 			"setGraphSelection",
-			{ graphId: graph.model().id, selection: [id] },
+			{ ...graphRefOf(graph.model()), selection: [id] },
 			{ ephemeral: true },
 		);
 
@@ -159,8 +161,11 @@ export function handleSelectableItemPointerDown(
 	let didDrag = false;
 
 	let positionsRafId: number | null = null;
-	let pendingLivePayload: { graphId: number; items: GraphItemPositionInput[] } | null =
-		null;
+	let pendingLivePayload: {
+		graphKind: import("@macrograph/runtime").GraphKind;
+		graphId: number;
+		items: GraphItemPositionInput[];
+	} | null = null;
 
 	const flushPendingLivePositions = () => {
 		if (positionsRafId != null) {
@@ -171,6 +176,7 @@ export function handleSelectableItemPointerDown(
 		pendingLivePayload = null;
 		if (!pay?.items.length || !interfaceCtx.broadcastGraphPositionsLive) return;
 		interfaceCtx.broadcastGraphPositionsLive({
+			graphKind: pay.graphKind,
 			graphId: pay.graphId,
 			items: pay.items.map((i) => ({
 				itemId: i.itemId,
@@ -191,7 +197,7 @@ export function handleSelectableItemPointerDown(
 					if (isCtrlEvent(e)) {
 						if (isSelected) {
 							interfaceCtx.execute("setGraphSelection", {
-								graphId: graph.model().id,
+								...graphRefOf(graph.model()),
 								selection: graph.state.selectedItemIds.filter(
 									(s) => s.type !== id.type || s.id !== id.id,
 								),
@@ -200,7 +206,7 @@ export function handleSelectableItemPointerDown(
 						}
 					} else {
 						interfaceCtx.execute("setGraphSelection", {
-							graphId: graph.model().id,
+							...graphRefOf(graph.model()),
 							selection: [id],
 							prev: prevSelection,
 						});
@@ -258,7 +264,7 @@ export function handleSelectableItemPointerDown(
 
 					if (items.length > 0)
 						interfaceCtx.execute("setGraphItemPositions", {
-							graphId: graph.model().id,
+							...graphRefOf(graph.model()),
 							items,
 							selection: [...graph.state.selectedItemIds],
 							prevSelection,
@@ -343,11 +349,11 @@ export function handleSelectableItemPointerDown(
 				if (items.length > 0) {
 					interfaceCtx.execute(
 						"setGraphItemPositions",
-						{ graphId: graph.model().id, items },
+						{ ...graphRefOf(graph.model()), items },
 						{ ephemeral: true },
 					);
 					pendingLivePayload = {
-						graphId: graph.model().id,
+						...graphRefOf(graph.model()),
 						items: items.map((i) => ({
 							...i,
 							position: { ...i.position },
@@ -360,6 +366,7 @@ export function handleSelectableItemPointerDown(
 							pendingLivePayload = null;
 							if (!pay?.items.length || !interfaceCtx.broadcastGraphPositionsLive) return;
 							interfaceCtx.broadcastGraphPositionsLive({
+								graphKind: pay.graphKind,
 								graphId: pay.graphId,
 								items: pay.items.map((i) => ({
 									itemId: i.itemId,

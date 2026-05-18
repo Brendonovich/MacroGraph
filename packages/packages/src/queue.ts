@@ -17,7 +17,7 @@ export function pkg(core?: any) {
 
 	pkg.createSchema({
 		name: "Add to Queue",
-		type: "exec",
+		type: "base",
 		properties: { queue: queueProperty },
 		createIO({ io, ctx, properties }: any) {
 			const queueId = ctx.getProperty(properties.queue);
@@ -25,7 +25,11 @@ export function pkg(core?: any) {
 			const queue = ctx.graph.project.queues.get(queueId);
 			if (!queue) return;
 
+			const execIn = io.execInput({ id: "exec" });
+
 			return {
+				execIn,
+				execOut: io.execOutput({ id: "exec" }),
 				value: io.dataInput({
 					id: "value",
 					name: "Value",
@@ -42,6 +46,8 @@ export function pkg(core?: any) {
 
 			const value = ctx.getInput(io.value);
 			queue.addItem(value);
+
+			ctx.exec(io.execOut);
 		},
 	});
 

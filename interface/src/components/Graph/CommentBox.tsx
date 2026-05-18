@@ -2,6 +2,7 @@ import { ContextMenu } from "@kobalte/core";
 import {
 	type CommentBox as CommentBoxModel,
 	getNodesInRect,
+	graphRefOf,
 } from "@macrograph/runtime";
 import { createEventListenerMap } from "@solid-primitives/event-listener";
 import clsx from "clsx";
@@ -65,7 +66,7 @@ export function CommentBox(props: Props) {
 						});
 
 						interfaceCtx.execute("setCommentBoxBounds", {
-							graphId: graph.model().id,
+							...graphRefOf(graph.model()),
 							boxId: box().id,
 							size: {
 								x:
@@ -95,7 +96,7 @@ export function CommentBox(props: Props) {
 						interfaceCtx.execute(
 							"setCommentBoxBounds",
 							{
-								graphId: graph.model().id,
+								...graphRefOf(graph.model()),
 								boxId: box().id,
 								size: {
 									x:
@@ -184,7 +185,7 @@ export function CommentBox(props: Props) {
 								<ContextMenuItem
 									onSelect={() => {
 										interfaceCtx.execute("deleteGraphItems", {
-											graphId: graph.model().id,
+											...graphRefOf(graph.model()),
 											items: [{ type: "commentBox", id: box().id }],
 										});
 									}}
@@ -214,7 +215,7 @@ export function CommentBox(props: Props) {
 										}
 
 										interfaceCtx.execute("deleteGraphItems", {
-											graphId: graph.model().id,
+											...graphRefOf(graph.model()),
 											items,
 										});
 									}}
@@ -246,7 +247,7 @@ export function CommentBox(props: Props) {
 									onBlur={() => {
 										if (value() !== "") {
 											interfaceCtx.execute("setCommentBoxText", {
-												graphId: graph.model().id,
+												...graphRefOf(graph.model()),
 												boxId: box().id,
 												text: value(),
 											});

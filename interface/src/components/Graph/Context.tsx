@@ -1,4 +1,10 @@
-import type { Graph as GraphModel, XY } from "@macrograph/runtime";
+import type {
+	Graph as GraphModel,
+	GraphKind,
+	GraphRef,
+	XY,
+} from "@macrograph/runtime";
+import { graphRefOf } from "@macrograph/runtime";
 import { createContextProvider } from "@solid-primitives/context";
 import type * as Solid from "solid-js";
 
@@ -21,23 +27,68 @@ export function toScreenSpace(graphXY: XY, bounds: XY, state: GraphViewState) {
 }
 
 export type GraphViewState = {
+	graphKind: GraphKind;
 	graphId: number;
 	translate: XY;
 	scale: number;
 	selectedItemIds: SelectedItemID[];
 };
 
+export { graphRefOf };
+export type { GraphRef };
+
+export function graphRefFromTab(tab: GraphEditorTab): GraphRef {
+	return {
+		graphKind: tab.graphKind ?? tabGraphKind(tab),
+		graphId: tab.graphId,
+	};
+}
+
 export type GraphTab = GraphViewState & { type: "graph" };
 export type FunctionTab = GraphViewState & { type: "function"; functionId: number };
 export type QueueTab = GraphViewState & { type: "queue"; queueId: number };
+export type FunctionQueueTab = {
+	type: "functionQueue";
+	functionQueueId: number;
+};
 export type SettingsTab = { type: "settings" };
 export type PackageTab = { type: "package"; packageName: string };
 
-export type TabState = GraphTab | FunctionTab | QueueTab | SettingsTab | PackageTab;
+export type TabState =
+	| GraphTab
+	| FunctionTab
+	| QueueTab
+	| FunctionQueueTab
+	| SettingsTab
+	| PackageTab;
+
+export type GraphEditorTab = GraphTab | FunctionTab | QueueTab;
+
+export function isGraphEditorTab(tab: TabState): tab is GraphEditorTab {
+	return tab.type === "graph" || tab.type === "function" || tab.type === "queue";
+}
+
+export function tabGraphKind(tab: GraphEditorTab): GraphKind {
+	if (tab.type === "function") return "function";
+	if (tab.type === "queue") return "queue";
+	return tab.graphKind ?? "graph";
+}
+
+export function coerceGraphScale(scale: unknown): number {
+	if (typeof scale === "number" && Number.isFinite(scale) && scale > 0) {
+		return scale;
+	}
+	if (typeof scale === "string") {
+		const parsed = Number(scale);
+		if (Number.isFinite(parsed) && parsed > 0) return parsed;
+	}
+	return 1;
+}
 
 export function makeGraphState(model: GraphModel): GraphTab {
 	return {
 		type: "graph",
+		graphKind: model.kind,
 		graphId: model.id,
 		translate: {
 			x: 0,
@@ -51,6 +102,7 @@ export function makeGraphState(model: GraphModel): GraphTab {
 export function makeFunctionTab(fn: { id: number; graphId: number }): FunctionTab {
 	return {
 		type: "function",
+		graphKind: "function",
 		graphId: fn.graphId,
 		functionId: fn.id,
 		translate: { x: 0, y: 0 } as XY,
@@ -62,11 +114,19 @@ export function makeFunctionTab(fn: { id: number; graphId: number }): FunctionTa
 export function makeQueueTab(queue: { id: number; graphId: number }): QueueTab {
 	return {
 		type: "queue",
+		graphKind: "queue",
 		graphId: queue.graphId,
 		queueId: queue.id,
 		translate: { x: 0, y: 0 } as XY,
 		scale: 1,
 		selectedItemIds: [] as SelectedItemID[],
+	};
+}
+
+export function makeFunctionQueueTab(queue: { id: number }): FunctionQueueTab {
+	return {
+		type: "functionQueue",
+		functionQueueId: queue.id,
 	};
 }
 

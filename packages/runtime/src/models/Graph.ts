@@ -16,12 +16,13 @@ import {
 	type ScopeOutput,
 } from "./IO";
 import { Node, type NodeArgs } from "./Node";
-import type { Project } from "./Project";
+import type { GraphKind, Project } from "./Project";
 import { Variable, type VariableArgs } from "./Variable";
 
 export interface GraphArgs {
 	id: number;
 	name: string;
+	kind: GraphKind;
 	project: Project;
 }
 
@@ -50,6 +51,7 @@ export type Connections = ReactiveMap<IORef, Array<IORef>>;
 export class Graph extends Disposable {
 	id: number;
 	name: string;
+	kind: GraphKind;
 	project: Project;
 
 	nodes = new ReactiveMap<number, Node>();
@@ -64,6 +66,7 @@ export class Graph extends Disposable {
 
 		this.id = args.id;
 		this.name = args.name;
+		this.kind = args.kind;
 		this.project = args.project;
 
 		return createMutable(this);

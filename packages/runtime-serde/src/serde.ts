@@ -87,7 +87,7 @@ export type FunctionQueueItem = v.InferOutput<typeof FunctionQueueItem>;
 export const FunctionQueue = v.object({
 	id: v.number(),
 	name: v.string(),
-	graphId: v.optional(IntID, 0),
+	graphId: v.optional(IntID),
 	items: v.optional(v.array(FunctionQueueItem), []),
 	paused: v.optional(v.boolean(), false),
 	concurrent: v.optional(v.boolean(), false),
@@ -97,7 +97,7 @@ export type FunctionQueue = v.InferOutput<typeof FunctionQueue>;
 export const Queue = v.object({
 	id: v.number(),
 	name: v.string(),
-	graphId: v.optional(IntID, 0),
+	graphId: v.optional(IntID),
 	items: v.optional(v.array(v.any()), []),
 	paused: v.optional(v.boolean(), false),
 	concurrent: v.optional(v.boolean(), false),
@@ -251,8 +251,17 @@ export const Resource = v.object({
 });
 export type Resource = v.InferOutput<typeof Resource>;
 
-/** Serialized invocation history embedded in project JSON / sharded project-root. */
+/** Serialized invocation history embedded in unified project JSON. */
 export const NodeInvocationFileRow = v.object({
+	graphKind: v.optional(
+		v.union([
+			v.literal("graph"),
+			v.literal("function"),
+			v.literal("queue"),
+			v.literal("functionQueue"),
+		]),
+		"graph",
+	),
 	graphId: v.number(),
 	nodeId: v.number(),
 	entries: v.array(v.any()),
@@ -308,9 +317,9 @@ export const ProjectRoot = v.object({
 	functionQueueIdCounter: v.optional(v.pipe(v.number(), v.integer()), 0),
 	counter: v.optional(v.number(), 0),
 	resources: v.optional(v.array(Resource), []),
-	/** Sharded save: IDs only; bodies live under `project-variable-${id}` in localStorage. */
+	/** Legacy sharded save: variable IDs only (bodies under `project-variable-${id}`). */
 	variables: v.optional(v.array(IntID), []),
-	/** Sharded save: IDs only; bodies live under `project-queue-${id}` in localStorage. */
+	/** Legacy sharded save: queue IDs only (bodies under `project-queue-${id}`). */
 	queues: v.optional(v.array(IntID), []),
 	functionQueues: v.optional(v.array(FunctionQueue), []),
 	nodeInvocations: v.optional(v.array(NodeInvocationFileRow), []),

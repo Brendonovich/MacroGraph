@@ -86,7 +86,7 @@ export class Queue extends Disposable {
 
 		this.processing = true;
 		try {
-			const graph = this.owner.graphs.get(this.graphId);
+			const graph = this.owner.getGraphByKind("queue", this.graphId);
 			if (!graph) return;
 
 			const startNode = [...graph.nodes.values()].find(

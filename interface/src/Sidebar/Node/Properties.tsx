@@ -3,6 +3,7 @@ import {
 	type Node,
 	type PropertyValue,
 	type SchemaProperties,
+	graphRefOf,
 } from "@macrograph/runtime";
 import { For, Match, Show, Switch, createMemo } from "solid-js";
 
@@ -65,7 +66,7 @@ export function Properties(props: {
 												value={selectedOption()}
 												onChange={(v) => {
 													interfaceCtx.execute("setNodeProperty", {
-														graphId: props.node.graph.id,
+														...graphRefOf(props.node.graph),
 														nodeId: props.node.id,
 														propertyId: property().id,
 														value: v.id,
@@ -83,7 +84,7 @@ export function Properties(props: {
 
 										const onChange = (v: any) => {
 											interfaceCtx.execute("setNodeProperty", {
-												graphId: props.node.graph.id,
+												...graphRefOf(props.node.graph),
 												nodeId: props.node.id,
 												propertyId: property().id,
 												value: v,
@@ -182,7 +183,7 @@ export function Properties(props: {
 												}
 												onChange={(v) => {
 													interfaceCtx.execute("setNodeProperty", {
-														graphId: props.node.graph.id,
+														...graphRefOf(props.node.graph),
 														nodeId: props.node.id,
 														propertyId: property().id,
 														value: v.id,

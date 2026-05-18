@@ -229,7 +229,7 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 
 		// Render remote pin drag wires (from other clients)
 		for (const drag of getRemotePinDrags()) {
-			if (drag.graphId !== graph.id) continue;
+			if (drag.graphKind !== graph.kind || drag.graphId !== graph.id) continue;
 			const node = graph.nodes.get(drag.pinNodeId);
 			if (!node) continue;
 			const pin = drag.isOutput ? node.output(drag.pinId) : node.input(drag.pinId);

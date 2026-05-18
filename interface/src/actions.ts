@@ -7,7 +7,10 @@ import {
 	DataOutput,
 	ExecInput,
 	ExecOutput,
+	Graph,
 	GraphFunction,
+	type GraphKind,
+	type GraphRef,
 	type IORef,
 	type InputPin,
 	type NodeSchema,
@@ -34,6 +37,7 @@ import {
 	deserializeField,
 	deserializeGraph,
 	deserializeNode,
+	deserializeFunctionQueue,
 	deserializeQueue,
 	deserializeVariable,
 	parseWithContext,
@@ -48,6 +52,7 @@ import {
 	serializeField,
 	serializeGraph,
 	serializeNode,
+	serializeFunctionQueue,
 	serializeQueue,
 	serializeVariable,
 } from "@macrograph/runtime-serde";
@@ -55,15 +60,19 @@ import { type PrimitiveType, deserializeType, Field, t } from "@macrograph/types
 import { batch } from "solid-js";
 import { createMutable } from "solid-js/store";
 import * as v from "valibot";
-import type {
-	GraphViewState,
-	SelectedItemID,
+import {
+	type GraphEditorTab,
+	graphRefFromTab,
+	isGraphEditorTab,
+	type GraphViewState,
+	type SelectedItemID,
 } from "./components/Graph/Context";
+import { graphRefsEqual } from "@macrograph/runtime";
 import type { EditorState } from "./context";
 
 export type VariableLocation =
 	| { location: "project" }
-	| { location: "graph"; graphId: number };
+	| ({ location: "graph" } & GraphRef);
 
 export type SelectionItem = { type: "node" | "commentBox"; id: number };
 export type GraphItemPositionInput = {
@@ -87,7 +96,6 @@ export type CreateNodeInput = GraphRef & {
 	properties?: Record<string, any>;
 };
 
-type GraphRef = { graphId: number };
 type NodeRef = GraphRef & { nodeId: number };
 type CommentBoxRef = GraphRef & { commentBoxId: number };
 type CustomStructRef = { structId: number };
@@ -115,21 +123,38 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		return entry.type;
 	}
 
-	function getFocusedGraphState(graphId?: number) {
-		const tile = editor.mosaicState.groups[editor.mosaicState.focusedIndex];
+	function getFocusedGraphState(ref?: GraphRef) {
+		return getFocusedGraphEditorTab(ref);
+	}
+
+	function getFocusedGraphEditorTab(ref?: GraphRef): GraphEditorTab | undefined {
+		const tile = editor.mosaicState.groups.find(
+			(g) => g.id === editor.mosaicState.focusedGroupId,
+		);
 		if (!tile) return;
 
-		if (graphId !== undefined) return tile.tabs.find((t) =>
-			(t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === graphId,
-		) as GraphViewState | undefined;
+		if (ref) {
+			const selected = tile.tabs[tile.selectedIndex];
+			if (
+				selected &&
+				isGraphEditorTab(selected) &&
+				graphRefsEqual(graphRefFromTab(selected), ref)
+			) {
+				return selected;
+			}
+			return tile.tabs.find(
+				(t): t is GraphEditorTab =>
+					isGraphEditorTab(t) && graphRefsEqual(graphRefFromTab(t), ref),
+			);
+		}
 
 		const tab = tile.tabs[tile.selectedIndex];
-		if (!tab || (tab.type !== "graph" && tab.type !== "function" && tab.type !== "queue")) return;
-		return tab as GraphViewState;
+		if (!tab || !isGraphEditorTab(tab)) return;
+		return tab;
 	}
 
 	function getGraph(input: GraphRef) {
-		const graph = core.project.graphs.get(input.graphId);
+		const graph = core.project.getGraphByKind(input.graphKind, input.graphId);
 		if (!graph) abort();
 		return graph;
 	}
@@ -194,7 +219,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//     return [graph, { id: graph.id }];
 		//   },
 		//   rewind(performData) {
-		//     const graph = core.project.graphs.get(performData.id);
+		//     const graph = getGraph(performData.id);
 		//     if (!graph) return;
 
 		//     const serialized = serializeGraph(graph);
@@ -227,10 +252,10 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				return graph;
 			},
 			rewind(entry) {
-				const graph = core.project.graphs.get(entry.id);
+				const graph = getGraph({ graphKind: "graph", graphId: entry.id });
 				if (!graph) return;
 
-				core.project.graphs.delete(entry.id);
+				core.project.deleteGraphByKind("graph", entry.id);
 				graph.dispose();
 
 				// editor.setGraphStates(entry.prev.graphStates);
@@ -270,8 +295,8 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//   },
 		// }),
 		setGraphName: historyAction({
-			prepare(input: { graphId: number; name: string }) {
-				const graph = core.project.graphs.get(input.graphId);
+			prepare(input: GraphRef & { name: string }) {
+				const graph = getGraph(input);
 				if (!graph) return;
 
 				return {
@@ -280,13 +305,13 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				};
 			},
 			perform(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				graph.name = entry.name;
 			},
 			rewind(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				graph.name = entry.prev;
@@ -313,11 +338,12 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//   },
 		// }),
 		deleteGraph: historyAction({
-			prepare(input: { graphId: number }) {
-				const graph = core.project.graphs.get(input.graphId);
+			prepare(input: GraphRef) {
+				const graph = getGraph(input);
 				if (!graph) return;
 
 				return {
+					graphKind: input.graphKind,
 					graphId: input.graphId,
 					data: serializeGraph(graph),
 					prev: {
@@ -327,10 +353,10 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				};
 			},
 			perform(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
-				core.project.graphs.delete(entry.graphId);
+				core.project.deleteGraphByKind(entry.graphKind, entry.graphId);
 				graph.dispose();
 
 				// editor.setGraphStates((s) => s.filter((s) => s.id !== entry.graphId));
@@ -353,8 +379,9 @@ export const historyActions = (core: Core, editor: EditorState) => {
 						serde.Graph,
 						entry.data,
 					),
+					entry.graphKind,
 				);
-				core.project.graphs.set(graph.id, graph);
+				core.project.setGraphByKind(entry.graphKind, graph);
 
 				batch(() => {
 					// editor.setGraphStates(entry.prev.graphStates);
@@ -435,7 +462,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		// }),
 		createNode: historyAction({
 			prepare(input: CreateNodeInput) {
-				const graph = core.project.graphs.get(input.graphId);
+				const graph = getGraph(input);
 				if (!graph) return;
 
 				const schema = input.schema;
@@ -450,7 +477,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				};
 			},
 			perform(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				const schema =
@@ -490,7 +517,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				return node;
 			},
 			rewind(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				const node = graph.nodes.get(entry.nodeId);
@@ -536,15 +563,12 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//   };
 		// }),
 		setNodeProperty: historyAction({
-			prepare(input: {
-				graphId: number;
+			prepare(input: GraphRef & {
 				nodeId: number;
 				propertyId: string;
 				value: any;
 			}) {
-				const node = core.project.graphs
-					.get(input.graphId)
-					?.nodes.get(input.nodeId);
+				const node = getGraph(input)?.nodes.get(input.nodeId);
 				if (!node) return;
 
 				const prev = node.state.properties[input.propertyId];
@@ -552,24 +576,20 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				if (prev === input.value) return;
 
 				return {
-					graphId: input.graphId,
-					nodeId: input.nodeId,
-					propertyId: input.propertyId,
+					...input,
 					prev,
 					value: input.value,
 				};
 			},
 			perform(entry) {
-				const node = core.project.graphs
-					.get(entry.graphId)
+				const node = getGraph(entry)
 					?.nodes.get(entry.nodeId);
 				if (!node) return;
 
 				node.setProperty(entry.propertyId, entry.value);
 			},
 			rewind(entry) {
-				const node = core.project.graphs
-					.get(entry.graphId)
+				const node = getGraph(entry)
 					?.nodes.get(entry.nodeId);
 				if (!node) return;
 
@@ -606,25 +626,22 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//   };
 		// }),
 		setNodeName: historyAction({
-			prepare(input: { graphId: number; nodeId: number; name: string }) {
-				const node = core.project.graphs
-					.get(input.graphId)
+			prepare(input: GraphRef & { nodeId: number; name: string }) {
+				const node = getGraph(input)
 					?.nodes.get(input.nodeId);
 				if (!node) return;
 
 				return { ...input, prev: node.state.name };
 			},
 			perform(entry) {
-				const node = core.project.graphs
-					.get(entry.graphId)
+				const node = getGraph(entry)
 					?.nodes.get(entry.nodeId);
 				if (!node) return;
 
 				node.state.name = entry.name;
 			},
 			rewind(entry) {
-				const node = core.project.graphs
-					.get(entry.graphId)
+				const node = getGraph(entry)
 					?.nodes.get(entry.nodeId);
 				if (!node) return;
 
@@ -653,25 +670,22 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//   },
 		// }),
 		setNodeFoldPins: historyAction({
-			prepare(input: { graphId: number; nodeId: number; foldPins: boolean }) {
-				const node = core.project.graphs
-					.get(input.graphId)
+			prepare(input: GraphRef & { nodeId: number; foldPins: boolean }) {
+				const node = getGraph(input)
 					?.nodes.get(input.nodeId);
 				if (!node) return;
 
 				return { ...input, prev: node.state.foldPins };
 			},
 			perform(entry) {
-				const node = core.project.graphs
-					.get(entry.graphId)
+				const node = getGraph(entry)
 					?.nodes.get(entry.nodeId);
 				if (!node) return;
 
 				node.state.foldPins = entry.foldPins;
 			},
 			rewind(entry) {
-				const node = core.project.graphs
-					.get(entry.graphId)
+				const node = getGraph(entry)
 					?.nodes.get(entry.nodeId);
 				if (!node) return;
 
@@ -720,8 +734,8 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//   },
 		// }),
 		createCommentBox: historyAction({
-			prepare(input: { graphId: number; position: XY }) {
-				const graph = core.project.graphs.get(input.graphId);
+			prepare(input: GraphRef & { position: XY }) {
+				const graph = getGraph(input);
 				if (!graph) return;
 
 				return {
@@ -737,7 +751,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				};
 			},
 			perform(entry) {
-				const box = core.project.graphs.get(entry.graphId)?.createCommentBox({
+				const box = getGraph(entry)?.createCommentBox({
 					id: entry.commentBoxId,
 					position: entry.position,
 					size: { x: 400, y: 200 },
@@ -754,7 +768,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				return box;
 			},
 			rewind(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				const box = graph.commentBoxes.get(entry.commentBoxId);
@@ -791,14 +805,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//   },
 		// }),
 		setCommentBoxTint: historyAction({
-			prepare(input: {
-				graphId: number;
-				boxId: number;
+			prepare(input: CommentBoxRef & {
 				tint: string;
 				prev?: string;
 			}) {
-				const box = core.project.graphs
-					.get(input.graphId)
+				const box = getGraph(input)
 					?.commentBoxes.get(input.boxId);
 				if (!box) return;
 
@@ -808,16 +819,14 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				};
 			},
 			perform(entry) {
-				const box = core.project.graphs
-					.get(entry.graphId)
+				const box = getGraph(entry)
 					?.commentBoxes.get(entry.boxId);
 				if (!box) return;
 
 				box.tint = entry.tint;
 			},
 			rewind(entry) {
-				const box = core.project.graphs
-					.get(entry.graphId)
+				const box = getGraph(entry)
 					?.commentBoxes.get(entry.boxId);
 				if (!box) return;
 
@@ -847,9 +856,8 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//   },
 		// }),
 		setCommentBoxText: historyAction({
-			prepare(input: { graphId: number; boxId: number; text: string }) {
-				const box = core.project.graphs
-					.get(input.graphId)
+			prepare(input: GraphRef & { boxId: number; text: string }) {
+				const box = getGraph(input)
 					?.commentBoxes.get(input.boxId);
 				if (!box) return;
 
@@ -859,16 +867,14 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				};
 			},
 			perform(entry) {
-				const box = core.project.graphs
-					.get(entry.graphId)
+				const box = getGraph(entry)
 					?.commentBoxes.get(entry.boxId);
 				if (!box) return;
 
 				box.text = entry.text;
 			},
 			rewind(entry) {
-				const box = core.project.graphs
-					.get(entry.graphId)
+				const box = getGraph(entry)
 					?.commentBoxes.get(entry.boxId);
 				if (!box) return;
 
@@ -916,8 +922,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				size: XY;
 				prev?: { position: XY; size: XY; selection?: Array<SelectedItemID> };
 			}) {
-				const box = core.project.graphs
-					.get(input.graphId)
+				const box = getGraph(input)
 					?.commentBoxes.get(input.boxId);
 				if (!box) return;
 
@@ -930,8 +935,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				};
 			},
 			perform(entry) {
-				const box = core.project.graphs
-					.get(entry.graphId)
+				const box = getGraph(entry)
 					?.commentBoxes.get(entry.boxId);
 				if (!box) return;
 
@@ -945,8 +949,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				// );
 			},
 			rewind(entry) {
-				const box = core.project.graphs
-					.get(entry.graphId)
+				const box = getGraph(entry)
 					?.commentBoxes.get(entry.boxId);
 				if (!box) return;
 
@@ -1010,8 +1013,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//   };
 		// }),
 		setGraphItemPositions: historyAction({
-			prepare(input: {
-				graphId: number;
+			prepare(input: GraphRef & {
 				items: Array<GraphItemPositionInput>;
 				selection?: Array<SelectedItemID>;
 				prevSelection?: Array<SelectedItemID>;
@@ -1019,7 +1021,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				return input;
 			},
 			perform(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				for (const item of entry.items) {
@@ -1044,7 +1046,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				// );
 			},
 			rewind(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				for (const item of entry.items) {
@@ -1226,20 +1228,19 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//   };
 		// }),
 		deleteGraphItems: historyAction({
-			prepare(input: { graphId: number; items: Array<SelectionItem> }) {
-				type Entry = {
-					graphId: number;
+			prepare(input: GraphRef & { items: Array<SelectionItem> }) {
+				type Entry = GraphRef & {
 					nodes: Array<v.InferInput<typeof serde.Node>>;
 					connections: Array<v.InferInput<typeof serde.Connection>>;
 					commentBoxes: Array<v.InferInput<typeof serde.CommentBox>>;
 				};
 
-				const { graphId, items } = input;
-				const graph = core.project.graphs.get(graphId);
-				if (!graph) return;
+				const { items } = input;
+				const graph = getGraph(input);
 
 				const entry: Entry = {
-					graphId,
+					graphKind: input.graphKind,
+					graphId: input.graphId,
 					nodes: [],
 					connections: [],
 					commentBoxes: [],
@@ -1317,7 +1318,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				return entry;
 			},
 			perform(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				for (const nodeData of entry.nodes) {
@@ -1336,7 +1337,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				}
 			},
 			rewind(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				for (const nodeData of entry.nodes.reverse()) {
@@ -1492,7 +1493,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				out: { nodeId: number; pinId: string };
 				in: { nodeId: number; pinId: string };
 			}) {
-				const graph = core.project.graphs.get(input.graphId);
+				const graph = getGraph(input);
 				if (!graph) return;
 
 				const outPin = graph.nodes
@@ -1539,7 +1540,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				return { ...input, prevConnections };
 			},
 			perform(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				const outNode = graph.nodes.get(entry.out.nodeId);
@@ -1553,7 +1554,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				graph.connectPins(outPin, inPin);
 			},
 			rewind(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				const outNode = graph.nodes.get(entry.out.nodeId);
@@ -1650,8 +1651,8 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//   },
 		// }),
 		disconnectIO: historyAction({
-			prepare(input: { graphId: number; ioRef: IORef }) {
-				const graph = core.project.graphs.get(input.graphId);
+			prepare(input: GraphRef & { ioRef: IORef }) {
+				const graph = getGraph(input);
 				if (!graph) return;
 
 				const io = splitIORef(input.ioRef);
@@ -1666,7 +1667,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				return { ...input, prevConnections: pinConnections(pin) };
 			},
 			perform(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				const io = splitIORef(entry.ioRef);
@@ -1681,7 +1682,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				graph.disconnectPin(pin);
 			},
 			rewind(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				const io = splitIORef(entry.ioRef);
@@ -1752,8 +1753,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				inputId: string;
 				value: any;
 			}) {
-				const node = core.project.graphs
-					.get(input.graphId)
+				const node = getGraph(input)
 					?.nodes.get(input.nodeId);
 				if (!node) return;
 
@@ -1763,8 +1763,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				return { ...input, prev: io.defaultValue };
 			},
 			perform(entry) {
-				const node = core.project.graphs
-					.get(entry.graphId)
+				const node = getGraph(entry)
 					?.nodes.get(entry.nodeId);
 				if (!node) return;
 
@@ -1774,8 +1773,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				input.setDefaultValue(entry.value);
 			},
 			rewind(entry) {
-				const node = core.project.graphs
-					.get(entry.graphId)
+				const node = getGraph(entry)
 					?.nodes.get(entry.nodeId);
 				if (!node) return;
 
@@ -2644,7 +2642,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 			},
 			perform(entry) {
 				const fn = core.project.createFunction({ id: entry.id });
-				const graph = core.project.graphs.get(fn.graphId);
+				const graph = getGraph({ graphKind: "function", graphId: fn.graphId });
 				if (!graph) return;
 
 				const inputSchema = core.schema("Functions", "Function Input");
@@ -2679,14 +2677,14 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				const fn = core.project.functions.get(entry.functionId);
 				if (!fn) return;
 				fn.name = entry.name;
-				const graph = core.project.graphs.get(fn.graphId);
+				const graph = getGraph({ graphKind: "function", graphId: fn.graphId });
 				if (graph) graph.name = entry.name;
 			},
 			rewind(entry) {
 				const fn = core.project.functions.get(entry.functionId);
 				if (!fn) return;
 				fn.name = entry.prev;
-				const graph = core.project.graphs.get(fn.graphId);
+				const graph = getGraph({ graphKind: "function", graphId: fn.graphId });
 				if (graph) graph.name = entry.prev;
 			},
 		}),
@@ -2703,11 +2701,16 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				core.project.deleteFunction(entry.functionId);
 			},
 			rewind(entry) {
-				const graph = core.project.graphs.get(entry.data.graphId);
+				const graph = getGraph({ graphKind: "function", graphId: entry.data.graphId });
 				if (!graph) {
-					const g = core.project.createGraph({ id: entry.data.graphId, name: entry.data.name });
-					core.project.graphs.set(g.id, g);
-					core.project.graphOrder.push(g.id);
+					const g = new Graph({
+						id: entry.data.graphId,
+						name: entry.data.name,
+						kind: "function",
+						project: core.project,
+					});
+					core.project.setGraphByKind("function", g);
+					core.project.functionGraphOrder.push(g.id);
 				}
 				const fn = new GraphFunction({ id: entry.functionId, name: entry.data.name, graphId: entry.data.graphId, project: core.project });
 				fn.inputs = entry.data.inputs;
@@ -2895,7 +2898,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 						id: core.project.generateId(),
 					};
 
-				const graph = core.project.graphs.get(input.graphId);
+				const graph = getGraph(input);
 				if (!graph) return;
 
 				return {
@@ -2912,7 +2915,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 						type: t.string(),
 					});
 				} else {
-					const graph = core.project.graphs.get(entry.graphId);
+					const graph = getGraph(entry);
 					if (!graph) return;
 
 					graph.createVariable({
@@ -2926,7 +2929,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 			rewind(entry) {
 				if (entry.location === "project") core.project.removeVariable(entry.id);
 				else {
-					const graph = core.project.graphs.get(entry.graphId);
+					const graph = getGraph(entry);
 					if (!graph) return;
 
 					graph.removeVariable(entry.id);
@@ -2942,7 +2945,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 						(v) => v.id === input.variableId,
 					);
 				} else {
-					const graph = core.project.graphs.get(input.graphId);
+					const graph = getGraph(input);
 					if (!graph) return;
 
 					variable = graph.variables.find((v) => v.id === input.variableId);
@@ -2960,7 +2963,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 						(v) => v.id === entry.variableId,
 					);
 				} else {
-					const graph = core.project.graphs.get(entry.graphId);
+					const graph = getGraph(entry);
 					if (!graph) return;
 
 					variable = graph.variables.find((v) => v.id === entry.variableId);
@@ -2978,7 +2981,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 						(v) => v.id === entry.variableId,
 					);
 				} else {
-					const graph = core.project.graphs.get(entry.graphId);
+					const graph = getGraph(entry);
 					if (!graph) return;
 
 					variable = graph.variables.find((v) => v.id === entry.variableId);
@@ -2998,7 +3001,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 						(v) => v.id === input.variableId,
 					);
 				} else {
-					const graph = core.project.graphs.get(input.graphId);
+					const graph = getGraph(input);
 					if (!graph) return;
 
 					variable = graph.variables.find((v) => v.id === input.variableId);
@@ -3016,7 +3019,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 						(v) => v.id === entry.variableId,
 					);
 				} else {
-					const graph = core.project.graphs.get(entry.graphId);
+					const graph = getGraph(entry);
 					if (!graph) return;
 
 					variable = graph.variables.find((v) => v.id === entry.variableId);
@@ -3034,7 +3037,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 						(v) => v.id === entry.variableId,
 					);
 				} else {
-					const graph = core.project.graphs.get(entry.graphId);
+					const graph = getGraph(entry);
 					if (!graph) return;
 
 					variable = graph.variables.find((v) => v.id === entry.variableId);
@@ -3054,7 +3057,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 						(v) => v.id === input.variableId,
 					);
 				} else {
-					const graph = core.project.graphs.get(input.graphId);
+					const graph = getGraph(input);
 					if (!graph) return;
 
 					variable = graph.variables.find((v) => v.id === input.variableId);
@@ -3077,7 +3080,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 						(v) => v.id === entry.variableId,
 					);
 				} else {
-					const graph = core.project.graphs.get(entry.graphId);
+					const graph = getGraph(entry);
 					if (!graph) return;
 
 					variable = graph.variables.find((v) => v.id === entry.variableId);
@@ -3100,7 +3103,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 						(v) => v.id === entry.variableId,
 					);
 				} else {
-					const graph = core.project.graphs.get(entry.graphId);
+					const graph = getGraph(entry);
 					if (!graph) return;
 
 					variable = graph.variables.find((v) => v.id === entry.variableId);
@@ -3128,7 +3131,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 					index = i;
 					variable = core.project.variables[i]!;
 				} else {
-					const graph = core.project.graphs.get(input.graphId);
+					const graph = getGraph(input);
 					if (!graph) return;
 
 					const i = graph.variables.findIndex((v) => v.id === input.variableId);
@@ -3145,7 +3148,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				if (entry.location === "project")
 					core.project.removeVariable(entry.variableId);
 				else {
-					const graph = core.project.graphs.get(entry.graphId);
+					const graph = getGraph(entry);
 					if (!graph) return;
 
 					graph.removeVariable(entry.variableId);
@@ -3164,7 +3167,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 
 					core.project.variables.splice(entry.index, 0, variable);
 				} else {
-					const graph = core.project.graphs.get(entry.graphId);
+					const graph = getGraph(entry);
 					if (!graph) return;
 
 					const variable = deserializeVariable(
@@ -3189,7 +3192,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 					id: entry.id,
 					name: `Queue ${core.project.queues.size + 1}`,
 				});
-				const graph = core.project.graphs.get(queue.graphId);
+				const graph = getGraph({ graphKind: "queue", graphId: queue.graphId });
 				if (!graph) return;
 
 				const startSchema = core.schema("Queue", "Queue Start");
@@ -3363,9 +3366,160 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				);
 
 				core.project.queues.set(queue.id, queue);
-				const graph = core.project.graphs.get(queue.graphId);
-				if (!graph) {
-					core.project.createGraph({ id: queue.graphId, name: queue.name });
+				if (!core.project.getGraphByKind("queue", queue.graphId)) {
+					const g = new Graph({
+						id: queue.graphId,
+						name: queue.name,
+						kind: "queue",
+						project: core.project,
+					});
+					core.project.setGraphByKind("queue", g);
+					core.project.queueGraphOrder.push(g.id);
+				}
+			},
+		}),
+		createFunctionQueue: historyAction({
+			prepare() {
+				return { id: core.project.generateFunctionQueueId() };
+			},
+			perform(entry) {
+				core.project.createFunctionQueue({
+					id: entry.id,
+					name: `Function Queue ${core.project.functionQueues.size + 1}`,
+				});
+			},
+			rewind(entry) {
+				core.project.removeFunctionQueue(entry.id);
+			},
+		}),
+		setFunctionQueueName: historyAction({
+			prepare(input: { functionQueueId: number; name: string }) {
+				const queue = core.project.functionQueues.get(input.functionQueueId);
+				if (!queue) return;
+
+				return { ...input, prev: queue.name };
+			},
+			perform(entry) {
+				const queue = core.project.functionQueues.get(entry.functionQueueId);
+				if (!queue) return;
+
+				queue.name = entry.name;
+				const graph = getGraph({ graphKind: "queue", graphId: queue.graphId });
+				if (graph) graph.name = entry.name;
+			},
+			rewind(entry) {
+				const queue = core.project.functionQueues.get(entry.functionQueueId);
+				if (!queue) return;
+
+				queue.name = entry.prev;
+				const graph = getGraph({ graphKind: "queue", graphId: queue.graphId });
+				if (graph) graph.name = entry.prev;
+			},
+		}),
+		setFunctionQueueValue: historyAction({
+			prepare(input: { functionQueueId: number; value: any[] }) {
+				const queue = core.project.functionQueues.get(input.functionQueueId);
+				if (!queue) return;
+
+				return { ...input, prev: [...queue.items] };
+			},
+			perform(entry) {
+				const queue = core.project.functionQueues.get(entry.functionQueueId);
+				if (!queue) return;
+
+				queue.items = entry.value;
+			},
+			rewind(entry) {
+				const queue = core.project.functionQueues.get(entry.functionQueueId);
+				if (!queue) return;
+
+				queue.items = entry.prev;
+			},
+		}),
+		setFunctionQueuePaused: historyAction({
+			prepare(input: { functionQueueId: number; paused: boolean }) {
+				const queue = core.project.functionQueues.get(input.functionQueueId);
+				if (!queue) return;
+
+				return { ...input, prev: queue.paused };
+			},
+			perform(entry) {
+				const queue = core.project.functionQueues.get(entry.functionQueueId);
+				if (!queue) return;
+				queue.setPaused(entry.paused);
+			},
+			rewind(entry) {
+				const queue = core.project.functionQueues.get(entry.functionQueueId);
+				if (!queue) return;
+				queue.setPaused(entry.prev);
+			},
+		}),
+		setFunctionQueueConcurrent: historyAction({
+			prepare(input: { functionQueueId: number; concurrent: boolean }) {
+				const queue = core.project.functionQueues.get(input.functionQueueId);
+				if (!queue) return;
+
+				return { ...input, prev: queue.concurrent };
+			},
+			perform(entry) {
+				const queue = core.project.functionQueues.get(entry.functionQueueId);
+				if (!queue) return;
+				queue.concurrent = entry.concurrent;
+			},
+			rewind(entry) {
+				const queue = core.project.functionQueues.get(entry.functionQueueId);
+				if (!queue) return;
+				queue.concurrent = entry.prev;
+			},
+		}),
+		removeFunctionQueueItem: historyAction({
+			prepare(input: { functionQueueId: number; index: number }) {
+				const queue = core.project.functionQueues.get(input.functionQueueId);
+				if (!queue) return;
+
+				return { ...input, prev: [...queue.items] };
+			},
+			perform(entry) {
+				const queue = core.project.functionQueues.get(entry.functionQueueId);
+				if (!queue) return;
+				queue.items = queue.items.filter((_: any, i: number) => i !== entry.index);
+			},
+			rewind(entry) {
+				const queue = core.project.functionQueues.get(entry.functionQueueId);
+				if (!queue) return;
+				queue.items = entry.prev;
+			},
+		}),
+		deleteFunctionQueue: historyAction({
+			prepare(input: { functionQueueId: number }) {
+				const queue = core.project.functionQueues.get(input.functionQueueId);
+				if (!queue) return;
+
+				return { ...input, data: serializeFunctionQueue(queue) };
+			},
+			perform(entry) {
+				core.project.removeFunctionQueue(entry.functionQueueId);
+			},
+			rewind(entry) {
+				const queue = deserializeFunctionQueue(
+					parseWithContext(
+						"actions history deleteFunctionQueue rewind (serde.FunctionQueue)",
+						serde.FunctionQueue,
+						entry.data,
+					),
+					core.project,
+				);
+
+				core.project.functionQueues.set(queue.id, queue);
+				if (!core.project.getGraphByKind("functionQueue", queue.graphId)) {
+					const g = new Graph({
+						id: queue.graphId,
+						name: queue.name,
+						kind: "functionQueue",
+						project: core.project,
+					});
+					core.project.setGraphByKind("functionQueue", g);
+					core.project.functionQueueGraphOrder.push(g.id);
 				}
 			},
 		}),
@@ -3677,7 +3831,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//     ];
 		//   },
 		//   rewind(data) {
-		//     const graph = core.project.graphs.get(data.graphId);
+		//     const graph = getGraph(data.graphId);
 		//     if (!graph) return;
 
 		//     const ret = {
@@ -3716,15 +3870,14 @@ export const historyActions = (core: Core, editor: EditorState) => {
 			prepare({
 				selection,
 				...input
-			}: {
-				graphId: number;
+			}: GraphRef & {
 				mousePosition: XY;
 				selection: Extract<
 					v.InferOutput<typeof ClipboardItem>,
 					{ type: "selection" }
 				>;
 			}) {
-				const graph = core.project.graphs.get(input.graphId);
+				const graph = getGraph(input);
 				if (!graph) return;
 
 				const nodeIdMap = new Map<number, number>();
@@ -3759,7 +3912,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				};
 			},
 			perform(input) {
-				const graph = core.project.graphs.get(input.graphId);
+				const graph = getGraph(input);
 				if (!graph) return;
 
 				const nodeIdMap = new Map(input.nodeIdMapEntries as [number, number][]);
@@ -3816,7 +3969,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				}
 			},
 			rewind(entry) {
-				const graph = core.project.graphs.get(entry.graphId);
+				const graph = getGraph(entry);
 				if (!graph) return;
 
 				for (const nodeData of entry.nodes) {
@@ -3874,27 +4027,26 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				return { data, graphId };
 			},
 			async perform(entry) {
-				const graph = await deserializeGraph(core.project, entry.data);
+				const graph = await deserializeGraph(core.project, entry.data, "graph");
 				if (!graph) return;
 
 				core.project.pasteGraph(graph);
 				// core.project.graphs.set(graph.id, graph);
 			},
 			rewind(entry) {
-				const graph = core.project.graphs.get(entry.data.id);
+				const graph = getGraph({ graphKind: "graph", graphId: entry.data.id });
 				if (!graph) return;
 
-				core.project.graphs.delete(entry.data.id);
+				core.project.deleteGraphByKind("graph", entry.data.id);
 				graph.dispose();
 			},
 		}),
 		setGraphSelection: historyAction({
-			prepare(input: {
-				graphId: number;
+			prepare(input: GraphRef & {
 				selection: Array<SelectedItemID>;
 				prev?: Array<SelectedItemID>;
 			}) {
-				const graphState = getFocusedGraphState(input.graphId);
+				const graphState = getFocusedGraphState(input);
 				if (!graphState) return;
 
 				return {
@@ -3904,12 +4056,14 @@ export const historyActions = (core: Core, editor: EditorState) => {
 			},
 			perform(entry) {
 				const group = editor.mosaicState.groups.find((g) =>
-					g.tabs.some((t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === entry.graphId),
+					g.tabs.some(
+						(t) => isGraphEditorTab(t) && graphRefsEqual(graphRefFromTab(t), entry),
+					),
 				);
 				if (!group) return;
 
 				const tabIdx = group.tabs.findIndex(
-					(t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === entry.graphId,
+					(t) => isGraphEditorTab(t) && graphRefsEqual(graphRefFromTab(t), entry),
 				);
 				if (tabIdx < 0) return;
 
@@ -3925,12 +4079,14 @@ export const historyActions = (core: Core, editor: EditorState) => {
 			},
 			rewind(entry) {
 				const group = editor.mosaicState.groups.find((g) =>
-					g.tabs.some((t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === entry.graphId),
+					g.tabs.some(
+						(t) => isGraphEditorTab(t) && graphRefsEqual(graphRefFromTab(t), entry),
+					),
 				);
 				if (!group) return;
 
 				const tabIdx = group.tabs.findIndex(
-					(t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === entry.graphId,
+					(t) => isGraphEditorTab(t) && graphRefsEqual(graphRefFromTab(t), entry),
 				);
 				if (tabIdx < 0) return;
 
@@ -3973,12 +4129,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		//   };
 		// }),
 		moveGraphToIndex: historyAction({
-			prepare(input: {
-				graphId: number;
+			prepare(input: GraphRef & {
 				currentIndex: number;
 				newIndex: number;
 			}) {
-				const graph = core.project.graphs.get(input.graphId);
+				const graph = getGraph(input);
 				if (!graph) return;
 
 				if (core.project.graphOrder[input.currentIndex] !== input.graphId)

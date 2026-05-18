@@ -1,4 +1,4 @@
-import type { NodeInvocationReport, PrintItem } from "@macrograph/runtime";
+import type { GraphRef, NodeInvocationReport, PrintItem } from "@macrograph/runtime";
 import type { NodeInvocationFileRow } from "@macrograph/runtime-serde";
 import type { SetStoreFunction } from "solid-js/store";
 
@@ -16,6 +16,7 @@ export type StoredNodeInvocation = {
 	startedAt: number;
 	durationMs?: number;
 	ok?: boolean;
+	graphKind: GraphRef["graphKind"];
 	graphId: number;
 	graphName: string;
 	nodeId: number;
@@ -31,10 +32,10 @@ type NodeRow = { key: string; entries: StoredNodeInvocation[] };
 
 export function invocationRowKey(
 	workspaceKey: string,
-	graphId: number,
+	ref: Pick<GraphRef, "graphKind" | "graphId">,
 	nodeId: number,
 ) {
-	return `${workspaceKey}\x1e${graphId}\x1e${nodeId}`;
+	return `${workspaceKey}\x1e${ref.graphKind}\x1e${ref.graphId}\x1e${nodeId}`;
 }
 
 function arrayBufferToBase64(buf: ArrayBuffer): string {
@@ -215,6 +216,7 @@ function toStored(report: NodeInvocationReport): StoredNodeInvocation {
 		startedAt: report.startedAt,
 		durationMs: Math.round(report.durationMs * 1000) / 1000,
 		ok: report.ok,
+		graphKind: report.graphKind,
 		graphId: report.graphId,
 		graphName: report.graphName,
 		nodeId: report.nodeId,
@@ -239,6 +241,7 @@ function consoleToStored(item: PrintItem, now: number): StoredNodeInvocation {
 				: `${now}-${Math.random().toString(36).slice(2)}`,
 		entryType: item.type,
 		startedAt: now,
+		graphKind: item.graph.kind,
 		graphId: item.graph.id,
 		graphName: item.graph.name,
 		nodeId: item.node.id,
@@ -462,7 +465,11 @@ export function appendInvocationReport(
 	getRowSnapshot: (key: string) => StoredNodeInvocation[] | undefined,
 ) {
 	const wk = getWorkspaceKey();
-	const key = invocationRowKey(wk, report.graphId, report.nodeId);
+	const key = invocationRowKey(
+		wk,
+		{ graphKind: report.graphKind, graphId: report.graphId },
+		report.nodeId,
+	);
 	let entry: StoredNodeInvocation;
 	try {
 		entry = toStored(report);
@@ -488,7 +495,11 @@ export function appendConsoleEntry(
 	getRowSnapshot: (key: string) => StoredNodeInvocation[] | undefined,
 ) {
 	const wk = getWorkspaceKey();
-	const key = invocationRowKey(wk, item.graph.id, item.node.id);
+	const key = invocationRowKey(
+		wk,
+		{ graphKind: item.graph.kind, graphId: item.graph.id },
+		item.node.id,
+	);
 	const now = Date.now();
 	let entry: StoredNodeInvocation;
 	try {
@@ -511,11 +522,11 @@ export function appendConsoleEntry(
 export async function loadInvocationsForNode(
 	setLogs: SetStoreFunction<Record<string, StoredNodeInvocation[]>>,
 	getWorkspaceKey: () => string,
-	graphId: number,
+	ref: GraphRef,
 	nodeId: number,
 	hydrated: Set<string>,
 ) {
-	const key = invocationRowKey(getWorkspaceKey(), graphId, nodeId);
+	const key = invocationRowKey(getWorkspaceKey(), ref, nodeId);
 	if (hydrated.has(key)) return;
 
 	const fromDisk = await idbGet(key);
@@ -560,23 +571,32 @@ export async function exportInvocationLogForGraphs(
 				key.startsWith(prefix) &&
 				row.entries?.length
 			) {
-				const suffix = key.slice(prefix.length);
-				const sep = suffix.indexOf("\x1e");
-				if (sep !== -1) {
-					const graphId = Number(suffix.slice(0, sep));
-					const nodeId = Number(suffix.slice(sep + 1));
-					if (idSet.has(graphId)) {
-						const raw =
-							typeof structuredClone === "function"
-								? (structuredClone(row.entries) as StoredNodeInvocation[])
-								: (JSON.parse(
-										JSON.stringify(row.entries),
-									) as StoredNodeInvocation[]);
-						const entries = stripUndefinedSentinels(
-							raw,
-						) as StoredNodeInvocation[];
-						out.push({ graphId, nodeId, entries });
-					}
+				const parts = key.slice(prefix.length).split("\x1e");
+				let graphKind: GraphRef["graphKind"] = "graph";
+				let graphId: number;
+				let nodeId: number;
+				if (parts.length >= 3) {
+					graphKind = parts[0] as GraphRef["graphKind"];
+					graphId = Number(parts[1]);
+					nodeId = Number(parts[2]);
+				} else if (parts.length === 2) {
+					graphId = Number(parts[0]);
+					nodeId = Number(parts[1]);
+				} else {
+					cursor.continue();
+					return;
+				}
+				if (graphKind === "graph" && idSet.has(graphId)) {
+					const raw =
+						typeof structuredClone === "function"
+							? (structuredClone(row.entries) as StoredNodeInvocation[])
+							: (JSON.parse(
+									JSON.stringify(row.entries),
+								) as StoredNodeInvocation[]);
+					const entries = stripUndefinedSentinels(
+						raw,
+					) as StoredNodeInvocation[];
+					out.push({ graphKind, graphId, nodeId, entries });
 				}
 			}
 			cursor.continue();
@@ -603,7 +623,14 @@ export async function importInvocationLogFromProject(
 		const fileEntries = stripUndefinedSentinels(
 			r.entries,
 		) as StoredNodeInvocation[];
-		const key = invocationRowKey(workspaceKey, r.graphId, r.nodeId);
+		const key = invocationRowKey(
+			workspaceKey,
+			{
+				graphKind: r.graphKind ?? "graph",
+				graphId: r.graphId,
+			},
+			r.nodeId,
+		);
 		const existing = await idbGet(key);
 		const merged = existing?.length
 			? mergeEntries(fileEntries, existing)

@@ -3,8 +3,10 @@ import {
 	ConfigDialog,
 	Interface,
 	PlatformContext,
+	ensureEditorStorageMigrated,
 	exportInvocationLogForGraphs,
 	importInvocationLogFromProject,
+	loadProjectJson,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { Core } from "@macrograph/runtime";
@@ -125,12 +127,13 @@ export default () => {
 					setLoaded(true);
 				});
 		} else {
-			const savedProject = localStorage.getItem("project");
+			await ensureEditorStorageMigrated();
+			const savedProject = await loadProjectJson("default");
 
 			if (savedProject) {
 				try {
 					const parsed = parseJsonWithContext(
-						"apps/web playground Editor: localStorage key `project`",
+						"apps/web playground Editor: IndexedDB project",
 						serde.Project,
 						savedProject,
 					);
@@ -139,9 +142,9 @@ export default () => {
 						parsed.nodeInvocations,
 						"default",
 					);
-				} catch {}
-
-				// handling this case is IMPORTANT!!!
+				} catch {
+					/* handling this case is IMPORTANT!!! */
+				}
 			}
 
 			setLoaded(true);

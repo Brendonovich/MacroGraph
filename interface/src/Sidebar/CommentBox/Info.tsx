@@ -1,4 +1,4 @@
-import type { CommentBox } from "@macrograph/runtime";
+import { type CommentBox, graphRefOf } from "@macrograph/runtime";
 import { debounce } from "@solid-primitives/scheduled";
 import { type ParentProps, runWithOwner } from "solid-js";
 
@@ -19,9 +19,9 @@ export function Info(props: { box: CommentBox }) {
 
 	let color: string | undefined;
 	const saveColour = runWithOwner(null, () =>
-		debounce((graphId: number, boxId: number, tint: string) => {
+		debounce((ref: ReturnType<typeof graphRefOf>, boxId: number, tint: string) => {
 			interfaceCtx.execute("setCommentBoxTint", {
-				graphId,
+				...ref,
 				boxId,
 				tint,
 				prev: color,
@@ -43,14 +43,14 @@ export function Info(props: { box: CommentBox }) {
 						interfaceCtx.execute(
 							"setCommentBoxTint",
 							{
-								graphId: props.box.graph.id,
+								...graphRefOf(props.box.graph),
 								boxId: props.box.id,
 								tint: e.currentTarget.value,
 							},
 							{ ephemeral: true },
 						);
 
-						saveColour(props.box.graph.id, props.box.id, e.currentTarget.value);
+						saveColour(graphRefOf(props.box.graph), props.box.id, e.currentTarget.value);
 					}}
 				/>
 			</Field>

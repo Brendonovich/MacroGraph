@@ -6,10 +6,13 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@macrograph/ui";
-import { makePersisted } from "@solid-primitives/storage";
 import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import { CheckBox, SelectInput } from "./components/ui";
+import {
+	hydrateEditorConfig,
+	startEditorConfigPersistence,
+} from "./editorConfigStorage";
 
 export type Config = {
 	nodes: {
@@ -34,22 +37,28 @@ const INDICATE_CONNECTED_NODES_OPTIONS = [
 	name: string;
 }>;
 
-export const [config, setConfig] = makePersisted(
-	createStore<Config>({
-		nodes: {
-			dimUnselectedConnections: false,
-			indicateConnectedNodes: "off",
-			enableNumberGrouping: true,
-		},
-		tabColors: {
-			function: "#86efac",
-			queue: "#93c5fd",
-			functionQueue: "#93c5fd",
-			package: "#22d3ee",
-		},
-	}),
-	{ name: "editor-config" },
+const DEFAULT_CONFIG: Config = {
+	nodes: {
+		dimUnselectedConnections: false,
+		indicateConnectedNodes: "off",
+		enableNumberGrouping: true,
+	},
+	tabColors: {
+		function: "#86efac",
+		queue: "#93c5fd",
+		functionQueue: "#93c5fd",
+		package: "#22d3ee",
+	},
+};
+
+export const [config, setConfig] = createStore<Config>(
+	structuredClone(DEFAULT_CONFIG),
 );
+
+export async function initEditorConfigStorage() {
+	await hydrateEditorConfig(setConfig, DEFAULT_CONFIG);
+	startEditorConfigPersistence(() => config);
+}
 
 function ColorSelect(props: {
 	value: string;

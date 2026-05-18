@@ -11,6 +11,7 @@ import {
 	type XY,
 	getNodesInRect,
 	pinIsOutput,
+	graphRefOf,
 } from "@macrograph/runtime";
 import {
 	type serde,
@@ -36,9 +37,15 @@ import { Dynamic } from "solid-js/web";
 
 import * as Sidebars from "./Sidebar";
 import type { CreateNodeInput, GraphItemPositionInput } from "./actions";
+import { FunctionQueuePanel } from "./components/FunctionQueuePanel";
 import { Graph } from "./components/Graph";
+import { MosaicLayout } from "./components/MosaicLayout";
+import { SplitDropOverlay } from "./components/SplitDropOverlay";
 import {
+	graphRefFromTab,
+	isGraphEditorTab,
 	makeGraphState,
+	tabGraphKind,
 	type GraphViewState,
 	type SelectedItemID,
 	type TabState,
@@ -54,9 +61,37 @@ import {
 	type GraphBounds,
 	type TabListState,
 	InterfaceContextProvider,
+	logMosaicTabSelection,
+	tabKey,
 	useInterfaceContext,
 } from "./context";
 import "./global.css";
+import {
+	applySplitRatioAtPath,
+	applyTabDrop,
+	closeGroup,
+	closeTabInGroup,
+	collectLeafGroupIds,
+	detectDropTarget,
+	mosaicLayoutKey,
+	setMosaicWorkspaceState,
+	duplicateTab,
+	findGroupIndex,
+	focusAdjacentLeaf,
+	focusLeafByIndex,
+	moveTabInGroup,
+	splitFocusedGroup,
+} from "./mosaicLayout";
+import { MosaicPaneProvider, useMosaicPane } from "./mosaicPaneContext";
+import {
+	endTabDragSession,
+	getTabDragGhostPos,
+	getTabDragSession,
+	getTabDropTarget,
+	startTabDragSession,
+	updateTabDragGhost,
+	updateTabDropTarget,
+} from "./tabDragSession";
 import { isCtrlEvent } from "./util";
 import { PlatformContext, usePlatform } from "./platform";
 
@@ -67,6 +102,16 @@ export {
 	exportInvocationLogForGraphs,
 	importInvocationLogFromProject,
 } from "./nodeInvocationLog";
+export {
+	PROJECT_LOCAL_STORAGE_KEY,
+	LEGACY_PROJECT_ROOT_KEY,
+	MOSAIC_LS_PREFIX,
+	ensureEditorStorageMigrated,
+	loadProjectJson,
+	removeShardedProjectKeys,
+	saveProjectToStorage,
+	saveProjectToLocalStorage,
+} from "./projectStorage";
 export type { RemoteHistoryWireItem, WireGraphPositionsEphemeral, RemoteCursor, RemotePinDrag, RemoteSelectionBox } from "./remoteHistorySync";
 export {
 	applyRemoteHistoryItems,
@@ -171,28 +216,46 @@ function ProjectInterface() {
 		setMosaicState,
 	} = useInterfaceContext();
 
+	const focusedGroup = () =>
+		mosaicState.groups.find((g) => g.id === mosaicState.focusedGroupId);
+
 	const currentGraph = Solid.createMemo(() => {
-		const group = mosaicState.groups[mosaicState.focusedIndex];
-
+		const group = focusedGroup();
 		const tab = group?.tabs[group?.selectedIndex ?? 0];
-		if (!tab || (tab.type !== "graph" && tab.type !== "function" && tab.type !== "queue")) return;
+		if (!tab || !isGraphEditorTab(tab)) return;
 
-		const model = ctx.core.project.graphs.get(tab.graphId);
+		const ref = graphRefFromTab(tab);
+		const model = ctx.core.project.getGraphByKind(ref.graphKind, ref.graphId);
 		if (!model) return;
 
 		return { model, state: tab } as unknown as CurrentGraph;
 	});
 
-	// will account for multi-pane in future
-	const [hoveredPane, setHoveredPane] = Solid.createSignal<null | boolean>(
+	const [hoveredGroupId, setHoveredGroupId] = Solid.createSignal<string | null>(
 		null,
 	);
 
 	const hoveredGraph = Solid.createMemo(() => {
-		if (hoveredPane()) return currentGraph();
+		const id = hoveredGroupId();
+		if (!id) return;
+		const group = mosaicState.groups.find((g) => g.id === id);
+		const tab = group?.tabs[group?.selectedIndex ?? 0];
+		if (!tab || !isGraphEditorTab(tab)) return;
+		const ref = graphRefFromTab(tab);
+		const model = ctx.core.project.getGraphByKind(ref.graphKind, ref.graphId);
+		if (!model) return;
+		return { model, state: tab } as unknown as CurrentGraph;
 	});
 
-	createKeydownShortcuts(currentGraph, hoveredGraph, ctx.graphBounds);
+	const setSplitRatioAtPath = (path: number[], ratio: number) => {
+		setMosaicState(
+			produce((s) => {
+				applySplitRatioAtPath(s.root, path, ratio);
+			}),
+		);
+	};
+
+	createKeydownShortcuts(currentGraph, hoveredGraph, ctx.graphBounds, ctx);
 
 	// const firstGraph = ctx.core.project.graphs.values().next().value;
 	// if (graphStates.length === 0 && firstGraph)
@@ -218,7 +281,7 @@ function ProjectInterface() {
 	return (
 		<div
 			ref={setRootRef}
-			class="relative w-full h-full flex flex-row select-none bg-neutral-800 text-white animate-in fade-in"
+			class="relative w-full h-full flex flex-row select-none bg-neutral-800 text-white animate-in fade-in overflow-hidden"
 			onContextMenu={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
@@ -237,6 +300,7 @@ function ProjectInterface() {
 							onGraphClicked={(graph) => ctx.selectGraph(graph)}
 							onFunctionClicked={(fn) => ctx.selectFunction(fn)}
 							onQueueClicked={(queue) => ctx.selectQueue(queue)}
+							onFunctionQueueClicked={(queue) => ctx.selectFunctionQueue(queue)}
 							onPackageClicked={(pkg) => ctx.selectPackage(pkg)}
 						/>
 					</Sidebar>
@@ -267,48 +331,19 @@ function ProjectInterface() {
 				</button>
 			</Solid.Show>
 
-			<div class="flex-1 flex divide-x divide-neutral-700 flex-row h-full justify-center items-center text-white overflow-x-hidden min-w-0">
-				<Solid.For each={mosaicState.groups}>
-					{(mosaicItem, i) => (
-						<GraphTabList
-							focused={mosaicState.focusedIndex === i()}
-							state={mosaicItem}
-							onTabClose={(index) => {
-								setMosaicState(
-									"groups",
-									mosaicState.focusedIndex,
-									produce((state) => {
-										state.tabs.splice(index, 1);
-										state.selectedIndex = Math.min(
-											state.selectedIndex,
-											state.tabs.length - 1,
-										);
-									}),
-								);
-							}}
-							onSelectedChanged={(i) => {
-								setMosaicState(
-									"groups",
-									mosaicState.focusedIndex,
-									"selectedIndex",
-									i,
-								);
-							}}
-							onFocus={() => {
-								ctx.setMosaicState("focusedIndex", i());
-							}}
-							onClose={() => {
-								ctx.setMosaicState(
-									"groups",
-									produce((groups) => {
-										groups.splice(i(), 1);
-									}),
-								);
-							}}
-							setHoveredPane={setHoveredPane}
+			<div class="flex-1 flex flex-row h-full justify-center items-center text-white overflow-hidden min-w-0 min-h-0">
+				<MosaicPaneProvider setHoveredGroupId={setHoveredGroupId}>
+					<Solid.Show when={ctx.mosaicHydrated()}>
+						<MosaicLayout
+							key={mosaicLayoutKey(mosaicState.root)}
+							node={mosaicState.root}
+							Leaf={MosaicPaneHost}
+							onSplitRatioChange={setSplitRatioAtPath}
+							onSplitResizeEnd={() => ctx.persistMosaicLayoutNow("split-resize")}
 						/>
-					)}
-				</Solid.For>
+					</Solid.Show>
+					<TabDragGhost />
+				</MosaicPaneProvider>
 			</div>
 
 			<Solid.Show when={isTouchDevice}>
@@ -489,7 +524,7 @@ function ProjectInterface() {
 										const graph = data().graph.model;
 										Solid.batch(() => {
 											const box = ctx.execute("createCommentBox", {
-												graphId: graph.id,
+												...graphRefOf(graph),
 												position: graphPosition(),
 											});
 											if (!box) return;
@@ -523,7 +558,7 @@ function ProjectInterface() {
 											);
 
 											ctx.execute("pasteGraphSelection", {
-												graphId: model.id,
+												...graphRefOf(model),
 												mousePosition,
 												selection: item,
 											});
@@ -533,11 +568,11 @@ function ProjectInterface() {
 									}}
 									onSchemaClicked={(schema, targetSuggestion, extra) => {
 										const graph = data().graph.model;
-										const graphId = graph.id;
+										const graphRef = graphRefOf(graph);
 										ctx.batch(() => {
 											const pin = Solid.batch(() => {
 												const input: CreateNodeInput = {
-													graphId,
+													...graphRef,
 													schema,
 													position: graphPosition(),
 													properties: extra?.defaultProperties,
@@ -601,7 +636,7 @@ function ProjectInterface() {
 												};
 
 												ctx.execute("setGraphItemPositions", {
-													graphId,
+													...graphRef,
 													items: [
 														{
 															itemId: pin.node.id,
@@ -688,17 +723,112 @@ function ResizeHandle(props: {
 	);
 }
 
+let mosaicChordPending = false;
+let mosaicChordTimer: ReturnType<typeof setTimeout> | undefined;
+
 function createKeydownShortcuts(
 	currentGraph: Solid.Accessor<CurrentGraph | undefined>,
 	hoveredGraph: Solid.Accessor<CurrentGraph | undefined>,
 	graphBounds: GraphBounds,
+	ctx: ReturnType<typeof useInterfaceContext>,
 ) {
 	const platform = usePlatform();
-	const ctx = useInterfaceContext();
 	const mouse = createMousePosition(window);
 
 	createEventListener(window, "keydown", async (e) => {
+		if (isCtrlEvent(e) && e.code === "KeyK" && !e.shiftKey) {
+			mosaicChordPending = true;
+			clearTimeout(mosaicChordTimer);
+			mosaicChordTimer = setTimeout(() => {
+				mosaicChordPending = false;
+			}, 2000);
+			return;
+		}
+
+		if (isCtrlEvent(e) && mosaicChordPending) {
+			if (e.code === "KeyW") {
+				mosaicChordPending = false;
+				clearTimeout(mosaicChordTimer);
+				const next = closeGroup(
+					ctx.mosaicState,
+					ctx.mosaicState.focusedGroupId,
+				);
+				ctx.setMosaicWorkspaceState(next);
+				ctx.persistMosaicLayoutNow("shortcut-close-pane");
+				e.preventDefault();
+				return;
+			}
+			if (e.code === "Backslash") {
+				mosaicChordPending = false;
+				clearTimeout(mosaicChordTimer);
+				const next = splitFocusedGroup(ctx.mosaicState, "horizontal");
+				ctx.setMosaicWorkspaceState(next);
+				ctx.persistMosaicLayoutNow("shortcut-split-h");
+				e.preventDefault();
+				return;
+			}
+		}
+
 		switch (e.code) {
+			case "Backslash": {
+				if (!isCtrlEvent(e)) break;
+				const next = splitFocusedGroup(
+					ctx.mosaicState,
+					e.shiftKey ? "horizontal" : "vertical",
+				);
+				ctx.setMosaicWorkspaceState(next);
+				ctx.persistMosaicLayoutNow(
+					e.shiftKey ? "shortcut-split-h" : "shortcut-split-v",
+				);
+				e.preventDefault();
+				return;
+			}
+			case "KeyW": {
+				if (!isCtrlEvent(e) || e.shiftKey) break;
+				const gi = findGroupIndex(
+					ctx.mosaicState.groups,
+					ctx.mosaicState.focusedGroupId,
+				);
+				if (gi < 0) break;
+				const group = ctx.mosaicState.groups[gi];
+				if (!group?.tabs.length) break;
+				const next = closeTabInGroup(
+					ctx.mosaicState,
+					ctx.mosaicState.focusedGroupId,
+					group.selectedIndex,
+				);
+				ctx.setMosaicWorkspaceState(next);
+				ctx.persistMosaicLayoutNow("shortcut-close-tab");
+				e.preventDefault();
+				return;
+			}
+			case "PageUp":
+			case "PageDown": {
+				if (!isCtrlEvent(e)) break;
+				const next = focusAdjacentLeaf(
+					ctx.mosaicState,
+					e.code === "PageDown" ? 1 : -1,
+				);
+				ctx.setMosaicState("focusedGroupId", next.focusedGroupId);
+				e.preventDefault();
+				return;
+			}
+			case "Digit1":
+			case "Digit2":
+			case "Digit3":
+			case "Digit4":
+			case "Digit5":
+			case "Digit6":
+			case "Digit7":
+			case "Digit8":
+			case "Digit9": {
+				if (!isCtrlEvent(e) || e.shiftKey || e.altKey) break;
+				const index = Number(e.code.replace("Digit", "")) - 1;
+				const next = focusLeafByIndex(ctx.mosaicState, index);
+				ctx.setMosaicState("focusedGroupId", next.focusedGroupId);
+				e.preventDefault();
+				return;
+			}
 			case "KeyC": {
 				if (!isCtrlEvent(e)) return;
 				const graph = currentGraph();
@@ -811,7 +941,7 @@ function createKeydownShortcuts(
 						console.log({ item, mousePosition });
 
 						ctx.execute("pasteGraphSelection", {
-							graphId: model.id,
+							...graphRefOf(model),
 							mousePosition,
 							selection: item,
 						});
@@ -948,7 +1078,7 @@ function createKeydownShortcuts(
 						}
 					}
 
-					ctx.execute("setGraphItemPositions", { graphId: model.id, items });
+					ctx.execute("setGraphItemPositions", { ...graphRefOf(model), items });
 				}
 				break;
 			}
@@ -1000,7 +1130,7 @@ function createKeydownShortcuts(
 					}
 				}
 
-				ctx.execute("setGraphItemPositions", { graphId: model.id, items });
+				ctx.execute("setGraphItemPositions", { ...graphRefOf(model), items });
 
 				break;
 			}
@@ -1043,7 +1173,7 @@ function createKeydownShortcuts(
 				}
 
 				if (items.length > 0)
-					ctx.execute("deleteGraphItems", { graphId: model.id, items });
+					ctx.execute("deleteGraphItems", { ...graphRefOf(model), items });
 
 				break;
 			}
@@ -1058,7 +1188,10 @@ function createKeydownShortcuts(
 }
 
 function tabLabel(tab: TabState, ctx: InterfaceContext): string {
-	if (tab.type === "graph") return ctx.core.project.graphs.get(tab.graphId)?.name ?? "Graph";
+	if (tab.type === "graph") {
+		const ref = graphRefFromTab(tab);
+		return ctx.core.project.getGraphByKind(ref.graphKind, ref.graphId)?.name ?? "Graph";
+	}
 	if (tab.type === "function") {
 		const fn = [...ctx.core.project.functions].find(([, f]) => f.id === tab.functionId)?.[1];
 		return fn?.name ?? "Function";
@@ -1067,53 +1200,285 @@ function tabLabel(tab: TabState, ctx: InterfaceContext): string {
 		const q = ctx.core.project.queues.get(tab.queueId);
 		return q?.name ?? "Queue";
 	}
+	if (tab.type === "functionQueue") {
+		const q = ctx.core.project.functionQueues.get(tab.functionQueueId);
+		return q?.name ?? "Function Queue";
+	}
 	if (tab.type === "settings") return "Settings";
 	if (tab.type === "package") return `pkg: ${tab.packageName}`;
 	return "Tab";
 }
 
+const TAB_DRAG_THRESHOLD_PX = 5;
+
+function MosaicPaneHost(props: { groupId: string }) {
+	const ctx = useInterfaceContext();
+	const shell = useMosaicPane();
+	const focused = Solid.createMemo(
+		() => ctx.mosaicState.focusedGroupId === props.groupId,
+	);
+	const canClosePane = Solid.createMemo(
+		() => collectLeafGroupIds(ctx.mosaicState.root).length > 1,
+	);
+
+	return (
+		<GraphTabList
+			groupId={props.groupId}
+			focused={focused()}
+			canClosePane={canClosePane()}
+			onTabClose={(index) => {
+				const next = closeTabInGroup(ctx.mosaicState, props.groupId, index);
+				ctx.setMosaicWorkspaceState(next);
+				ctx.persistMosaicLayoutNow("tab-close");
+			}}
+			onSelectedChanged={(tabIndex) => {
+				const gi = findGroupIndex(ctx.mosaicState.groups, props.groupId);
+				if (gi < 0) return;
+				const tab = ctx.mosaicState.groups[gi]?.tabs[tabIndex];
+				const key = tab ? tabKey(tab) : undefined;
+				logMosaicTabSelection(
+					"select",
+					ctx.mosaicWorkspaceKey(),
+					ctx.mosaicState.groups,
+					{
+						groupId: props.groupId,
+						clickedIndex: tabIndex,
+						clickedTabKey: key,
+					},
+				);
+				ctx.setMosaicState("groups", gi, "selectedIndex", tabIndex);
+				ctx.setMosaicState("groups", gi, "selectedTabKey", key);
+				queueMicrotask(() => {
+					logMosaicTabSelection(
+						"select-after",
+						ctx.mosaicWorkspaceKey(),
+						ctx.mosaicState.groups,
+						{ groupId: props.groupId },
+					);
+					ctx.persistMosaicLayoutNow("tab-click");
+				});
+			}}
+			onFocus={() => {
+				ctx.setMosaicState("focusedGroupId", props.groupId);
+			}}
+			onClose={() => {
+				const next = closeGroup(ctx.mosaicState, props.groupId);
+				ctx.setMosaicWorkspaceState(next);
+				ctx.persistMosaicLayoutNow("pane-close");
+			}}
+			setHoveredGroupId={shell.setHoveredGroupId}
+		/>
+	);
+}
+
+function TabDragGhost() {
+	return (
+		<Solid.Show when={getTabDragSession()}>
+			{(s) => (
+				<div
+					class="fixed z-[100] pointer-events-none px-3 py-1.5 rounded bg-neutral-700 border border-neutral-500 text-sm text-white shadow-lg"
+					style={{
+						left: `${getTabDragGhostPos().x}px`,
+						top: `${getTabDragGhostPos().y}px`,
+						transform: "translate(8px, 8px)",
+					}}
+				>
+					{s().label}
+				</div>
+			)}
+		</Solid.Show>
+	);
+}
+
 function GraphTabList(props: {
+	groupId: string;
 	focused: boolean;
-	state: TabListState;
+	canClosePane: boolean;
 	onSelectedChanged: (index: number) => void;
 	onTabClose: (index: number) => void;
 	onFocus: () => void;
 	onClose: () => void;
-	setHoveredPane: Solid.Setter<boolean | null>;
+	setHoveredGroupId: Solid.Setter<string | null>;
 }) {
 	const ctx = useInterfaceContext();
+	let tabBarRef: HTMLDivElement | undefined;
+	let dragFromIndex: number | null = null;
+	let pointerStartX = 0;
+	let pointerStartY = 0;
+	let suppressClick = false;
+	const [dragActive, setDragActive] = Solid.createSignal(false);
+	const [dragIndex, setDragIndex] = Solid.createSignal<number | null>(null);
 
-	const selectedTab = () => props.state.tabs[props.state.selectedIndex];
+	const groupIndex = () => findGroupIndex(ctx.mosaicState.groups, props.groupId);
+
+	const reorderTabs = (from: number, to: number) => {
+		if (from === to) return;
+		const gi = groupIndex();
+		if (gi < 0) return;
+		ctx.setMosaicState(
+			"groups",
+			gi,
+			produce((state) => {
+				moveTabInGroup(state, from, to);
+			}),
+		);
+		dragFromIndex = to;
+		setDragIndex(to);
+	};
+
+	const handleTabPointerDown = (e: PointerEvent, index: number) => {
+		if (e.button !== 0) return;
+		const target = e.target as HTMLElement;
+		if (target.closest("[data-tab-close]")) return;
+
+		const el = e.currentTarget as HTMLElement;
+		const g = group();
+		if (!g) return;
+
+		dragFromIndex = index;
+		pointerStartX = e.clientX;
+		pointerStartY = e.clientY;
+		setDragIndex(index);
+		let dragging = false;
+		const tab = g.tabs[index];
+		if (!tab) return;
+
+		const onMove = (ev: PointerEvent) => {
+			if (dragFromIndex === null) return;
+			if (
+				!dragging &&
+				Math.abs(ev.clientX - pointerStartX) < TAB_DRAG_THRESHOLD_PX &&
+				Math.abs(ev.clientY - pointerStartY) < TAB_DRAG_THRESHOLD_PX
+			) {
+				return;
+			}
+			if (!dragging) {
+				dragging = true;
+				setDragActive(true);
+				// Tab buttons may remount during drag (nested splits); document listeners don't need capture.
+				try {
+					if (el.isConnected) el.setPointerCapture(ev.pointerId);
+				} catch {
+					// continue without capture
+				}
+				startTabDragSession({
+					tab,
+					label: tabLabel(tab, ctx),
+					sourceGroupId: props.groupId,
+					sourceIndex: index,
+					duplicate: ev.altKey,
+				});
+			}
+
+			updateTabDragGhost(ev.clientX, ev.clientY);
+			updateTabDropTarget(detectDropTarget(ev.clientX, ev.clientY, true));
+		};
+
+		const onUp = (ev: PointerEvent) => {
+			document.removeEventListener("pointermove", onMove);
+			document.removeEventListener("pointerup", onUp);
+			if (dragging) {
+				suppressClick = true;
+				try {
+					if (el.isConnected) el.releasePointerCapture(ev.pointerId);
+				} catch {
+					// pointer may already be released
+				}
+				const session = getTabDragSession();
+				const dropTarget = getTabDropTarget();
+				if (session) {
+					const tabForDrop = session.duplicate
+						? duplicateTab(session.tab)
+						: duplicateTab(session.tab);
+					const next = applyTabDrop(ctx.mosaicState, {
+						tab: tabForDrop,
+						sourceGroupId: session.sourceGroupId,
+						sourceIndex: session.sourceIndex,
+						duplicate: session.duplicate,
+						dropTarget,
+					});
+					ctx.setMosaicWorkspaceState(next);
+					ctx.persistMosaicLayoutNow("tab-drag-drop");
+				}
+				endTabDragSession();
+			}
+			dragFromIndex = null;
+			setDragActive(false);
+			setDragIndex(null);
+		};
+
+		document.addEventListener("pointermove", onMove);
+		document.addEventListener("pointerup", onUp);
+	};
+
+	const group = () => {
+		const gi = groupIndex();
+		if (gi < 0) return;
+		return ctx.mosaicState.groups[gi];
+	};
+
+	const isDropTarget = () => {
+		const t = getTabDropTarget();
+		return t?.groupId === props.groupId && !t.edge;
+	};
+	const splitEdge = () => {
+		const t = getTabDropTarget();
+		if (t?.groupId !== props.groupId || !t.edge) return;
+		return t.edge;
+	};
+
+	const selectedTab = () => {
+		const g = group();
+		if (!g) return;
+		return g.tabs[g.selectedIndex];
+	};
 
 	const graphContent = () => {
 		const tab = selectedTab();
-		if (!tab || (tab.type !== "graph" && tab.type !== "function" && tab.type !== "queue")) return;
-		const graph = ctx.core.project.graphs.get(tab.graphId);
+		if (!tab || !isGraphEditorTab(tab)) return;
+		const ref = graphRefFromTab(tab);
+		const graph = ctx.core.project.getGraphByKind(ref.graphKind, ref.graphId);
 		if (!graph) return;
 		return { tab, graph };
 	};
 
 	return (
 		<div
-			class="flex-1 flex flex-col justify-center items-center h-full relative"
+			data-mosaic-group-id={props.groupId}
+			class="flex-1 flex flex-col h-full relative min-h-0 min-w-0"
 			onMouseDown={() => {
 				setTimeout(() => {
 					props.onFocus();
 				}, 1);
 			}}
 		>
-			<div class="overflow-x-auto w-full scrollbar scrollbar-none border-b border-neutral-700 h-8 flex flex-row text-sm">
-				<Solid.For each={props.state.tabs}>
+			<Solid.Show when={splitEdge()}>
+				{(edge) => <SplitDropOverlay edge={edge()} />}
+			</Solid.Show>
+			<div
+				ref={tabBarRef}
+				data-mosaic-tab-bar
+				class="overflow-x-auto w-full shrink-0 scrollbar scrollbar-none border-b border-neutral-700 h-8 flex flex-row text-sm"
+				classList={{
+					"select-none": dragActive(),
+					"ring-1 ring-inset ring-sky-400/60": isDropTarget(),
+				}}
+			>
+				<Solid.For each={group()?.tabs ?? []}>
 					{(tab, index) => (
 						<button
 							type="button"
+							data-tab-index={index()}
 							class={clsx(
-								"py-2 px-4 flex flex-row items-center relative group shrink-0 whitespace-nowrap transition-colors",
-								props.state.selectedIndex === index()
+								"py-2 px-4 flex flex-row items-center relative group shrink-0 whitespace-nowrap transition-colors touch-none",
+								dragActive() && dragIndex() === index() && "opacity-40",
+								!dragActive() && "cursor-grab active:cursor-grabbing",
+								group()?.selectedIndex === index()
 									? clsx(
 										props.focused ? "bg-white/20" : "bg-white/10",
 										tab.type === "function" && "text-sky-200",
 										tab.type === "queue" && "text-amber-200",
+										tab.type === "functionQueue" && "text-blue-200",
 										tab.type === "settings" && "text-purple-200",
 										tab.type === "package" && "text-cyan-200",
 									)
@@ -1121,14 +1486,23 @@ function GraphTabList(props: {
 										"hover:bg-white/5",
 										tab.type === "function" && "text-sky-300",
 										tab.type === "queue" && "text-amber-300",
+										tab.type === "functionQueue" && "text-blue-300",
 										tab.type === "settings" && "text-purple-300",
 										tab.type === "package" && "text-cyan-300",
 									),
 							)}
-							onClick={() => props.onSelectedChanged(index())}
+							onPointerDown={(e) => handleTabPointerDown(e, index())}
+							onClick={() => {
+								if (suppressClick) {
+									suppressClick = false;
+									return;
+								}
+								props.onSelectedChanged(index());
+							}}
 						>
 							<span class="font-medium">{tabLabel(tab, ctx)}</span>
 							<span
+								data-tab-close
 								class="ml-1 hover:bg-white/20 rounded-[0.125rem] opacity-0 group-hover:opacity-100 cursor-pointer"
 								onClick={(e) => {
 									e.stopPropagation();
@@ -1145,29 +1519,53 @@ function GraphTabList(props: {
 				</Solid.For>
 				<div class="flex-1" />
 			</div>
+			<div
+				class="flex-1 flex flex-col min-h-0 w-full relative"
+				classList={{ "ring-1 ring-inset ring-sky-400/60": isDropTarget() }}
+			>
 			{(() => {
 				const tab = selectedTab();
-				const graph = (tab && (tab.type === "graph" || tab.type === "function" || tab.type === "queue"))
-					? ctx.core.project.graphs.get(tab.graphId)
-					: undefined;
+				const graph =
+					tab && isGraphEditorTab(tab)
+						? ctx.core.project.getGraphByKind(
+								graphRefFromTab(tab).graphKind,
+								tab.graphId,
+							)
+						: undefined;
 
 				if (tab && graph) {
-					const groupIdx = ctx.mosaicState.groups.indexOf(props.state);
+					const gi = groupIndex();
 					const setGraphTranslate = (t: XY) => {
-						if (groupIdx >= 0)
-							ctx.setMosaicState("groups", groupIdx, "tabs", props.state.selectedIndex, "translate", t);
+						const g = group();
+						if (g && gi >= 0)
+							ctx.setMosaicState(
+								"groups",
+								gi,
+								"tabs",
+								g.selectedIndex,
+								"translate",
+								t,
+							);
 					};
 					const setGraphScale = (s: number) => {
-						if (groupIdx >= 0)
-							ctx.setMosaicState("groups", groupIdx, "tabs", props.state.selectedIndex, "scale", s);
+						const g = group();
+						if (g && gi >= 0)
+							ctx.setMosaicState(
+								"groups",
+								gi,
+								"tabs",
+								g.selectedIndex,
+								"scale",
+								s,
+							);
 					};
 					return (
 						<Graph
 							graph={graph}
 							state={tab}
-							onMouseEnter={() => props.setHoveredPane(true)}
-							onMouseMove={() => props.setHoveredPane(true)}
-							onMouseLeave={() => props.setHoveredPane(null)}
+							onMouseEnter={() => props.setHoveredGroupId(props.groupId)}
+							onMouseMove={() => props.setHoveredGroupId(props.groupId)}
+							onMouseLeave={() => props.setHoveredGroupId(null)}
 							onBoundsChange={ctx.setGraphBounds}
 							onSizeChange={ctx.setGraphBounds}
 							onScaleChange={setGraphScale}
@@ -1195,9 +1593,24 @@ function GraphTabList(props: {
 					);
 				}
 
+				if (tab?.type === "functionQueue") {
+					const queue = ctx.core.project.functionQueues.get(tab.functionQueueId);
+					return (
+						<div class="flex-1 w-full flex flex-row overflow-auto bg-neutral-900">
+							<div class="flex-1 overflow-y-auto p-4 text-white">
+								{queue ? (
+									<FunctionQueuePanel queue={queue} />
+								) : (
+									<span class="text-neutral-500">Function queue not found</span>
+								)}
+							</div>
+						</div>
+					);
+				}
+
 				return (
-					<>
-						<Solid.Show when={ctx.mosaicState.groups.length > 1}>
+					<div class="flex-1 flex flex-col items-center justify-center w-full">
+						<Solid.Show when={props.canClosePane}>
 							<button
 								type="button"
 								class={clsx(
@@ -1212,9 +1625,10 @@ function GraphTabList(props: {
 							</button>
 						</Solid.Show>
 						<span class="text-neutral-400 font-medium">No graph selected</span>
-					</>
+					</div>
 				);
 			})()}
+			</div>
 		</div>
 	);
 }

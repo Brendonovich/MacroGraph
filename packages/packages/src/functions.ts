@@ -20,7 +20,7 @@ export function pkg(core: any) {
 
 		pkg.createSchema({
 			name: "Execute Function",
-			type: "exec",
+			type: "base",
 			properties: { function: functionProperty },
 			createIO({ io, ctx, properties }: any) {
 				const fnId = ctx.getProperty(properties.function);
@@ -28,7 +28,11 @@ export function pkg(core: any) {
 				const fn = ctx.graph.project.functions.get(fnId);
 				if (!fn) return;
 
+				const execIn = io.execInput({ id: "exec" });
+
 				return {
+					execIn,
+					execOut: io.execOutput({ id: "exec" }),
 					inputs: fn.inputs.map((f: any) =>
 						io.dataInput({ id: `in:${f.id}`, name: f.name ?? f.id, type: f.type }),
 					),
@@ -43,7 +47,7 @@ export function pkg(core: any) {
 				if (fnId === undefined) return;
 				const fn = graph.project.functions.get(fnId);
 				if (!fn) return;
-				const fnGraph = graph.project.graphs.get(fn.graphId);
+				const fnGraph = graph.project.getGraphByKind("function", fn.graphId);
 				if (!fnGraph) return;
 
 				const inNode = [...fnGraph.nodes.values()].find(
@@ -97,6 +101,8 @@ export function pkg(core: any) {
 						if (val !== undefined) ctx.setOutput(out, val);
 					}
 				}
+
+				ctx.exec(io.execOut);
 			},
 		});
 

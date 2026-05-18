@@ -1,4 +1,4 @@
-import type { Graph } from "@macrograph/runtime";
+import { type Graph, graphRefOf } from "@macrograph/runtime";
 import {
 	deserializeNode,
 	deserializeVariable,
@@ -14,9 +14,15 @@ import { Variables as VariablesRoot } from "../Variables";
 
 export function Variables(props: { graph: Graph }) {
 	const interfaceCtx = useInterfaceContext();
-	const isFn = [...interfaceCtx.core.project.functions].some(([, f]) => f.graphId === props.graph.id);
-	const isQueue = [...interfaceCtx.core.project.queues].some(([, q]) => q.graphId === props.graph.id);
-	const titlePrefix = isFn ? "Function" : isQueue ? "Queue" : "Graph";
+	const kind = interfaceCtx.core.project.kindOfGraph(props.graph);
+	const titlePrefix =
+		kind === "function"
+			? "Function"
+			: kind === "queue"
+				? "Queue"
+				: kind === "functionQueue"
+					? "Function Queue"
+					: "Graph";
 
 	return (
 		<VariablesRoot
@@ -25,20 +31,20 @@ export function Variables(props: { graph: Graph }) {
 			onCreateVariable={() => {
 				interfaceCtx.execute("createVariable", {
 					location: "graph",
-					graphId: props.graph.id,
+					...graphRefOf(props.graph),
 				});
 			}}
 			onRemoveVariable={(id) => {
 				interfaceCtx.execute("deleteVariable", {
 					location: "graph",
-					graphId: props.graph.id,
+					...graphRefOf(props.graph),
 					variableId: id,
 				});
 			}}
 			onSetVariableValue={(id, value) => {
 				interfaceCtx.execute("setVariableValue", {
 					location: "graph",
-					graphId: props.graph.id,
+					...graphRefOf(props.graph),
 					variableId: id,
 					value,
 				});
@@ -46,7 +52,7 @@ export function Variables(props: { graph: Graph }) {
 			onSetVariableType={(id, type) => {
 				interfaceCtx.execute("setVariableType", {
 					location: "graph",
-					graphId: props.graph.id,
+					...graphRefOf(props.graph),
 					variableId: id,
 					type,
 				});
@@ -54,7 +60,7 @@ export function Variables(props: { graph: Graph }) {
 			onVariableNameChanged={(id, name) => {
 				interfaceCtx.execute("setVariableName", {
 					location: "graph",
-					graphId: props.graph.id,
+					...graphRefOf(props.graph),
 					variableId: id,
 					name,
 				});
@@ -116,7 +122,7 @@ export function Variables(props: { graph: Graph }) {
 
 								interfaceCtx.execute(
 									"deleteVariable",
-									{ location: "graph", graphId: graph.id, variableId: id },
+									{ location: "graph", ...graphRefOf(graph), variableId: id },
 									{ ephemeral: true },
 								);
 

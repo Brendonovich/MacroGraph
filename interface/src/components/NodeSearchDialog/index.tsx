@@ -1,6 +1,11 @@
 import { Dialog } from "@kobalte/core";
 import { createEventListener } from "@solid-primitives/event-listener";
-import type { Graph, Node } from "@macrograph/runtime";
+import {
+	type Graph,
+	type GraphKind,
+	type Node,
+	graphRefOf,
+} from "@macrograph/runtime";
 import clsx from "clsx";
 import { For, batch, createEffect, createMemo, createSignal, on } from "solid-js";
 import { produce } from "solid-js/store";
@@ -14,6 +19,7 @@ const GRAPH_MAX_ZOOM_OUT = 5;
 const GRAPH_MIN_SCALE = 1 / GRAPH_MAX_ZOOM_OUT;
 
 type Row = {
+	graphKind: GraphKind;
 	graphId: number;
 	nodeId: number;
 	graphName: string;
@@ -140,7 +146,7 @@ export function NodeSearchDialog() {
 		const pairs: Array<readonly [string[], Row]> = [];
 
 		for (const id of project.graphOrder) {
-			const graph = project.graph(id);
+			const graph = project.getGraphByKind("graph", id);
 			if (!graph) continue;
 
 			for (const node of graph.nodes.values()) {
@@ -149,6 +155,7 @@ export function NodeSearchDialog() {
 				const schemaQualified = `${node.schema.package.name}/${node.schema.name}`;
 				const raw = `${graphName} ${displayName} ${schemaQualified}`;
 				const row: Row = {
+					graphKind: graph.kind,
 					graphId: graph.id,
 					nodeId: node.id,
 					graphName,
@@ -211,9 +218,16 @@ export function NodeSearchDialog() {
 				Math.max(GRAPH_MIN_SCALE, scaleFit),
 			);
 
-			const groupIndex = ctx.mosaicState.focusedIndex;
+			const groupIndex = ctx.mosaicState.groups.findIndex(
+				(g) => g.id === ctx.mosaicState.focusedGroupId,
+			);
 			const tabIndex = ctx.mosaicState.groups[groupIndex]?.tabs.findIndex(
-				(t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === graph.id,
+				(t) =>
+					(t.type === "graph" ||
+						t.type === "function" ||
+						t.type === "queue") &&
+					t.graphKind === graph.kind &&
+					t.graphId === graph.id,
 			);
 			if (tabIndex === undefined || tabIndex < 0) return;
 
@@ -238,15 +252,31 @@ export function NodeSearchDialog() {
 	}
 
 	function goToRow(row: Row) {
-		const graph = ctx.core.project.graph(row.graphId);
+		const graph = ctx.core.project.getGraphByKind(row.graphKind, row.graphId);
 		if (!graph) return;
 
 		const node = graph.nodes.get(row.nodeId);
 		if (!node) return;
 
-		ctx.selectGraph(graph);
+		if (graph.kind === "function") {
+			for (const [, fn] of ctx.core.project.functions) {
+				if (fn.graphId === graph.id) {
+					ctx.selectFunction(fn);
+					break;
+				}
+			}
+		} else if (graph.kind === "queue") {
+			for (const [, queue] of ctx.core.project.queues) {
+				if (queue.graphId === graph.id) {
+					ctx.selectQueue(queue);
+					break;
+				}
+			}
+		} else {
+			ctx.selectGraph(graph);
+		}
 		ctx.execute("setGraphSelection", {
-			graphId: graph.id,
+			...graphRefOf(graph),
 			selection: [{ type: "node", id: node.id }],
 		});
 		frameNodeInActiveTab(graph, node);

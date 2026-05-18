@@ -51,6 +51,7 @@ export function renderSchema(
 	const graph = new Graph({
 		id: 0,
 		name: "",
+		kind: "graph",
 		project: new Project({ core: new Core() }),
 	});
 

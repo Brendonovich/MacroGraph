@@ -45,10 +45,6 @@ export function Graphs(props: Props) {
 			.map((id) => {
 				const g = interfaceCtx.core.project.graphs.get(id);
 				if (!g) return;
-				const isFnGraph = [...interfaceCtx.core.project.functions].some(([, f]) => f.graphId === id);
-				if (isFnGraph) return;
-				const isQueueGraph = [...interfaceCtx.core.project.queues].some(([, q]) => q.graphId === id);
-				if (isQueueGraph) return;
 
 				return [tokeniseString(g.name), g] as const;
 			})
@@ -84,6 +80,7 @@ export function Graphs(props: Props) {
 						const graph = await deserializeGraph(
 							interfaceCtx.core.project,
 							item.graph,
+							"graph",
 						);
 						interfaceCtx.core.project.graphs.set(graph.id, graph);
 					}}
@@ -122,10 +119,11 @@ export function Graphs(props: Props) {
 															onClick={() => props.onGraphClicked(graph)}
 														/>
 													)}
-													selected={props.currentGraph === graph.id}
+													selected={props.currentGraph === graph}
 													value={graph.name}
 													onChange={(value) => {
 														interfaceCtx.execute("setGraphName", {
+															graphKind: "graph",
 															graphId: graph.id,
 															name: value,
 														});
@@ -150,6 +148,7 @@ export function Graphs(props: Props) {
 															<ContextMenuItem
 																onSelect={() =>
 																	interfaceCtx.execute("moveGraphToIndex", {
+																		graphKind: "graph",
 																		graphId: graph.id,
 																		currentIndex: i(),
 																		newIndex: i() - 1,
@@ -164,6 +163,7 @@ export function Graphs(props: Props) {
 															<ContextMenuItem
 																onSelect={() =>
 																	interfaceCtx.execute("moveGraphToIndex", {
+																		graphKind: "graph",
 																		graphId: graph.id,
 																		currentIndex: i(),
 																		newIndex: i() + 1,
@@ -198,6 +198,7 @@ export function Graphs(props: Props) {
 														<Button
 															onClick={() => {
 																interfaceCtx.execute("deleteGraph", {
+																	graphKind: "graph",
 																	graphId: graph.id,
 																});
 															}}

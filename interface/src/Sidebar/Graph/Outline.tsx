@@ -1,4 +1,4 @@
-import type { Graph } from "@macrograph/runtime";
+import { type Graph, graphRefOf } from "@macrograph/runtime";
 
 import { For } from "solid-js";
 import { produce } from "solid-js/store";
@@ -22,7 +22,7 @@ export function Outline(props: { graph: Graph }) {
 								type="button"
 								onClick={() => {
 									interfaceCtx.execute("setGraphSelection", {
-										graphId: props.graph.id,
+										...graphRefOf(props.graph),
 										selection: [{ type: "commentBox", id: box.id }],
 									});
 									// interfaceCtx.setGraphStates(

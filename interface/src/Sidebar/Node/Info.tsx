@@ -2,6 +2,7 @@ import {
 	type Node,
 	rerunNodeFromInvocationSnapshot,
 	remoteHostRpcRequest,
+	graphRefOf,
 } from "@macrograph/runtime";
 import type { ParentProps } from "solid-js";
 import { For, Show, createEffect, createMemo, createSignal, on } from "solid-js";
@@ -76,7 +77,10 @@ export function NodeInfo(props: { node: Node }) {
 	}
 
 	const entries = createMemo(() => {
-		const all = ctx.getNodeInvocationEntries(props.node.graph.id, props.node.id);
+		const all = ctx.getNodeInvocationEntries(
+			graphRefOf(props.node.graph),
+			props.node.id,
+		);
 		const active = activeFilters();
 		return all.filter((e) => active.has(e.entryType));
 	});
@@ -89,7 +93,7 @@ export function NodeInfo(props: { node: Node }) {
 				await remoteHostRpcRequest({
 					method: "rerunNode",
 					params: {
-						graphId: props.node.graph.id,
+						...graphRefOf(props.node.graph),
 						nodeId: props.node.id,
 						inputs: inv.inputs,
 						eventData: inv.eventData,
@@ -125,8 +129,8 @@ export function NodeInfo(props: { node: Node }) {
 					props.node.graph.id,
 					props.node.id,
 				] as const,
-			([, graphId, nodeId]) => {
-				void ctx.hydrateNodeInvocationLog(graphId, nodeId);
+			([, , nodeId]) => {
+				void ctx.hydrateNodeInvocationLog(graphRefOf(props.node.graph), nodeId);
 
 				if (props.node.graph.project.core.remoteShell) {
 					remoteHostRpcRequest({

@@ -8,6 +8,7 @@ import {
 	pinIsInput,
 	pinIsOutput,
 	pinsCanConnect,
+	graphRefOf,
 } from "@macrograph/runtime";
 import {
 	createEventListener,
@@ -88,13 +89,13 @@ export function usePin(pin: Accessor<Pin>) {
 
 					if (pinIsOutput(thisPin) && pinIsInput(draggingPin))
 						interfaceCtx.execute("connectIO", {
-							graphId: graph.model().id,
+							...graphRefOf(graph.model()),
 							out: { nodeId: thisPin.node.id, pinId: thisPin.id },
 							in: { nodeId: draggingPin.node.id, pinId: draggingPin.id },
 						});
 					else if (pinIsInput(thisPin) && pinIsOutput(draggingPin))
 						interfaceCtx.execute("connectIO", {
-							graphId: graph.model().id,
+							...graphRefOf(graph.model()),
 							out: { nodeId: draggingPin.node.id, pinId: draggingPin.id },
 							in: { nodeId: thisPin.node.id, pinId: thisPin.id },
 						});
@@ -110,13 +111,13 @@ export function usePin(pin: Accessor<Pin>) {
 				if (mouseDown.status === "connectionAssignMode") {
 					if (pinIsOutput(thisPin) && pinIsInput(mouseDown.pin))
 						interfaceCtx.execute("connectIO", {
-							graphId: graph.model().id,
+							...graphRefOf(graph.model()),
 							out: { nodeId: thisPin.node.id, pinId: thisPin.id },
 							in: { nodeId: mouseDown.pin.node.id, pinId: mouseDown.pin.id },
 						});
 					else if (pinIsInput(thisPin) && pinIsOutput(mouseDown.pin))
 						interfaceCtx.execute("connectIO", {
-							graphId: graph.model().id,
+							...graphRefOf(graph.model()),
 							out: { nodeId: mouseDown.pin.node.id, pinId: mouseDown.pin.id },
 							in: { nodeId: thisPin.node.id, pinId: thisPin.id },
 						});
@@ -206,7 +207,7 @@ export function usePin(pin: Accessor<Pin>) {
 
 									//   if (pinIsOutput(thisPin) && pinIsInput(autoconnectIO))
 									//     interfaceCtx.execute("connectIO", {
-									//       graphId: graph.model().id,
+									//       ...graphRefOf(graph.model()),
 									//       out: { nodeId: thisPin.node.id, pinId: thisPin.id },
 									//       in: {
 									//         nodeId: autoconnectIO.node.id,
@@ -215,7 +216,7 @@ export function usePin(pin: Accessor<Pin>) {
 									//     });
 									//   else if (pinIsInput(thisPin) && pinIsOutput(autoconnectIO))
 									//     interfaceCtx.execute("connectIO", {
-									//       graphId: graph.model().id,
+									//       ...graphRefOf(graph.model()),
 									//       out: {
 									//         nodeId: autoconnectIO.node.id,
 									//         pinId: autoconnectIO.id,
@@ -259,7 +260,7 @@ export function usePin(pin: Accessor<Pin>) {
 			},
 			dblclick: () => {
 				interfaceCtx.execute("disconnectIO", {
-					graphId: graph.model().id,
+					...graphRefOf(graph.model()),
 					ioRef: makeIORef(thisPin),
 				});
 			},

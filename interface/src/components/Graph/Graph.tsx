@@ -6,6 +6,7 @@ import {
 	getNodesInRect,
 	pinIsInput,
 	pinIsOutput,
+	graphRefOf,
 } from "@macrograph/runtime";
 import { createBodyCursor } from "@solid-primitives/cursor";
 import {
@@ -20,11 +21,13 @@ import { isMobile } from "@solid-primitives/platform";
 import clsx from "clsx";
 
 import { type SchemaMenuOpenState, useInterfaceContext } from "../../context";
+import { isCtrlEvent } from "../../util";
 import { ConnectionRenderer } from "../Graph";
 import { CommentBox } from "./CommentBox";
 import {
 	type GraphContext,
 	GraphContextProvider,
+	coerceGraphScale,
 	type GraphViewState,
 	toGraphSpace,
 	toScreenSpace,
@@ -61,6 +64,12 @@ export const Graph = (props: Props) => {
 	const interfaceCtx = useInterfaceContext();
 
 	const model = () => props.graph;
+	const graphRef = () => graphRefOf(model());
+
+	const viewState = (): GraphViewState => ({
+		...props.state,
+		scale: coerceGraphScale(props.state.scale),
+	});
 
 	const [state, setState] = createStore<State>({
 		size: { width: 0, height: 0 },
@@ -71,60 +80,37 @@ export const Graph = (props: Props) => {
 	const remotePinDragList = Solid.createMemo(() => getRemotePinDrags());
 	const remoteSelectionBoxList = Solid.createMemo(() => getRemoteSelectionBoxes());
 
-	// --- resize/position tracking ---
-	let prevScreenX = window.screenX;
-	let prevScreenY = window.screenY;
-	let prevInnerW = window.innerWidth;
-	let prevInnerH = window.innerHeight;
+	let boundsInitialized = false;
 
-	let typeCache: string | null = null;
-	let typeTime = 0;
+	function onResize() {
+		const rect = ref()!.getBoundingClientRect()!;
 
-	function logResizeType() {
-		const sx = window.screenX, sy = window.screenY;
-		const iw = window.innerWidth, ih = window.innerHeight;
-		const now = performance.now();
-		const rect = ref()?.getBoundingClientRect();
+		if (boundsInitialized) {
+			const dx = rect.left - state.bounds.x;
+			const dy = rect.top - state.bounds.y;
+			const sizeChanged =
+				rect.width !== state.size.width ||
+				rect.height !== state.size.height;
 
-		if (rect && (rect.left !== state.bounds.x || rect.top !== state.bounds.y)) {
-			typeCache = "left sidebar"; typeTime = now;
-		} else if (sx !== prevScreenX) {
-			typeCache = "window left"; typeTime = now;
-			const s = props.state.scale;
-			const dx = (sx - prevScreenX) / s;
-			props.onTranslateChange({
-				x: props.state.translate.x + dx,
-				y: props.state.translate.y,
-			});
-		} else if (sy !== prevScreenY) {
-			typeCache = "window top"; typeTime = now;
-			const s = props.state.scale;
-			const dy = (sy - prevScreenY) / s;
-			props.onTranslateChange({
-				x: props.state.translate.x,
-				y: props.state.translate.y + dy,
-			});
-		} else if (iw !== prevInnerW) {
-			if (!typeCache || now - typeTime > 500) {
-				typeCache = "window right"; typeTime = now;
-			}
-		} else if (ih !== prevInnerH) {
-			if (!typeCache || now - typeTime > 500) {
-				typeCache = "window bottom"; typeTime = now;
+			// Only compensate for layout resizes, not viewport scroll from focus/scrollIntoView.
+			if ((dx !== 0 || dy !== 0) && sizeChanged) {
+				const s = viewState().scale;
+				props.onTranslateChange({
+					x: props.state.translate.x + dx / s,
+					y: props.state.translate.y + dy / s,
+				});
 			}
 		}
 
-		prevScreenX = sx; prevScreenY = sy;
-		prevInnerW = iw; prevInnerH = ih;
-	}
+		boundsInitialized = true;
 
-	function onResize() {
-		logResizeType();
+		const boundsValue = { x: rect.left, y: rect.top };
+		props.onBoundsChange(boundsValue);
+		setState("bounds", boundsValue);
 
-		const bounds = ref()!.getBoundingClientRect()!;
-		const value = { x: bounds.left, y: bounds.top };
-		props.onBoundsChange(value);
-		setState("bounds", value);
+		const sizeValue = { width: rect.width, height: rect.height };
+		props.onSizeChange(sizeValue);
+		setState("size", sizeValue);
 	}
 
 	function updateScale(delta: number, screenOrigin: XY) {
@@ -138,7 +124,7 @@ export const Graph = (props: Props) => {
 			Math.min(
 				Math.max(
 					1 / MAX_ZOOM_OUT,
-					props.state.scale * Math.pow(ZOOM_STEP, delta),
+					viewState().scale * Math.pow(ZOOM_STEP, delta),
 				),
 				MAX_ZOOM_IN,
 			),
@@ -239,7 +225,7 @@ export const Graph = (props: Props) => {
 						if (!node) return;
 
 						interfaceCtx.execute("setNodeFoldPins", {
-							graphId: model().id,
+							...graphRef(),
 							nodeId: node.id,
 							foldPins: true,
 						});
@@ -261,7 +247,7 @@ export const Graph = (props: Props) => {
 						if (!node) return;
 
 						interfaceCtx.execute("setNodeFoldPins", {
-							graphId: model().id,
+							...graphRef(),
 							nodeId: node.id,
 							foldPins: false,
 						});
@@ -280,11 +266,11 @@ export const Graph = (props: Props) => {
 	const ctx: GraphContext = {
 		model,
 		get state() {
-			return props.state;
+			return viewState();
 		},
 		offset: state.bounds,
-		toGraphSpace: (xy) => toGraphSpace(xy, state.bounds, props.state),
-		toScreenSpace: (xy) => toScreenSpace(xy, state.bounds, props.state),
+		toGraphSpace: (xy) => toGraphSpace(xy, state.bounds, viewState()),
+		toScreenSpace: (xy) => toScreenSpace(xy, state.bounds, viewState()),
 	};
 
 	const gesture = {
@@ -300,7 +286,7 @@ export const Graph = (props: Props) => {
 	function unselectAllEphemeral() {
 		interfaceCtx.execute(
 			"setGraphSelection",
-			{ graphId: model().id, selection: [] },
+			{ ...graphRef(), selection: [] },
 			{ ephemeral: true },
 		);
 	}
@@ -397,7 +383,7 @@ export const Graph = (props: Props) => {
 
 					broadcastSelectionBox({
 						id: "",
-						graphId: model().id,
+						...graphRef(),
 						x: 0,
 						y: 0,
 						width: 0,
@@ -407,7 +393,7 @@ export const Graph = (props: Props) => {
 					if (!didMove) {
 						if (prevSelection.length !== 0)
 							interfaceCtx.execute("setGraphSelection", {
-								graphId: model().id,
+								...graphRef(),
 								selection: [],
 								prev: prevSelection,
 							});
@@ -419,13 +405,13 @@ export const Graph = (props: Props) => {
 							interfaceCtx.setState({ status: "idle" });
 							if (prevSelection.length > 0)
 								interfaceCtx.execute("setGraphSelection", {
-									graphId: model().id,
+									...graphRef(),
 									selection: [],
 									prev: prevSelection,
 								});
 						} else {
 							interfaceCtx.execute("setGraphSelection", {
-								graphId: model().id,
+								...graphRef(),
 								selection: items,
 								prev: prevSelection,
 							});
@@ -440,13 +426,13 @@ export const Graph = (props: Props) => {
 
 					interfaceCtx.execute(
 						"setGraphSelection",
-						{ graphId: model().id, selection: items },
+						{ ...graphRef(), selection: items },
 						{ ephemeral: true },
 					);
 
 					broadcastSelectionBox({
 						id: "",
-						graphId: model().id,
+						...graphRef(),
 						x: rect.x,
 						y: rect.y,
 						width: rect.width,
@@ -458,7 +444,7 @@ export const Graph = (props: Props) => {
 	}
 
 	// Follow a user's cursor (auto-pan camera with smooth lerp, auto-switch graph)
-	const lastFollowGraphRef = { id: model().id };
+	const lastFollowGraphRef = { kind: model().kind, id: model().id };
 	Solid.createEffect(() => {
 		const followId = getFollowUserId();
 		if (!followId) return;
@@ -466,10 +452,17 @@ export const Graph = (props: Props) => {
 		let rafId: number;
 		const loop = () => {
 			const cursors = getRemoteCursors();
-			const target = cursors.find((c) => c.id === followId && c.graphId === model().id);
+			const ref = graphRef();
+			const target = cursors.find(
+				(c) =>
+					c.id === followId &&
+					c.graphKind === ref.graphKind &&
+					c.graphId === ref.graphId,
+			);
 
 			if (target) {
-				lastFollowGraphRef.id = model().id;
+				lastFollowGraphRef.kind = ref.graphKind;
+				lastFollowGraphRef.id = ref.graphId;
 				const followPos = target.viewportCenter ?? target.position;
 				const screenPos = toScreenSpace(followPos, state.bounds, props.state);
 				const centerX = state.size.width / 2;
@@ -486,11 +479,23 @@ export const Graph = (props: Props) => {
 					y: props.state.translate.y + (targetTranslateY - props.state.translate.y) * lerpFactor,
 				});
 			} else {
-				const other = cursors.find((c) => c.id === followId && c.graphId !== model().id);
-				if (other && other.graphId !== lastFollowGraphRef.id) {
+				const other = cursors.find(
+					(c) =>
+						c.id === followId &&
+						(c.graphKind !== ref.graphKind || c.graphId !== ref.graphId),
+				);
+				if (
+					other &&
+					(other.graphKind !== lastFollowGraphRef.kind ||
+						other.graphId !== lastFollowGraphRef.id)
+				) {
+					lastFollowGraphRef.kind = other.graphKind;
 					lastFollowGraphRef.id = other.graphId;
-					const graph = interfaceCtx.core.project.graphs.get(other.graphId);
-					if (graph) interfaceCtx.selectGraph(graph);
+					const graph = interfaceCtx.core.project.getGraphByKind(
+						other.graphKind,
+						other.graphId,
+					);
+					if (graph?.kind === "graph") interfaceCtx.selectGraph(graph);
 				}
 			}
 
@@ -503,7 +508,13 @@ export const Graph = (props: Props) => {
 	});
 
 	const cursorRaf = { current: 0 as unknown as ReturnType<typeof requestAnimationFrame> | null };
-	const sendCursor = (payload: { graphId: number; position: { x: number; y: number }; viewportCenter?: { x: number; y: number } }) => {
+	const sendCursor = (payload: {
+		id?: string;
+		graphKind: import("@macrograph/runtime").GraphKind;
+		graphId: number;
+		position: { x: number; y: number };
+		viewportCenter?: { x: number; y: number };
+	}) => {
 		if (cursorRaf.current != null) cancelAnimationFrame(cursorRaf.current);
 		cursorRaf.current = requestAnimationFrame(() => {
 			cursorRaf.current = null;
@@ -522,7 +533,7 @@ export const Graph = (props: Props) => {
 				pinDragRaf.current = null;
 				broadcastPinDrag({
 					id: "",
-					graphId: model().id,
+					...graphRef(),
 					pinNodeId: 0,
 					pinId: "",
 					isOutput: false,
@@ -540,7 +551,7 @@ export const Graph = (props: Props) => {
 			pinDragRaf.current = null;
 			broadcastPinDrag({
 				id: "",
-				graphId: model().id,
+				...graphRef(),
 				pinNodeId: pin.node.id,
 				pinId: pin.id,
 				isOutput: pinIsOutput(pin),
@@ -567,7 +578,8 @@ export const Graph = (props: Props) => {
 				onPointerMove={(e) => {
 					const graphSpace = ctx.toGraphSpace({ x: e.clientX, y: e.clientY });
 					sendCursor?.({
-						graphId: model().id,
+						id: "",
+						...graphRef(),
 						position: graphSpace,
 						viewportCenter: {
 							x: (state.size.width / 2) / props.state.scale + props.state.translate.x,
@@ -576,7 +588,11 @@ export const Graph = (props: Props) => {
 					});
 				}}
 				onPointerLeave={() => {
-					sendCursor?.({ graphId: model().id, position: { x: -99999, y: -99999 } });
+					sendCursor?.({
+						id: "",
+						...graphRef(),
+						position: { x: -99999, y: -99999 },
+					});
 				}}
 				onPointerUp={(e) => {
 					if (e.pointerType === "touch") {
@@ -619,7 +635,7 @@ export const Graph = (props: Props) => {
 
 							if (pinIsOutput(thisPin) && pinIsInput(autoconnectIO))
 								interfaceCtx.execute("connectIO", {
-									graphId: model().id,
+									...graphRef(),
 									out: { nodeId: thisPin.node.id, pinId: thisPin.id },
 									in: {
 										nodeId: autoconnectIO.node.id,
@@ -628,7 +644,7 @@ export const Graph = (props: Props) => {
 								});
 							else if (pinIsInput(thisPin) && pinIsOutput(autoconnectIO))
 								interfaceCtx.execute("connectIO", {
-									graphId: model().id,
+									...graphRef(),
 									out: {
 										nodeId: autoconnectIO.node.id,
 										pinId: autoconnectIO.id,
@@ -637,16 +653,17 @@ export const Graph = (props: Props) => {
 								});
 
 							interfaceCtx.setState({ status: "idle" });
-						} else {
+						} else if (isCtrlEvent(e)) {
 							interfaceCtx.setState({
 								...interfaceCtx.state,
 								status: "pinDragMode",
 								state: {
 									status: "schemaMenuOpen",
 									position: { x: e.clientX, y: e.clientY },
-									// graph: props.state,
 								},
 							});
+						} else {
+							interfaceCtx.setState({ status: "idle" });
 						}
 					}
 				}}
@@ -858,7 +875,7 @@ export const Graph = (props: Props) => {
 				<div
 					class="absolute inset-0 text-white origin-top-left overflow-hidden"
 					style={{
-						transform: `scale(${props.state.scale})`,
+						transform: `scale(${viewState().scale})`,
 						width: `${MAX_ZOOM_OUT * 100}%`,
 						height: `${MAX_ZOOM_OUT * 100}%`,
 					}}
@@ -879,7 +896,7 @@ export const Graph = (props: Props) => {
 										interfaceCtx.execute(
 											"setGraphSelection",
 											{
-												graphId: model().id,
+												...graphRef(),
 												selection: [{ type: "commentBox", id: box.id }],
 											},
 											{ ephemeral },
@@ -896,7 +913,7 @@ export const Graph = (props: Props) => {
 										interfaceCtx.execute(
 											"setGraphSelection",
 											{
-												graphId: model().id,
+												...graphRef(),
 												selection: [{ type: "node", id: node.id }],
 											},
 											{ ephemeral },
@@ -920,7 +937,13 @@ export const Graph = (props: Props) => {
 							)}
 						</Solid.Show>
 						{remoteSelectionBoxList()
-							.filter((b) => b.graphId === model().id && b.width > 0 && b.height > 0)
+							.filter(
+								(b) =>
+									b.graphKind === model().kind &&
+									b.graphId === model().id &&
+									b.width > 0 &&
+									b.height > 0,
+							)
 							.map((box) => (
 								<div
 									class="absolute pointer-events-none z-40 bg-blue-500/10 border-blue-400 border border-dashed rounded"
@@ -932,7 +955,12 @@ export const Graph = (props: Props) => {
 								/>
 							))}
 						{cursorList()
-							.filter((c) => c.graphId === model().id && c.position.x > -9999)
+							.filter(
+								(c) =>
+									c.graphKind === model().kind &&
+									c.graphId === model().id &&
+									c.position.x > -9999,
+							)
 							.map((cursor) => (
 								<div
 									class="absolute pointer-events-none z-50"

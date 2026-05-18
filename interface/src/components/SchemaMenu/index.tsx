@@ -48,6 +48,22 @@ interface Props {
 	onClose?(): void;
 }
 
+const MENU_OFFSET = 18;
+const MENU_WIDTH = 320; // w-80
+const MENU_HEIGHT = 480; // h-[30rem]
+
+function clampMenuPosition(
+	position: XY,
+	container: { clientWidth: number; clientHeight: number },
+): XY {
+	const left = position.x - MENU_OFFSET;
+	const top = position.y - MENU_OFFSET;
+	return {
+		x: Math.max(0, Math.min(left, container.clientWidth - MENU_WIDTH)),
+		y: Math.max(0, Math.min(top, container.clientHeight - MENU_HEIGHT)),
+	};
+}
+
 const TypeIndicatorColours: Record<NodeSchemaVariant, string> = {
 	Base: "bg-mg-base",
 	Exec: "bg-mg-exec",
@@ -82,14 +98,8 @@ export function SchemaMenu(props: Props) {
 	);
 
 	const isRestrictedGraph = createMemo(() => {
-		const graph = props.graphModel;
-		const isFn = [...interfaceCtx.core.project.functions].some(
-			([, f]) => f.graphId === graph.id,
-		);
-		const isQueue = [...interfaceCtx.core.project.queues].some(
-			([, q]) => q.graphId === graph.id,
-		);
-		return isFn || isQueue;
+		const kind = interfaceCtx.core.project.kindOfGraph(props.graphModel);
+		return kind !== "graph";
 	});
 
 	const renderedSchemas = createMemo(() => {
@@ -126,7 +136,7 @@ export function SchemaMenu(props: Props) {
 		node.setAttribute("data-active", "true");
 		if (!disableScroll) {
 			ignorePointerEnter = true;
-			node.scrollIntoView({ block: "center" });
+			node.scrollIntoView({ block: "nearest" });
 			setTimeout(() => {
 				ignorePointerEnter = false;
 			}, 2);
@@ -196,6 +206,19 @@ export function SchemaMenu(props: Props) {
 
 	let root: HTMLDivElement;
 
+	const [menuPosition, setMenuPosition] = createSignal({
+		x: props.position.x - MENU_OFFSET,
+		y: props.position.y - MENU_OFFSET,
+	});
+
+	onMount(() => {
+		const container =
+			(root.offsetParent as HTMLElement | null) ?? root.parentElement;
+		if (!container) return;
+		const clamped = clampMenuPosition(props.position, container);
+		setMenuPosition(clamped);
+	});
+
 	const onPointerEnter: ComponentProps<"button">["onPointerEnter"] = (e) => {
 		if (ignorePointerEnter) return;
 		setActive(e.target, true);
@@ -206,8 +229,8 @@ export function SchemaMenu(props: Props) {
 			ref={root!}
 			class="flex flex-col bg-neutral-900 border-black text-white border absolute z-10 w-80 h-[30rem] rounded-xl shadow-md overflow-hidden text-sm animate-in zoom-in-95 origin-top-left transition-none fade-in duration-100"
 			style={{
-				left: `${props.position.x - 18}px`,
-				top: `${props.position.y - 18}px`,
+				left: `${menuPosition().x}px`,
+				top: `${menuPosition().y}px`,
 			}}
 		>
 			<div class="p-2">
@@ -344,7 +367,7 @@ export function SchemaMenu(props: Props) {
 									}
 								}
 
-								if (p.name === "Custom Events") {
+								if (p.name === "Custom Events" && leftoverSearchTokens.length > 0) {
 									const emitCustomEventSchema =
 										p.schemas.get("Emit Custom Event");
 									const customEventSchema = p.schemas.get("Custom Event");
@@ -372,7 +395,11 @@ export function SchemaMenu(props: Props) {
 									}
 								}
 
-								if (p.name === "Variables" && !props.suggestion) {
+								if (
+									p.name === "Variables" &&
+									!props.suggestion &&
+									leftoverSearchTokens.length > 0
+								) {
 									const getGraph = p.schemas.get("Get Graph Variable");
 									const setGraph = p.schemas.get("Set Graph Variable");
 									const changedGraph = p.schemas.get("Graph Variable Changed");
@@ -433,7 +460,11 @@ export function SchemaMenu(props: Props) {
 									}
 								}
 
-								if (p.name === "Queue" && !props.suggestion) {
+								if (
+									p.name === "Queue" &&
+									!props.suggestion &&
+									leftoverSearchTokens.length > 0
+								) {
 									const addToQueue = p.schemas.get("Add to Queue");
 									const queueIterated = p.schemas.get("Queue Iterated Event");
 									const getQueuePaused = p.schemas.get("Get Queue Paused");
@@ -449,33 +480,128 @@ export function SchemaMenu(props: Props) {
 										if (addToQueue)
 											ret.push({
 												schema: addToQueue,
-												name: `Add to ${q.name}`,
+												name: `Add to Queue (${q.name})`,
 												defaultProperties: { queue: q.id },
 											});
 										if (queueIterated)
 											ret.push({
 												schema: queueIterated,
-												name: `${q.name} Iterated`,
+												name: `Queue Iterated Event (${q.name})`,
 												defaultProperties: { queue: q.id },
 											});
 										if (getQueuePaused)
 											ret.push({
 												schema: getQueuePaused,
-												name: `${q.name} Paused`,
+												name: `Get Queue Paused (${q.name})`,
 												defaultProperties: { queue: q.id },
 											});
 										if (setQueuePaused)
 											ret.push({
 												schema: setQueuePaused,
-												name: `Set ${q.name} Paused`,
+												name: `Set Queue Paused (${q.name})`,
 												defaultProperties: { queue: q.id },
 											});
 										if (queueLength)
 											ret.push({
 												schema: queueLength,
-												name: `${q.name} Length`,
+												name: `Queue Length (${q.name})`,
 												defaultProperties: { queue: q.id },
 											});
+									}
+								}
+
+								if (
+									p.name === "Functions" &&
+									!props.suggestion &&
+									leftoverSearchTokens.length > 0
+								) {
+									const executeFunction = p.schemas.get("Execute Function");
+
+									for (const fn of props.graphModel.project.functions.values()) {
+										const n = fn.name.toLowerCase();
+										const searchMatches = leftoverSearchTokens.every((t) =>
+											n.includes(t),
+										);
+										if (!searchMatches) continue;
+										if (executeFunction)
+											ret.push({
+												schema: executeFunction,
+												name: `Execute Function (${fn.name})`,
+												defaultProperties: { function: fn.id },
+											});
+									}
+								}
+
+								if (
+									p.name === "Function Queue" &&
+									!props.suggestion &&
+									leftoverSearchTokens.length > 0
+								) {
+									const addToFunctionQueue = p.schemas.get(
+										"Add to Function Queue",
+									);
+									const fnQueueIterated = p.schemas.get(
+										"Function Queue Iterated Event",
+									);
+									const getFnQueuePaused = p.schemas.get(
+										"Get Function Queue Paused",
+									);
+									const setFnQueuePaused = p.schemas.get(
+										"Set Function Queue Paused",
+									);
+									const fnQueueLength = p.schemas.get("Function Queue Length");
+
+									for (const q of props.graphModel.project.functionQueues.values()) {
+										const n = q.name.toLowerCase();
+										const searchMatches = leftoverSearchTokens.every((t) =>
+											n.includes(t),
+										);
+										if (!searchMatches) continue;
+										if (addToFunctionQueue)
+											ret.push({
+												schema: addToFunctionQueue,
+												name: `Add to Function Queue (${q.name})`,
+												defaultProperties: { queue: q.id },
+											});
+										if (fnQueueIterated)
+											ret.push({
+												schema: fnQueueIterated,
+												name: `Function Queue Iterated Event (${q.name})`,
+												defaultProperties: { queue: q.id },
+											});
+										if (getFnQueuePaused)
+											ret.push({
+												schema: getFnQueuePaused,
+												name: `Get Function Queue Paused (${q.name})`,
+												defaultProperties: { queue: q.id },
+											});
+										if (setFnQueuePaused)
+											ret.push({
+												schema: setFnQueuePaused,
+												name: `Set Function Queue Paused (${q.name})`,
+												defaultProperties: { queue: q.id },
+											});
+										if (fnQueueLength)
+											ret.push({
+												schema: fnQueueLength,
+												name: `Function Queue Length (${q.name})`,
+												defaultProperties: { queue: q.id },
+											});
+									}
+
+									if (addToFunctionQueue) {
+										for (const fn of props.graphModel.project.functions.values()) {
+											const n = fn.name.toLowerCase();
+											const searchMatches = leftoverSearchTokens.every((t) =>
+												n.includes(t),
+											);
+											if (!searchMatches) continue;
+											ret.push({
+												schema: addToFunctionQueue,
+												name: `Add to Function Queue (${fn.name})`,
+												defaultProperties: { function: fn.id },
+											});
+										}
 									}
 								}
 

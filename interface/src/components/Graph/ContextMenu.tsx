@@ -30,7 +30,10 @@ export function ContextMenuContent(
 		<ContextMenu.Portal>
 			<ContextMenu.Content
 				{...props}
-				onKeyDown={(e) => e.stopPropagation()}
+				onKeyDown={(e) => {
+					e.stopPropagation();
+					if (e.key === "Tab") e.preventDefault();
+				}}
 				class={clsx(
 					"border border-black rounded bg-neutral-900 min-w-32 text-sm ui-expanded:animate-in ui-expanded:fade-in ui-expanded:zoom-in-95 origin-top-left ui-closed:animate-out ui-closed:fade-out ui-closed:zoom-out-95 p-1 focus:outline-none select-none text-neutral-300",
 					props.class,

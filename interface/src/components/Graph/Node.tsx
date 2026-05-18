@@ -13,6 +13,7 @@ import {
 	ScopeOutput as ScopeOutputModel,
 	hasConnection,
 	splitIORef,
+	graphRefOf,
 } from "@macrograph/runtime";
 import clsx from "clsx";
 import * as Solid from "solid-js";
@@ -256,17 +257,16 @@ export const Node = (props: Props) => {
 					class={clsx(
 						"h-6 duration-100 text-md font-medium flex flex-col items-stretch",
 						active() === 1 && "opacity-50",
-						(() => {
-							const schema = node().schema;
-							if (schema.package.name === "Functions") return "bg-neutral-500";
-							return SchemaVariantColours[
-								"variant" in schema
+						SchemaVariantColours[
+							(() => {
+								const schema = node().schema;
+								return "variant" in schema
 									? schema.variant
 									: "type" in schema
 										? schema.type
-										: "Event"
-							];
-						})(),
+										: "Event";
+							})()
+						],
 					)}
 				>
 					<Solid.Show
@@ -299,16 +299,18 @@ export const Node = (props: Props) => {
 									<ContextMenuItem onSelect={() => setEditingName(true)}>
 										Rename
 									</ContextMenuItem>
-									{node().schema.package.name === "Functions" && node().schema.name === "Execute Function" && (
+									{((node().schema.package.name === "Functions" &&
+										node().schema.name === "Execute Function") ||
+										(node().schema.package.name === "Function Queue" &&
+											node().schema.name === "Add to Function Queue")) && (
 										<ContextMenuItem
 											onSelect={() => {
 												const fnId = node().state.properties.function;
 												if (fnId !== undefined) {
-													const fn = [...node().graph.project.functions].find(([id]) => id === (typeof fnId === 'number' ? fnId : Number(fnId)));
-													if (fn) {
-														const graph = node().graph.project.graphs.get(fn[1].graphId);
-														if (graph) interfaceCtx.selectGraph(graph);
-													}
+													const id =
+														typeof fnId === "number" ? fnId : Number(fnId);
+													const fn = node().graph.project.functions.get(id);
+													if (fn) interfaceCtx.selectFunction(fn);
 												}
 											}}
 										>
@@ -318,7 +320,7 @@ export const Node = (props: Props) => {
 									<ContextMenuItem
 										onSelect={() => {
 											interfaceCtx.execute("setNodeFoldPins", {
-												graphId: graph.model().id,
+												...graphRefOf(graph.model()),
 												nodeId: node().id,
 												foldPins: !node().state.foldPins,
 											});
@@ -349,7 +351,7 @@ export const Node = (props: Props) => {
 									<ContextMenuItem
 										onSelect={() => {
 											interfaceCtx.execute("deleteGraphItems", {
-												graphId: graph.model().id,
+												...graphRefOf(graph.model()),
 												items: [{ type: "node", id: node().id }],
 											});
 										}}
@@ -394,7 +396,7 @@ export const Node = (props: Props) => {
 										onBlur={() => {
 											if (value() !== "")
 												interfaceCtx.execute("setNodeName", {
-													graphId: graph.model().id,
+													...graphRefOf(graph.model()),
 													nodeId: node().id,
 													name: value(),
 												});
@@ -465,7 +467,7 @@ export const Node = (props: Props) => {
 							class="hover:bg-white/30 transition-color duration-100 px-1 rounded -py-1 h-3 flex flex-row items-center justify-center"
 							onClick={() => {
 								interfaceCtx.execute("setNodeFoldPins", {
-									graphId: graph.model().id,
+									...graphRefOf(graph.model()),
 									nodeId: node().id,
 									foldPins: false,
 								});

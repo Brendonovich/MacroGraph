@@ -251,7 +251,11 @@ export class Core {
 				type,
 				value: msg,
 				timestamp: new Date(),
-				graph: { name: node.graph.name, id: node.graph.id },
+				graph: {
+					name: node.graph.name,
+					id: node.graph.id,
+					kind: node.graph.kind,
+				},
 				node: { name: node.state.name, id: node.id },
 			});
 		}
@@ -269,11 +273,12 @@ export interface PrintItem {
 	type: PrintType;
 	value: string;
 	timestamp: Date;
-	graph: { name: string; id: number };
+	graph: { name: string; id: number; kind: import("./Project").GraphKind };
 	node: { name: string; id: number };
 }
 
 export type NodeInvocationReport = {
+	graphKind: import("./Project").GraphKind;
 	graphId: number;
 	graphName: string;
 	nodeId: number;
@@ -572,6 +577,7 @@ export class ExecutionContext {
 			}
 
 			reporter({
+				graphKind: node.graph.kind,
 				graphId: node.graph.id,
 				graphName: node.graph.name,
 				nodeId: node.id,

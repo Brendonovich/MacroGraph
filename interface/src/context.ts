@@ -10,25 +10,34 @@ import type {
 	Size,
 	XY,
 } from "@macrograph/runtime";
-import {
-	type NodeInvocationFileRow,
-	serializeProject,
-} from "@macrograph/runtime-serde";
 import { createContextProvider } from "@solid-primitives/context";
 import { ReactiveWeakMap } from "@solid-primitives/map";
 import { leading, throttle } from "@solid-primitives/scheduled";
 import { makePersisted } from "@solid-primitives/storage";
-import { createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
+import {
+	createEffect,
+	createMemo,
+	createSignal,
+	on,
+	onCleanup,
+	onMount,
+} from "solid-js";
 import { createStore, produce, reconcile } from "solid-js/store";
 
+import { initEditorConfigStorage } from "./ConfigDialog";
 import { historyActions } from "./actions";
+import { ensureEditorStorageMigrated } from "./projectStorage";
 import {
 	type GraphViewState,
 	type SelectedItemID,
 	type TabState,
+	coerceGraphScale,
+	isGraphEditorTab,
 	makeGraphState,
 	makeFunctionTab,
+	makeFunctionQueueTab,
 	makeQueueTab,
+	tabGraphKind,
 } from "./components/Graph/Context";
 import { MIN_WIDTH } from "./components/Sidebar";
 import {
@@ -42,13 +51,41 @@ import {
 } from "./remoteHistorySync";
 import {
 	appendInvocationReport,
-	exportInvocationLogForGraphs,
 	flushInvocationLogPending,
 	invocationRowKey,
 	loadInvocationsForNode,
 	migrateInvocationWorkspaceKeys,
 	type StoredNodeInvocation,
 } from "./nodeInvocationLog";
+import { mosaicDebug } from "./mosaicDebug";
+import {
+	collectLeafGroupIds,
+	createLeafGroup,
+	ensureMosaicConsistency,
+	setMosaicWorkspaceState,
+	findGroupIndex,
+	getGroupById,
+	leafNode,
+	migrateGroupsToV2,
+	type MosaicNode,
+	type MosaicWorkspaceState,
+	type TabListState,
+} from "./mosaicLayout";
+import {
+	loadMosaicJson,
+	saveMosaicJson,
+	saveProjectToStorage,
+} from "./projectStorage";
+
+export type {
+	MosaicNode,
+	MosaicLeaf,
+	MosaicSplit,
+	MosaicWorkspaceState,
+	TabListState,
+	SplitDirection,
+	SplitEdge,
+} from "./mosaicLayout";
 
 export type Environment = "custom" | "browser";
 
@@ -57,37 +94,67 @@ export type GraphBounds = XY & {
 	height: number;
 };
 
-const MOSAIC_LS_PREFIX = "macrograph-editor-mosaic-";
-
-export type TabListState = {
-	tabs: Array<TabState>;
-	selectedIndex: number;
-};
-
 let _openTab: ((tab: TabState) => void) | null = null;
 export function registerOpenTab(fn: (tab: TabState) => void) { _openTab = fn; }
 
 export function tabKey(tab: TabState) {
-	if (tab.type === "graph") return `graph:${tab.graphId}`;
+	if (tab.type === "graph") return `${tab.graphKind}:${tab.graphId}`;
 	if (tab.type === "function") return `function:${tab.functionId}`;
 	if (tab.type === "queue") return `queue:${tab.queueId}`;
+	if (tab.type === "functionQueue") return `functionQueue:${tab.functionQueueId}`;
 	if (tab.type === "package") return `package:${tab.packageName}`;
 	return tab.type;
 }
 
-export type MosaicWorkspaceState = {
-	groups: Array<TabListState>;
-	focusedIndex: number;
-};
+const MOSAIC_TAB_LOG = "[mosaic-tab]";
 
-function mosaicLocalStorageKey(workspaceSegment: string) {
-	return `${MOSAIC_LS_PREFIX}${encodeURIComponent(workspaceSegment)}`;
+function mosaicTabSelectionSummary(groups: TabListState[]) {
+	return groups.map((g) => ({
+		groupId: g.id,
+		selectedIndex: g.selectedIndex,
+		selectedTabKey: g.selectedTabKey,
+		activeTabKey: g.tabs[g.selectedIndex]
+			? tabKey(g.tabs[g.selectedIndex])
+			: null,
+		tabKeys: g.tabs.map(tabKey),
+	}));
+}
+
+export function logMosaicTabSelection(
+	phase:
+		| "select"
+		| "select-after"
+		| "persist"
+		| "persist-skipped"
+		| "load-raw"
+		| "load-parsed",
+	workspaceKey: string,
+	groups: TabListState[],
+	extra?: Record<string, unknown>,
+) {
+	console.log(MOSAIC_TAB_LOG, phase, workspaceKey, {
+		...mosaicTabSelectionSummary(groups),
+		...extra,
+	});
 }
 
 function filterTabToProject(tab: TabState, project: Project): TabState | null {
-	if (tab.type === "settings" || tab.type === "connections") return tab;
+	if (tab.type === "functionQueue") {
+		if (
+			typeof tab.functionQueueId !== "number" ||
+			!project.functionQueues.has(tab.functionQueueId)
+		) {
+			return null;
+		}
+		return { type: "functionQueue", functionQueueId: tab.functionQueueId };
+	}
 
-	const graph = project.graph(tab.graphId);
+	if (!isGraphEditorTab(tab)) return tab;
+
+	const graph = project.getGraphByKind(
+		tab.graphKind ?? tabGraphKind(tab),
+		tab.graphId,
+	);
 	if (!graph) return null;
 
 	const selectedItemIds = (tab.selectedItemIds ?? []).filter((sid) => {
@@ -97,12 +164,10 @@ function filterTabToProject(tab: TabState, project: Project): TabState | null {
 	});
 
 	const translate = tab.translate ?? { x: 0, y: 0 };
-	const scale =
-		typeof tab.scale === "number" && Number.isFinite(tab.scale) && tab.scale > 0
-			? tab.scale
-			: 1;
+	const scale = coerceGraphScale(tab.scale);
 
 	const view = {
+		graphKind: tab.graphKind ?? tabGraphKind(tab),
 		graphId: tab.graphId,
 		translate: { x: translate.x ?? 0, y: translate.y ?? 0 },
 		scale,
@@ -116,86 +181,293 @@ function filterTabToProject(tab: TabState, project: Project): TabState | null {
 	return tab;
 }
 
-function loadMosaicForWorkspace(
-	workspaceKey: string,
+function defaultMosaicState(): MosaicWorkspaceState {
+	const group = createLeafGroup();
+	return {
+		version: 2,
+		root: leafNode(group.id),
+		groups: [group],
+		focusedGroupId: group.id,
+	};
+}
+
+function tabKeyFromRaw(raw: unknown, project: Project): string | null {
+	if (typeof raw !== "object" || raw === null) return null;
+	const record = raw as Record<string, unknown>;
+	if (!("type" in record) && "id" in record) {
+		return `graph:${record.id}`;
+	}
+	return tabKeyFromPersistedTab(record, project);
+}
+
+function tabKeyFromPersistedTab(
+	raw: Record<string, unknown>,
+	project: Project,
+): string | null {
+	if (typeof raw.type !== "string") return null;
+	if (raw.type === "functionQueue") {
+		if (typeof raw.functionQueueId !== "number") return null;
+		return `functionQueue:${raw.functionQueueId}`;
+	}
+	if (raw.type === "package" && typeof raw.packageName === "string") {
+		return `package:${raw.packageName}`;
+	}
+	if (raw.type === "settings") return "settings";
+	if (raw.type === "function" && typeof raw.functionId === "number") {
+		const graphId =
+			typeof raw.graphId === "number"
+				? raw.graphId
+				: project.functions.get(raw.functionId)?.graphId;
+		if (graphId === undefined) return null;
+		return `function:${raw.functionId}`;
+	}
+	if (raw.type === "queue" && typeof raw.queueId === "number") {
+		return `queue:${raw.queueId}`;
+	}
+	if (typeof raw.graphId === "number") {
+		const graphKind =
+			typeof raw.graphKind === "string"
+				? raw.graphKind
+				: raw.type === "graph"
+					? "graph"
+					: null;
+		if (!graphKind) return null;
+		return `${graphKind}:${raw.graphId}`;
+	}
+	return null;
+}
+
+function resolveSelectedIndex(
+	tabs: TabState[],
+	selectedIndexRaw: unknown,
+	selectedTabKeyRaw: unknown,
+	fallbackTabKey: string | null,
+): number {
+	if (!tabs.length) return 0;
+
+	const selectedTabKey =
+		typeof selectedTabKeyRaw === "string"
+			? selectedTabKeyRaw
+			: fallbackTabKey;
+
+	if (selectedTabKey) {
+		const idx = tabs.findIndex((t) => tabKey(t) === selectedTabKey);
+		if (idx >= 0) return idx;
+	}
+
+	if (typeof selectedIndexRaw === "number" && selectedIndexRaw >= 0) {
+		return Math.min(selectedIndexRaw, tabs.length - 1);
+	}
+
+	return 0;
+}
+
+function parseGroupTabs(
+	g: unknown,
+	project: Project,
+): TabListState {
+	if (typeof g !== "object" || g === null || !("tabs" in g)) {
+		const empty = createLeafGroup();
+		return empty;
+	}
+	const groupRecord = g as {
+		id?: unknown;
+		tabs: unknown;
+		selectedIndex?: unknown;
+		selectedTabKey?: unknown;
+	};
+	const tabsRaw = groupRecord.tabs;
+	const selectedIndexRaw = groupRecord.selectedIndex;
+	const selectedTabKeyRaw = groupRecord.selectedTabKey;
+	if (!Array.isArray(tabsRaw)) {
+		const empty = createLeafGroup();
+		if (typeof groupRecord.id === "string") empty.id = groupRecord.id;
+		return empty;
+	}
+
+	const fallbackTabKey =
+		typeof selectedIndexRaw === "number" &&
+		selectedIndexRaw >= 0 &&
+		tabsRaw[selectedIndexRaw] != null
+			? tabKeyFromRaw(tabsRaw[selectedIndexRaw], project)
+			: null;
+
+	const tabs = tabsRaw
+		.filter((t): t is TabState =>
+			typeof t === "object" && t !== null && ("type" in t || "id" in t),
+		)
+		.map((t) => {
+			const rawTab = t as Record<string, unknown>;
+			if (!("type" in rawTab) && "id" in rawTab) {
+				const old = rawTab as unknown as {
+					id: number;
+					translate?: XY;
+					scale?: number;
+					selectedItemIds?: SelectedItemID[];
+				};
+				const migrated: TabState = {
+					type: "graph",
+					graphKind: "graph",
+					graphId: old.id,
+					translate: old.translate ?? { x: 0, y: 0 },
+					scale: coerceGraphScale(old.scale),
+					selectedItemIds: old.selectedItemIds ?? [],
+				};
+				return filterTabToProject(migrated, project);
+			}
+			return filterTabToProject(t as TabState, project);
+		})
+		.filter((t): t is TabState => t !== null);
+
+	const selectedIndex = resolveSelectedIndex(
+		tabs,
+		selectedIndexRaw,
+		selectedTabKeyRaw,
+		fallbackTabKey,
+	);
+
+	const selectedTabKey = tabs[selectedIndex]
+		? tabKey(tabs[selectedIndex])
+		: undefined;
+
+	const group: TabListState = {
+		id: typeof groupRecord.id === "string" ? groupRecord.id : createLeafGroup().id,
+		tabs,
+		selectedIndex: tabs.length ? selectedIndex : 0,
+		selectedTabKey,
+	};
+	return group;
+}
+
+function parseMosaicJson(
+	raw: string | null,
 	project: Project,
 ): MosaicWorkspaceState {
-	const defaultState: MosaicWorkspaceState = {
-		groups: [{ tabs: [], selectedIndex: 0 }],
-		focusedIndex: 0,
-	};
-
-	if (typeof localStorage === "undefined") return structuredClone(defaultState);
+	const defaultState = defaultMosaicState();
+	if (!raw) {
+		mosaicDebug("parseMosaicJson:empty-raw", { using: "defaultState" });
+		return structuredClone(defaultState);
+	}
 
 	let parsed: unknown;
 	try {
-		const raw = localStorage.getItem(mosaicLocalStorageKey(workspaceKey));
-		if (!raw) return structuredClone(defaultState);
 		parsed = JSON.parse(raw);
 	} catch {
 		return structuredClone(defaultState);
 	}
 
-	if (
-		typeof parsed !== "object" ||
-		parsed === null ||
-		!("groups" in parsed) ||
-		!("focusedIndex" in parsed)
-	) {
+	if (typeof parsed !== "object" || parsed === null || !("groups" in parsed)) {
 		return structuredClone(defaultState);
 	}
 
-	const p = parsed as { groups: unknown; focusedIndex: unknown };
-	if (!Array.isArray(p.groups) || typeof p.focusedIndex !== "number") {
+	const p = parsed as {
+		version?: unknown;
+		groups: unknown;
+		focusedIndex?: unknown;
+		focusedGroupId?: unknown;
+		root?: unknown;
+	};
+
+	if (!Array.isArray(p.groups)) {
 		return structuredClone(defaultState);
 	}
 
 	const groups: Array<TabListState> = p.groups.map((g) => {
-		if (typeof g !== "object" || g === null || !("tabs" in g)) {
-			return { tabs: [], selectedIndex: 0 };
-		}
-		const tabsRaw = (g as { tabs: unknown }).tabs;
-		const selectedIndexRaw = (g as unknown as { selectedIndex: unknown }).selectedIndex;
-		if (!Array.isArray(tabsRaw)) return { tabs: [], selectedIndex: 0 };
-
-		const tabs = tabsRaw
-			.filter((t): t is TabState =>
-				typeof t === "object" && t !== null && ("type" in t || "id" in t),
-			)
-			.map((t) => {
-				// migrate old GraphState format
-				const raw = t as Record<string, unknown>;
-				if (!("type" in raw) && "id" in raw) {
-					const old = raw as unknown as { id: number; translate?: XY; scale?: number; selectedItemIds?: SelectedItemID[] };
-					const migrated: TabState = {
-						type: "graph",
-						graphId: old.id,
-						translate: old.translate ?? { x: 0, y: 0 },
-						scale: typeof old.scale === "number" && old.scale > 0 ? old.scale : 1,
-						selectedItemIds: old.selectedItemIds ?? [],
-					};
-					return filterTabToProject(migrated, project);
-				}
-				return filterTabToProject(t as TabState, project);
-			})
-			.filter((t): t is TabState => t !== null);
-
-		const selectedIndex =
-			typeof selectedIndexRaw === "number" && selectedIndexRaw >= 0
-				? Math.min(selectedIndexRaw, Math.max(0, tabs.length - 1))
-				: 0;
-
-		return { tabs, selectedIndex: tabs.length ? selectedIndex : 0 };
+		return parseGroupTabs(g, project);
 	});
 
 	if (!groups.length) return structuredClone(defaultState);
 
-	const focusedIndex = Math.min(
-		Math.max(0, p.focusedIndex),
-		groups.length - 1,
-	);
+	if (p.version === 2 && p.root && typeof p.root === "object") {
+		const focusedGroupId =
+			typeof p.focusedGroupId === "string" &&
+			groups.some((g) => g.id === p.focusedGroupId)
+				? p.focusedGroupId
+				: groups[0]!.id;
+		const state = {
+			version: 2 as const,
+			root: p.root as MosaicNode,
+			groups,
+			focusedGroupId,
+		};
+		mosaicDebug("parseMosaicJson:v2", {
+			focusedGroupId,
+			groupIds: groups.map((g) => g.id),
+			rootLeafIds: collectLeafGroupIds(state.root),
+			tabCounts: groups.map((g) => g.tabs.length),
+			root: JSON.stringify(state.root),
+		});
+		return ensureMosaicConsistency(state);
+	}
 
-	return { groups, focusedIndex };
+	const focusedIndex =
+		typeof p.focusedIndex === "number"
+			? Math.min(Math.max(0, p.focusedIndex), groups.length - 1)
+			: 0;
+
+	const migrated = migrateGroupsToV2(groups, focusedIndex);
+	mosaicDebug("parseMosaicJson:v1-migrate", {
+		focusedIndex,
+		focusedGroupId: migrated.focusedGroupId,
+		groupIds: migrated.groups.map((g) => g.id),
+		rootLeafIds: collectLeafGroupIds(migrated.root),
+		tabCounts: migrated.groups.map((g) => g.tabs.length),
+	});
+	return migrated;
+}
+
+async function loadMosaicForWorkspace(
+	workspaceKey: string,
+	project: Project,
+): Promise<MosaicWorkspaceState> {
+	const raw = await loadMosaicJson(workspaceKey);
+	if (raw) {
+		try {
+			const parsed = JSON.parse(raw) as {
+				groups?: Array<{
+					selectedIndex?: number;
+					selectedTabKey?: string | null;
+					tabs?: unknown[];
+				}>;
+				focusedIndex?: number;
+				focusedGroupId?: string;
+				version?: number;
+			};
+			logMosaicTabSelection(
+				"load-raw",
+				workspaceKey,
+				(parsed.groups ?? []).map((g) => ({
+					id: "pending",
+					tabs: [],
+					selectedIndex:
+						typeof g.selectedIndex === "number" ? g.selectedIndex : 0,
+					selectedTabKey:
+						typeof g.selectedTabKey === "string"
+							? g.selectedTabKey
+							: undefined,
+				})),
+				{
+					focusedIndex: parsed.focusedIndex,
+					focusedGroupId: parsed.focusedGroupId,
+					version: parsed.version,
+					rawTabCount: (parsed.groups ?? []).map((g) =>
+						Array.isArray(g.tabs) ? g.tabs.length : 0,
+					),
+					rawSelectedTabKeys: (parsed.groups ?? []).map((g) => g.selectedTabKey),
+					rawSelectedIndexes: (parsed.groups ?? []).map((g) => g.selectedIndex),
+				},
+			);
+		} catch {
+			console.log(MOSAIC_TAB_LOG, "load-raw", workspaceKey, { parseError: true });
+		}
+	} else {
+		console.log(MOSAIC_TAB_LOG, "load-raw", workspaceKey, { empty: true });
+	}
+	const state = parseMosaicJson(raw, project);
+	logMosaicTabSelection("load-parsed", workspaceKey, state.groups, {
+		focusedGroupId: state.focusedGroupId,
+	});
+	return state;
 }
 
 function createEditorState(initialMosaic: MosaicWorkspaceState) {
@@ -287,7 +559,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			/** True while a graph item pointer-drag session is active (used to ignore echoed live frames). */
 			onGraphLivePointerSession?: (active: boolean) => void;
 			/** Broadcast local cursor position to remote clients. */
-			broadcastCursorPosition?: (payload: { graphId: number; position: { x: number; y: number } }) => void;
+			broadcastCursorPosition?: (payload: import("./remoteHistorySync").WireCursorPosition) => void;
 		}) => {
 		const workspaceKey = createMemo(() => {
 			const k = props.mosaicWorkspaceKey?.();
@@ -296,58 +568,122 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 
 		let previousWorkspaceSegment = workspaceKey();
 
-		const initialKey = workspaceKey();
-		const initialMosaic = loadMosaicForWorkspace(initialKey, props.core.project);
-		const state = createEditorState(initialMosaic);
-		let loadedWorkspaceKey = initialKey;
+		const state = createEditorState(defaultMosaicState());
+		const [mosaicHydrated, setMosaicHydrated] = createSignal(false);
+		let loadedWorkspaceKey: string | null = null;
 
 		const { mosaicState, setMosaicState } = state;
+
+		createEffect(() => {
+			const groupIds = mosaicState.groups.map((g) => g.id);
+			if (!groupIds.length) return;
+			if (groupIds.includes(mosaicState.focusedGroupId)) return;
+			setMosaicState("focusedGroupId", groupIds[0]!);
+		});
 
 		const histActions = historyActions(props.core, state);
 		/** Must be sync: remote WS handlers can run in the same microtask as `core.load` finishing, before `onMount`. */
 		registerRemoteHistoryActions(histActions);
 
+		async function hydrateMosaicForKey(key: string) {
+			setMosaicHydrated(false);
+			const loaded = await loadMosaicForWorkspace(key, props.core.project);
+			const m = ensureMosaicConsistency(loaded);
+			setMosaicWorkspaceState(setMosaicState, m);
+			loadedWorkspaceKey = key;
+			setMosaicHydrated(true);
+		}
+
+		onMount(() => {
+			const flush = () => persistMosaicLayoutNow("pagehide");
+			window.addEventListener("pagehide", flush);
+			onCleanup(() => window.removeEventListener("pagehide", flush));
+
+			void (async () => {
+				await ensureEditorStorageMigrated();
+				await initEditorConfigStorage();
+				await hydrateMosaicForKey(workspaceKey());
+			})();
+		});
+
 		createEffect(
 			on(workspaceKey, (k) => {
-				setMosaicState(
-					reconcile(loadMosaicForWorkspace(k, props.core.project)),
-				);
-				loadedWorkspaceKey = k;
+				if (!mosaicHydrated() || k === loadedWorkspaceKey) return;
+				void hydrateMosaicForKey(k);
 			}),
 		);
 
-		const persistMosaicLayout = leading(
-			throttle,
-			() => {
-				const k = workspaceKey();
-				if (k !== loadedWorkspaceKey) return;
-				try {
-					const payload: MosaicWorkspaceState = {
-						groups: mosaicState.groups.map((g) => ({
-							tabs: g.tabs.map((t) => ({ ...t })),
-							selectedIndex: g.selectedIndex,
-						})),
-						focusedIndex: mosaicState.focusedIndex,
-					};
-					localStorage.setItem(
-						mosaicLocalStorageKey(k),
-						JSON.stringify(payload),
+		function buildMosaicPersistPayload(): MosaicWorkspaceState {
+			const normalized = ensureMosaicConsistency(mosaicState);
+			const payload: MosaicWorkspaceState = {
+				version: 2,
+				root: normalized.root,
+				focusedGroupId: normalized.focusedGroupId,
+				groups: normalized.groups.map((g) => {
+					const selectedIndex = Math.min(
+						Math.max(0, g.selectedIndex),
+						Math.max(0, g.tabs.length - 1),
 					);
-				} catch {
-					/* quota / private mode */
-				}
-			},
+					const selectedTab = g.tabs[selectedIndex];
+					return {
+						id: g.id,
+						tabs: g.tabs.map((t) => ({ ...t })),
+						selectedIndex: g.tabs.length ? selectedIndex : 0,
+						selectedTabKey: selectedTab ? tabKey(selectedTab) : undefined,
+					};
+				}),
+			};
+			return JSON.parse(JSON.stringify(payload)) as MosaicWorkspaceState;
+		}
+
+		function persistMosaicLayoutNow(reason: string) {
+			const k = workspaceKey();
+			if (!mosaicHydrated() || k !== loadedWorkspaceKey) {
+				logMosaicTabSelection("persist-skipped", k, mosaicState.groups, {
+					reason,
+					mosaicHydrated: mosaicHydrated(),
+					loadedWorkspaceKey,
+				});
+				return;
+			}
+			const payload = buildMosaicPersistPayload();
+			logMosaicTabSelection("persist", k, payload.groups, {
+				reason,
+				focusedGroupId: payload.focusedGroupId,
+				inMemorySelectedTabKeys: mosaicState.groups.map(
+					(g) => g.selectedTabKey,
+				),
+			});
+			void saveMosaicJson(k, JSON.stringify(payload)).catch((err) => {
+				console.warn(MOSAIC_TAB_LOG, "persist-error", reason, err);
+			});
+		}
+
+		const persistMosaicLayoutThrottled = throttle(
+			() => persistMosaicLayoutNow("layout-throttled"),
 			100,
 		);
 
+		const mosaicSelectionSig = createMemo(() =>
+			mosaicState.groups
+				.map((g) => `${g.selectedIndex}:${g.selectedTabKey ?? ""}`)
+				.join("|"),
+		);
+
+		createEffect(
+			on(mosaicSelectionSig, () => {
+				if (!mosaicHydrated()) return;
+				if (workspaceKey() !== loadedWorkspaceKey) return;
+				persistMosaicLayoutNow("selection-effect");
+			}),
+		);
+
 		createEffect(() => {
-			const k = workspaceKey();
+			if (!mosaicHydrated()) return;
+			if (workspaceKey() !== loadedWorkspaceKey) return;
 			const _groups = JSON.stringify(mosaicState.groups);
-			const _focused = mosaicState.focusedIndex;
-			if (k !== loadedWorkspaceKey) return;
 			void _groups;
-			void _focused;
-			persistMosaicLayout();
+			persistMosaicLayoutThrottled();
 		});
 
 		const save = leading(
@@ -356,46 +692,10 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 				void (async () => {
 					if (props.core.project.disableSave) return;
 
-					const serialized = serializeProject(props.core.project);
-					const wk = workspaceKey();
-					const nodeInvocations = await exportInvocationLogForGraphs(
-						props.core.project.graphOrder,
-						wk,
-					).catch((): NodeInvocationFileRow[] => []);
-
-					localStorage.setItem(
-						"project-root",
-						JSON.stringify({
-							...serialized,
-							graphs: serialized.graphs.map((g) => g.id),
-							variables: serialized.variables?.map((v) => v.id),
-							queues: serialized.queues?.map((q) => q.id),
-							nodeInvocations,
-						}),
+					await saveProjectToStorage(
+						props.core.project,
+						workspaceKey(),
 					);
-
-					for (const graph of serialized.graphs) {
-						localStorage.setItem(
-							`project-graph-${graph.id}`,
-							JSON.stringify(graph),
-						);
-					}
-
-					for (const variable of serialized.variables ?? []) {
-						localStorage.setItem(
-							`project-variable-${variable.id}`,
-							JSON.stringify(variable),
-						);
-					}
-
-					for (const queue of serialized.queues ?? []) {
-						localStorage.setItem(
-							`project-queue-${queue.id}`,
-							JSON.stringify(queue),
-						);
-					}
-
-					localStorage.removeItem("project");
 				})();
 			},
 			100,
@@ -481,25 +781,46 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 
 		// Follow a user's cursor: auto-switch to their graph even when no graph tab is open.
 		// (Camera panning within the current graph is handled per-Graph in Graph.tsx.)
-		const lastFollowedGraph = { id: -1 };
+		const lastFollowedGraph = { kind: "graph" as const, id: -1 };
 		// Effect: opens the graph when follow is activated and cursors already exist.
 		createEffect(() => {
 			const followId = getFollowUserId();
 			if (!followId) {
+				lastFollowedGraph.kind = "graph";
 				lastFollowedGraph.id = -1;
 				return;
 			}
 
 			const cursors = getRemoteCursors();
 			const cursor = cursors.find((c) => c.id === followId);
-			if (!cursor || cursor.graphId === lastFollowedGraph.id) return;
+			if (
+				!cursor ||
+				(cursor.graphKind === lastFollowedGraph.kind &&
+					cursor.graphId === lastFollowedGraph.id)
+			)
+				return;
 
-			const focusedGroup = mosaicState.groups[mosaicState.focusedIndex];
-			if (focusedGroup?.tabs.some((t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === cursor.graphId)) return;
+			const focusedGroup = getGroupById(
+				mosaicState.groups,
+				mosaicState.focusedGroupId,
+			);
+			if (
+				focusedGroup?.tabs.some(
+					(t) =>
+						isGraphEditorTab(t) &&
+						t.graphKind === cursor.graphKind &&
+						t.graphId === cursor.graphId,
+				)
+			)
+				return;
 
-			const graph = props.core.project.graphs.get(cursor.graphId);
-			if (!graph) return;
+			const graph = props.core.project.getGraphByKind(
+				cursor.graphKind,
+				cursor.graphId,
+			);
+			if (!graph || graph.kind !== "graph") return;
 
+			lastFollowedGraph.kind = cursor.graphKind;
 			lastFollowedGraph.id = cursor.graphId;
 			selectGraph(graph);
 		});
@@ -507,14 +828,33 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 		setOnCursorUpdate((cursor) => {
 			const followId = getFollowUserId();
 			if (!followId || cursor.id !== followId) return;
-			if (cursor.graphId === lastFollowedGraph.id) return;
+			if (
+				cursor.graphKind === lastFollowedGraph.kind &&
+				cursor.graphId === lastFollowedGraph.id
+			)
+				return;
 
-			const focusedGroup = mosaicState.groups[mosaicState.focusedIndex];
-			if (focusedGroup?.tabs.some((t) => (t.type === "graph" || t.type === "function" || t.type === "queue") && t.graphId === cursor.graphId)) return;
+			const focusedGroup = getGroupById(
+				mosaicState.groups,
+				mosaicState.focusedGroupId,
+			);
+			if (
+				focusedGroup?.tabs.some(
+					(t) =>
+						isGraphEditorTab(t) &&
+						t.graphKind === cursor.graphKind &&
+						t.graphId === cursor.graphId,
+				)
+			)
+				return;
 
-			const graph = props.core.project.graphs.get(cursor.graphId);
-			if (!graph) return;
+			const graph = props.core.project.getGraphByKind(
+				cursor.graphKind,
+				cursor.graphId,
+			);
+			if (!graph || graph.kind !== "graph") return;
 
+			lastFollowedGraph.kind = cursor.graphKind;
 			lastFollowedGraph.id = cursor.graphId;
 			selectGraph(graph);
 		});
@@ -522,33 +862,69 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 
 		function openTab(tab: TabState) {
 			const key = tabKey(tab);
-			const idx = mosaicState.groups[
-				mosaicState.focusedIndex
-			]?.tabs.findIndex((t) => tabKey(t) === key);
+			const groupIdx = findGroupIndex(
+				mosaicState.groups,
+				mosaicState.focusedGroupId,
+			);
+			mosaicDebug("openTab", {
+				tabKey: key,
+				focusedGroupId: mosaicState.focusedGroupId,
+				groupIdx,
+				groupIds: mosaicState.groups.map((g) => g.id),
+				rootLeafIds: collectLeafGroupIds(mosaicState.root),
+			});
+			if (groupIdx < 0) return;
+
+			const idx = mosaicState.groups[groupIdx]?.tabs.findIndex(
+				(t) => tabKey(t) === key,
+			);
 
 			if (idx === undefined || idx < 0) {
 				setMosaicState(
 					"groups",
-					mosaicState.focusedIndex,
+					groupIdx,
 					produce((t) => {
 						t.selectedIndex = t.tabs.length;
 						t.tabs.push(tab);
+						t.selectedTabKey = key;
 					}),
 				);
 			} else {
 				setMosaicState(
 					"groups",
-					mosaicState.focusedIndex,
-					"selectedIndex",
-					idx,
+					groupIdx,
+					produce((t) => {
+						t.selectedIndex = idx;
+						t.selectedTabKey = key;
+					}),
 				);
 			}
 		}
 
 		registerOpenTab(openTab);
 
-		function selectGraph(graph: Graph) {
+		function openGraph(graph: Graph) {
+			if (graph.kind === "function") {
+				for (const [, fn] of props.core.project.functions) {
+					if (fn.graphId === graph.id) {
+						openTab(makeFunctionTab(fn));
+						return;
+					}
+				}
+			}
+			if (graph.kind === "queue") {
+				for (const [, queue] of props.core.project.queues) {
+					if (queue.graphId === graph.id) {
+						openTab(makeQueueTab(queue));
+						return;
+					}
+				}
+			}
 			openTab(makeGraphState(graph));
+		}
+
+		function selectGraph(graph: Graph) {
+			openGraph(graph);
 		}
 
 		function selectFunction(fn: { id: number; graphId: number }) {
@@ -557,6 +933,10 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 
 		function selectQueue(queue: { id: number; graphId: number }) {
 			openTab(makeQueueTab(queue));
+		}
+
+		function selectFunctionQueue(queue: { id: number }) {
+			openTab(makeFunctionQueueTab(queue));
 		}
 
 		function selectPackage(pkg: { name: string }) {
@@ -589,32 +969,38 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			get environment() {
 				return props.environment;
 			},
+			mosaicWorkspaceKey: workspaceKey,
+			mosaicHydrated,
+			setMosaicWorkspaceState: (next: MosaicWorkspaceState) =>
+				setMosaicWorkspaceState(setMosaicState, next),
+			persistMosaicLayoutNow,
 			selectGraph,
 			selectFunction,
 			selectQueue,
+			selectFunctionQueue,
 			selectPackage,
 			graphBounds,
 			setGraphBounds,
 			invocationWorkspaceKey: workspaceKey,
-			getNodeInvocationEntries(graphId: number, nodeId: number) {
-				const k = invocationRowKey(workspaceKey(), graphId, nodeId);
+			getNodeInvocationEntries(ref: import("@macrograph/runtime").GraphRef, nodeId: number) {
+				const k = invocationRowKey(workspaceKey(), ref, nodeId);
 				return nodeInvocationLogByKey[k] ?? [];
 			},
-			hydrateNodeInvocationLog(graphId: number, nodeId: number) {
+			hydrateNodeInvocationLog(ref: import("@macrograph/runtime").GraphRef, nodeId: number) {
 				return loadInvocationsForNode(
 					setNodeInvocationLogByKey,
 					() => workspaceKey(),
-					graphId,
+					ref,
 					nodeId,
 					invocationHydrated,
 				);
 			},
 			setNodeInvocationEntries(
-				graphId: number,
+				ref: import("@macrograph/runtime").GraphRef,
 				nodeId: number,
 				entries: StoredNodeInvocation[],
 			) {
-				const k = invocationRowKey(workspaceKey(), graphId, nodeId);
+				const k = invocationRowKey(workspaceKey(), ref, nodeId);
 				setNodeInvocationLogByKey(k, entries);
 			},
 		};

@@ -113,7 +113,10 @@ export function Console() {
 					<For each={filteredItems()}>
 						{(i) => {
 							const graph = createMemo(() =>
-								interfaceCtx.core.project.graph(i.graph.id),
+								interfaceCtx.core.project.getGraphByKind(
+									i.graph.kind,
+									i.graph.id,
+								),
 							);
 
 							const node = createMemo(() => graph()?.node(i.node.id));

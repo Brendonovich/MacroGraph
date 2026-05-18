@@ -136,19 +136,14 @@ export async function deserializeProject(
 
 	async function loadGraphArray(
 		serializedGraphs: serde.Graph[],
+		kind: runtime.GraphKind,
 	): Promise<Array<[number, runtime.Graph]>> {
 		const results: Array<[number, runtime.Graph]> = [];
 		for (const g of serializedGraphs) {
-			const graph = await deserializeGraph(project, g);
+			const graph = await deserializeGraph(project, g, kind);
 			if (graph) results.push([graph.id, graph]);
 		}
 		return results;
-	}
-
-	const allGraphs = new Map<number, runtime.Graph>();
-
-	for (const [id, graph] of await loadGraphArray(data.graphs)) {
-		allGraphs.set(id, graph);
 	}
 
 	const hasNewFormat =
@@ -156,19 +151,22 @@ export async function deserializeProject(
 		(data.queueGraphs && data.queueGraphs.length > 0) ||
 		(data.functionQueueGraphs && data.functionQueueGraphs.length > 0);
 
+	project.graphs = new ReactiveMap(await loadGraphArray(data.graphs, "graph"));
+
 	if (hasNewFormat) {
-		for (const [id, graph] of await loadGraphArray(data.functionGraphs ?? [])) {
-			allGraphs.set(id, graph);
-		}
+		project.functionGraphs = new ReactiveMap(
+			await loadGraphArray(data.functionGraphs ?? [], "function"),
+		);
 		project.functionGraphOrder = data.functionGraphs?.map((g) => g.id) ?? [];
-		for (const [id, graph] of await loadGraphArray(data.queueGraphs ?? [])) {
-			allGraphs.set(id, graph);
-		}
+		project.queueGraphs = new ReactiveMap(
+			await loadGraphArray(data.queueGraphs ?? [], "queue"),
+		);
 		project.queueGraphOrder = data.queueGraphs?.map((g) => g.id) ?? [];
-		for (const [id, graph] of await loadGraphArray(data.functionQueueGraphs ?? [])) {
-			allGraphs.set(id, graph);
-		}
-		project.functionQueueGraphOrder = data.functionQueueGraphs?.map((g) => g.id) ?? [];
+		project.functionQueueGraphs = new ReactiveMap(
+			await loadGraphArray(data.functionQueueGraphs ?? [], "functionQueue"),
+		);
+		project.functionQueueGraphOrder =
+			data.functionQueueGraphs?.map((g) => g.id) ?? [];
 	} else {
 		// Backward compat: old format — sort legacy `graphs` into correct order arrays
 		for (const id of project.graphOrder) {
@@ -194,9 +192,38 @@ export async function deserializeProject(
 				!queueGraphIds.has(id) &&
 				!fnQueueGraphIds.has(id),
 		);
-	}
 
-	project.graphs = new ReactiveMap([...allGraphs]);
+		project.functionGraphs = new ReactiveMap(
+			project.functionGraphOrder
+				.map((id) => {
+					const graph = project.graphs.get(id);
+					if (!graph) return null;
+					project.graphs.delete(id);
+					return [id, graph] as [number, runtime.Graph];
+				})
+				.filter(Boolean) as Array<[number, runtime.Graph]>,
+		);
+		project.queueGraphs = new ReactiveMap(
+			project.queueGraphOrder
+				.map((id) => {
+					const graph = project.graphs.get(id);
+					if (!graph) return null;
+					project.graphs.delete(id);
+					return [id, graph] as [number, runtime.Graph];
+				})
+				.filter(Boolean) as Array<[number, runtime.Graph]>,
+		);
+		project.functionQueueGraphs = new ReactiveMap(
+			project.functionQueueGraphOrder
+				.map((id) => {
+					const graph = project.graphs.get(id);
+					if (!graph) return null;
+					project.graphs.delete(id);
+					return [id, graph] as [number, runtime.Graph];
+				})
+				.filter(Boolean) as Array<[number, runtime.Graph]>,
+		);
+	}
 
 	project.disableSave = false;
 
@@ -355,7 +382,7 @@ export function deserializeFunctionQueue(
 ): runtime.FunctionQueue {
 	let graphId = data.graphId;
 	if (graphId == null) {
-		graphId = owner.generateGraphId();
+		graphId = owner.functionQueueGraphIdCounter++;
 	}
 
 	const queue = new runtime.FunctionQueue({
@@ -369,10 +396,11 @@ export function deserializeFunctionQueue(
 		const graph = new runtime.Graph({
 			id: graphId,
 			name: data.name,
+			kind: "functionQueue",
 			project: owner,
 		});
-		owner.graphs.set(graphId, graph);
-		owner.graphOrder.push(graphId);
+		owner.functionQueueGraphs.set(graphId, graph);
+		owner.functionQueueGraphOrder.push(graphId);
 		owner.functionQueues.set(queue.id, queue);
 	}
 
@@ -395,7 +423,7 @@ export function deserializeQueue(
 
 	let graphId = data.graphId;
 	if (graphId == null) {
-		graphId = owner.generateGraphId();
+		graphId = owner.queueGraphIdCounter++;
 	}
 
 	const queue = new runtime.Queue({
@@ -410,10 +438,11 @@ export function deserializeQueue(
 		const graph = new runtime.Graph({
 			id: graphId,
 			name: data.name,
+			kind: "queue",
 			project: owner,
 		});
-		owner.graphs.set(graphId, graph);
-		owner.graphOrder.push(graphId);
+		owner.queueGraphs.set(graphId, graph);
+		owner.queueGraphOrder.push(graphId);
 
 		owner.queues.set(queue.id, queue);
 
@@ -446,11 +475,13 @@ export function deserializeQueue(
 export async function deserializeGraph(
 	project: runtime.Project,
 	data: serde.Graph,
+	kind: runtime.GraphKind,
 ): Promise<runtime.Graph> {
 	const graph = new runtime.Graph({
 		project,
 		id: data.id,
 		name: data.name,
+		kind,
 	});
 
 	graph.idCounter = data.nodeIdCounter;
@@ -533,10 +564,7 @@ export function deserializeNode(
 
 	const isEvent = "event" in schema || ("type" in schema && schema.type === "event");
 	if (isEvent) {
-		const isFn = [...graph.project.functions].some(([, f]) => f.graphId === graph.id);
-		const isQueue = [...graph.project.queues].some(([, q]) => q.graphId === graph.id);
-		const isFunctionQueue = [...graph.project.functionQueues].some(([, q]) => q.graphId === graph.id);
-		if (isFn || isQueue || isFunctionQueue) return null;
+		if (graph.kind !== "graph") return null;
 	}
 
 	const node = new runtime.Node({

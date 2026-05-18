@@ -110,7 +110,7 @@ export class FunctionQueue extends Disposable {
 					continue;
 				}
 
-				const fnGraph = this.owner.graphs.get(fn.graphId);
+				const fnGraph = this.owner.getGraphByKind("function", fn.graphId);
 				if (!fnGraph) {
 					if (item.resolve) item.resolve({});
 					this.items.shift();
@@ -186,7 +186,11 @@ export class FunctionQueue extends Disposable {
 		if (item.resolve) {
 			item.resolve(outputs);
 		} else {
-			const graph = this.owner.graphs.get(item.waitingGraphId);
+			const graph =
+				this.owner.getGraphByKind("graph", item.waitingGraphId) ??
+				this.owner.getGraphByKind("function", item.waitingGraphId) ??
+				this.owner.getGraphByKind("queue", item.waitingGraphId) ??
+				this.owner.getGraphByKind("functionQueue", item.waitingGraphId);
 			if (graph) {
 				const node = graph.nodes.get(item.waitingNodeId);
 				if (node) {

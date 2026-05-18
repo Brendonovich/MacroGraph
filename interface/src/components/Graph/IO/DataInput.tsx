@@ -1,4 +1,4 @@
-import type { DataInput as DataInputModel } from "@macrograph/runtime";
+import { type DataInput as DataInputModel, graphRefOf } from "@macrograph/runtime";
 import {
 	type AnyType,
 	BasePrimitiveType,
@@ -170,7 +170,7 @@ export const DataInput = (props: Props) => {
 				value={props.input.defaultValue}
 				onChange={(v) => {
 					interfaceCtx.execute("setInputDefaultValue", {
-						graphId: props.input.node.graph.id,
+						...graphRefOf(props.input.node.graph),
 						nodeId: props.input.node.id,
 						inputId: props.input.id,
 						value: v,

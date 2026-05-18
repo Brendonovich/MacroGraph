@@ -20,28 +20,28 @@ export function serializeProject(
 		functionQueueGraphIdCounter: project.functionQueueGraphIdCounter,
 		graphs: project.graphOrder
 			.map((id) => {
-				const graph = project.graphs.get(id);
+				const graph = project.getGraphByKind("graph", id);
 				if (!graph) return;
 				return serializeGraph(graph);
 			})
 			.filter(Boolean),
 		functionGraphs: project.functionGraphOrder
 			.map((id) => {
-				const graph = project.graphs.get(id);
+				const graph = project.getGraphByKind("function", id);
 				if (!graph) return;
 				return serializeGraph(graph);
 			})
 			.filter(Boolean),
 		queueGraphs: project.queueGraphOrder
 			.map((id) => {
-				const graph = project.graphs.get(id);
+				const graph = project.getGraphByKind("queue", id);
 				if (!graph) return;
 				return serializeGraph(graph);
 			})
 			.filter(Boolean),
 		functionQueueGraphs: project.functionQueueGraphOrder
 			.map((id) => {
-				const graph = project.graphs.get(id);
+				const graph = project.getGraphByKind("functionQueue", id);
 				if (!graph) return;
 				return serializeGraph(graph);
 			})
