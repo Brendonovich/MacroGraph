@@ -10,6 +10,13 @@ declare global {
 // Function avoids 'window not defined' in SSR
 const invoke = () => window.__TAURI_INVOKE__;
 
+/**
+ * File size in bytes (Tauri 1.x JS fs API has no metadata helper).
+ */
+export function fileSize(path: string) {
+    return invoke()<number>("file_size", { path })
+}
+
 export function fetch(method: string, url: string, headers: ([string, string])[], data: number[] | null, connectTimeout: number | null, maxRedirections: number | null) {
     return invoke()<number>("fetch", { method,url,headers,data,connectTimeout,maxRedirections })
 }
@@ -18,8 +25,8 @@ export function fetch(method: string, url: string, headers: ([string, string])[]
  * POST multipart/form-data with an optional file streamed from disk (avoids loading
  * large files into the JS runtime before upload).
  */
-export function fetchMultipart(url: string, fields: ([string, string])[], filePath: string | null, fileFieldName: string | null, connectTimeout: number | null) {
-    return invoke()<number>("fetch_multipart", { url,fields,filePath,fileFieldName,connectTimeout })
+export function fetchMultipart(url: string, headers: ([string, string])[], fields: ([string, string])[], filePath: string | null, fileFieldName: string | null, connectTimeout: number | null) {
+    return invoke()<number>("fetch_multipart", { url,headers,fields,filePath,fileFieldName,connectTimeout })
 }
 
 export function fetchCancel(rid: number) {

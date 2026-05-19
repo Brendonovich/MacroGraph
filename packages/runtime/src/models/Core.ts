@@ -54,6 +54,44 @@ class NodeEmit {
 
 export const NODE_EMIT = new NodeEmit();
 
+function nodeRunningKey(node: Node) {
+	return `${node.graph.id}:${node.id}`;
+}
+
+/** Tracks nodes currently executing (for sustained UI feedback on long runs). */
+class NodeRunningTracker {
+	private keys = new Set<string>();
+	private listeners = new Set<() => void>();
+
+	start(node: Node) {
+		const key = nodeRunningKey(node);
+		if (this.keys.has(key)) return;
+		this.keys.add(key);
+		NODE_EMIT.emit(node);
+		this.notify();
+	}
+
+	end(node: Node) {
+		if (!this.keys.delete(nodeRunningKey(node))) return;
+		this.notify();
+	}
+
+	isRunning(node: Node) {
+		return this.keys.has(nodeRunningKey(node));
+	}
+
+	subscribe(cb: () => void) {
+		this.listeners.add(cb);
+		return () => this.listeners.delete(cb);
+	}
+
+	private notify() {
+		for (const cb of this.listeners) cb();
+	}
+}
+
+export const NODE_RUNNING = new NodeRunningTracker();
+
 export type OAuthToken = {
 	access_token: string;
 	refresh_token: string;
@@ -95,6 +133,10 @@ export class Core {
 		url: string,
 		fields: Record<string, string>,
 		file?: { path: string; fieldName: string },
+		options?: {
+			headers?: Record<string, string>;
+			onProgress?: (percent: number, sent: number, total: number) => void;
+		},
 	) => Promise<{ status: number }>;
 	oauth: OAuth;
 	api: InitClientReturn<typeof contract, any>;
@@ -328,7 +370,7 @@ export class ExecutionContext {
 		replaySnapshotInputs?: Record<string, unknown>,
 	) {
 		const node = this.root;
-		NODE_EMIT.emit(node);
+		NODE_RUNNING.start(node);
 
 		const replaySnap = replaySnapshotInputs;
 		const prevPins = this.replayInputByPinId;
@@ -358,6 +400,7 @@ export class ExecutionContext {
 			err = e;
 			throw e;
 		} finally {
+			NODE_RUNNING.end(node);
 			this.emitInvocationReport(node, {
 				startedAt,
 				durationMs: performance.now() - t0,
@@ -471,7 +514,7 @@ export class ExecutionContext {
 		)
 			throw new Error("Cannot exec an Event node!");
 
-		NODE_EMIT.emit(node);
+		NODE_RUNNING.start(node);
 
 		const replaySnap = options?.replaySnapshotInputs;
 		const prevPins = this.replayInputByPinId;
@@ -541,6 +584,7 @@ export class ExecutionContext {
 				});
 			}
 		} finally {
+			NODE_RUNNING.end(node);
 			if (replaySnap) {
 				this.replayInputByPinId = prevPins;
 				this.replaySnapshotNodeId = prevId;

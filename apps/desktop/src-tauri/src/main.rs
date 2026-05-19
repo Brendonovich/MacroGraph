@@ -44,6 +44,7 @@ async fn main() {
             Ok(())
         })
         .invoke_handler(tauri_handlers![
+            fs::file_size,
             http::fetch,
             http::fetch_multipart,
             http::fetch_cancel,

@@ -60,18 +60,48 @@ export async function fetch(
 	return completeFetch(rid);
 }
 
+export type FetchMultipartOptions = {
+	headers?: Record<string, string>;
+	onProgress?: (percent: number, sent: number, total: number) => void;
+};
+
 /** POST multipart/form-data with an optional file streamed from disk in Rust. */
 export async function fetchMultipart(
 	url: string,
 	fields: Record<string, string>,
 	file?: { path: string; fieldName: string },
+	options?: FetchMultipartOptions,
 ): Promise<Response> {
 	const rid = await commands.fetchMultipart(
 		url,
+		Object.entries(options?.headers ?? {}),
 		Object.entries(fields),
 		file?.path ?? null,
 		file?.fieldName ?? null,
 		null,
 	);
-	return completeFetch(rid);
+
+	let unlisten: (() => void) | undefined;
+	if (options?.onProgress && file) {
+		const { listen } = await import("@tauri-apps/api/event");
+		unlisten = await listen<{
+			rid: number;
+			percent: number;
+			sent: number;
+			total: number;
+		}>("http-upload-progress", (event) => {
+			if (event.payload.rid !== rid) return;
+			options.onProgress!(
+				event.payload.percent,
+				event.payload.sent,
+				event.payload.total,
+			);
+		});
+	}
+
+	try {
+		return await completeFetch(rid);
+	} finally {
+		unlisten?.();
+	}
 }

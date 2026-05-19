@@ -2245,6 +2245,7 @@ dependencies = [
  "tauri-specta 1.0.2",
  "thiserror",
  "tokio",
+ "tokio-util",
  "tokio-websockets",
  "tower-http",
  "url",

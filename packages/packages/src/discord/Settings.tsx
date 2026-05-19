@@ -6,6 +6,18 @@ import { createForm } from "@tanstack/solid-form";
 import { Match } from "solid-js";
 import type { Ctx } from ".";
 
+const CREDENTIALS_URL = "https://www.macrograph.app/account/credentials";
+
+async function openCredentialsPage(e: MouseEvent) {
+	e.preventDefault();
+	if (typeof window !== "undefined" && "__TAURI_INVOKE__" in window) {
+		const { open } = await import("@tauri-apps/api/shell");
+		await open(CREDENTIALS_URL);
+		return;
+	}
+	window.open(CREDENTIALS_URL, "_blank", "noopener,noreferrer");
+}
+
 export default function ({ core, auth, gateway }: Ctx) {
 	const credentials = createAsync(() => core.getCredentials());
 
@@ -17,7 +29,68 @@ export default function ({ core, auth, gateway }: Ctx) {
 	}));
 
 	return (
-		<div class="flex flex-col items-start space-y-2">
+		<div class="flex flex-col items-start space-y-4">
+			<div class="flex flex-col gap-2 w-full">
+				<span class="text-neutral-400 font-medium">OAuth account</span>
+				<p class="text-xs text-neutral-500 leading-snug">
+					OAuth accounts work for read nodes (user/guild info). To{" "}
+					<strong class="font-medium text-neutral-300">send messages</strong> or
+					listen for new messages, add a bot token below.
+				</p>
+				<div class="flex flex-row flex-wrap gap-2">
+					<AsyncButton
+						onClick={async () => {
+							await core.oauth.authorize("discord");
+						}}
+						loadingChildren="Connecting..."
+					>
+						Connect Discord
+					</AsyncButton>
+					<Button size="md" onClick={openCredentialsPage}>
+						Manage credentials
+					</Button>
+				</div>
+				<ul class="flex flex-col mb-2 space-y-2 w-full">
+					<Suspense>
+						<Show when={credentials()}>
+							{(creds) => (
+								<For
+									each={creds().filter((cred) => cred.provider === "discord")}
+								>
+									{(cred) => {
+										const account = () => auth.accounts.get(cred.id);
+
+										return (
+											<li class="flex flex-row items-center justify-between 1-full">
+												<span>{cred.displayName}</span>
+												<Show
+													when={account()}
+													children={
+														<Button
+															onClick={() => auth.disableAccount(cred.id)}
+														>
+															Disable
+														</Button>
+													}
+													fallback={
+														<AsyncButton
+															onClick={() => auth.enableAccount(cred.id)}
+															loadingChildren="Enabling..."
+														>
+															Enable
+														</AsyncButton>
+													}
+												/>
+											</li>
+										);
+									}}
+								</For>
+							)}
+						</Show>
+					</Suspense>
+				</ul>
+			</div>
+
 			<span class="text-neutral-400 font-medium">Bot</span>
 			<form
 				onSubmit={(e) => {
@@ -96,43 +169,6 @@ export default function ({ core, auth, gateway }: Ctx) {
 						</Show>
 					)}
 				</For>
-			</ul>
-
-			<span class="text-neutral-400 font-medium">OAuth</span>
-			<ul class="flex flex-col mb-2 space-y-2 w-full">
-				<Suspense>
-					<Show when={credentials()}>
-						{(creds) => (
-							<For each={creds().filter((cred) => cred.provider === "discord")}>
-								{(cred) => {
-									const account = () => auth.accounts.get(cred.id);
-
-									return (
-										<li class="flex flex-row items-center justify-between 1-full">
-											<span>{cred.displayName}</span>
-											<Show
-												when={account()}
-												children={
-													<Button onClick={() => auth.disableAccount(cred.id)}>
-														Disable
-													</Button>
-												}
-												fallback={
-													<AsyncButton
-														onClick={() => auth.enableAccount(cred.id)}
-														loadingChildren="Enabling..."
-													>
-														Enable
-													</AsyncButton>
-												}
-											/>
-										</li>
-									);
-								}}
-							</For>
-						)}
-					</Show>
-				</Suspense>
 			</ul>
 		</div>
 	);

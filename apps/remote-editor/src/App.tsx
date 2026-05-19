@@ -2,6 +2,7 @@ import {
 	applyRemoteHistoryItems,
 	applySetGraphItemPositionsPerform,
 	ConfigDialog,
+	KeyboardShortcutsDialog,
 	ConnectionsDialog,
 	Interface,
 	PlatformContext,
@@ -804,6 +805,7 @@ export default function App() {
 							broadcastCursorPosition={broadcastCursorToHost}
 						/>
 						<ConnectionsDialog core={core} />
+						<KeyboardShortcutsDialog />
 						<ConfigDialog />
 					</PlatformContext.Provider>
 					<Show when={!projectReady()}>

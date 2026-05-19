@@ -2,10 +2,10 @@ import type { Platform } from "@macrograph/interface";
 import {
 	exportInvocationLogForGraphs,
 	importInvocationLogFromProject,
+	loadParsedProject,
 } from "@macrograph/interface";
 import type { Core } from "@macrograph/runtime";
 import {
-	deserializeProject,
 	parseJsonWithContext,
 	serde,
 	serializeProject,
@@ -77,14 +77,22 @@ export function createPlatform(props: {
 					data,
 				);
 
-				await props.core.load((core) =>
-					deserializeProject(core, serializedProject),
+				const loaded = await loadParsedProject(
+					props.core,
+					serializedProject,
+					{
+						onAfterLoad: async (data) => {
+							await importInvocationLogFromProject(
+								data.nodeInvocations,
+								url,
+							).catch((e: unknown) =>
+								console.error("import invocation log", e),
+							);
+						},
+					},
 				);
 
-				await importInvocationLogFromProject(
-					serializedProject.nodeInvocations,
-					url,
-				).catch((e: unknown) => console.error("import invocation log", e));
+				if (!loaded) return;
 
 				props.setProjectUrl(url);
 			},

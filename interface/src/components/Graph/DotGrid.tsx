@@ -1,6 +1,7 @@
 import type { XY } from "@macrograph/runtime";
-import { createEffect, createSignal, Show } from "solid-js";
+import { createEffect, createSignal, onCleanup, Show } from "solid-js";
 
+import { isPaneResizing, onPaneResizeEnd } from "../../paneResizeSession";
 import { useGraphContext } from "./Context";
 import { GRID_SIZE } from "./util";
 
@@ -97,6 +98,9 @@ function drawDotGrid(
 export function DotGrid(props: Props) {
 	const graphCtx = useGraphContext();
 	const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement>();
+	const [paintEpoch, setPaintEpoch] = createSignal(0);
+
+	onCleanup(onPaneResizeEnd(() => setPaintEpoch((n) => n + 1)));
 
 	const visible = () => {
 		const { spacingMult } = dotGridParams(graphCtx.state.scale);
@@ -104,33 +108,36 @@ export function DotGrid(props: Props) {
 	};
 
 	createEffect(() => {
+		paintEpoch();
+		if (isPaneResizing()) return;
+
 		const canvas = canvasRef();
 		const width = props.width();
 		const height = props.height();
+		const scale = graphCtx.state.scale;
+		const translate = graphCtx.state.translate;
 		if (!canvas || !visible() || width === 0 || height === 0) return;
 
-		const dpr = window.devicePixelRatio || 1;
-		canvas.width = Math.round(width * dpr);
-		canvas.height = Math.round(height * dpr);
-		canvas.style.width = `${width}px`;
-		canvas.style.height = `${height}px`;
+		let raf = 0;
+		raf = requestAnimationFrame(() => {
+			const dpr = window.devicePixelRatio || 1;
+			canvas.width = Math.round(width * dpr);
+			canvas.height = Math.round(height * dpr);
+			canvas.style.width = `${width}px`;
+			canvas.style.height = `${height}px`;
 
-		const ctx = canvas.getContext("2d");
-		if (!ctx) return;
+			const ctx = canvas.getContext("2d");
+			if (!ctx) return;
 
-		const scale = graphCtx.state.scale;
-		const { dotPx, spacingMult } = dotGridParams(scale);
+			const { dotPx, spacingMult } = dotGridParams(scale);
 
-		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-		drawDotGrid(
-			ctx,
-			width,
-			height,
-			graphCtx.state.translate,
-			scale,
-			dotPx,
-			spacingMult,
-		);
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			drawDotGrid(ctx, width, height, translate, scale, dotPx, spacingMult);
+		});
+
+		return () => {
+			if (raf) cancelAnimationFrame(raf);
+		};
 	});
 
 	return (

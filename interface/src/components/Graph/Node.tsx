@@ -5,7 +5,7 @@ import {
 	DataOutput as DataOutputModel,
 	ExecInput as ExecInputModel,
 	ExecOutput as ExecOutputModel,
-	NODE_EMIT,
+	NODE_RUNNING,
 	type Node as NodeModel,
 	type NodeSchemaVariant,
 	type OutputPin,
@@ -39,6 +39,7 @@ import {
 } from "./IO";
 import "./Node.css";
 import { GRID_SIZE, handleSelectableItemPointerDown } from "./util";
+import { isPaneResizing } from "../../paneResizeSession";
 import { usePlatform } from "../../platform";
 
 interface Props {
@@ -73,18 +74,15 @@ export const Node = (props: Props) => {
 	const graph = useGraphContext();
 	const interfaceCtx = useInterfaceContext();
 
-	const ACTIVE = NODE_EMIT.subscribe(node(), (data) => {
-		if (node().id === data.id && data.schema === node().schema) {
-			updateActive(1);
-			setTimeout(() => {
-				updateActive(0);
-			}, 200);
-		}
+	const [running, setRunning] = Solid.createSignal(NODE_RUNNING.isRunning(node()));
+
+	Solid.onMount(() => {
+		setRunning(NODE_RUNNING.isRunning(node()));
+		const unsub = NODE_RUNNING.subscribe(() => {
+			setRunning(NODE_RUNNING.isRunning(node()));
+		});
+		Solid.onCleanup(unsub);
 	});
-
-	const [active, updateActive] = Solid.createSignal(0);
-
-	Solid.onCleanup(ACTIVE);
 
 	const [editingName, setEditingName] = Solid.createSignal(false);
 
@@ -101,6 +99,8 @@ export const Node = (props: Props) => {
 		});
 
 		const obs = new ResizeObserver((resize) => {
+			if (isPaneResizing()) return;
+
 			const contentRect = resize[resize.length - 1]?.contentRect;
 
 			if (!contentRect) return;
@@ -256,7 +256,7 @@ export const Node = (props: Props) => {
 				<div
 					class={clsx(
 						"h-6 duration-100 text-md font-medium flex flex-col items-stretch",
-						active() === 1 && "opacity-50",
+						running() && "node-running opacity-60",
 						SchemaVariantColours[
 							(() => {
 								const schema = node().schema;
@@ -293,7 +293,14 @@ export const Node = (props: Props) => {
 										})
 									}
 								>
-									{node().state.name}
+									<span class="flex min-w-0 items-center gap-1.5">
+										<span class="truncate">{node().state.name}</span>
+										<Solid.Show when={running()}>
+											<span class="shrink-0 text-[10px] font-normal opacity-80">
+												Running…
+											</span>
+										</Solid.Show>
+									</span>
 								</ContextMenu.Trigger>
 								<ContextMenuContent>
 									<ContextMenuItem onSelect={() => setEditingName(true)}>

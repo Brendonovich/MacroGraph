@@ -1,17 +1,19 @@
 import { contract } from "@macrograph/api-contract";
 import {
 	ConfigDialog,
+	KeyboardShortcutsDialog,
 	Interface,
+	LoadCheckerDialog,
 	PlatformContext,
 	ensureEditorStorageMigrated,
 	exportInvocationLogForGraphs,
 	importInvocationLogFromProject,
+	loadParsedProject,
 	loadProjectJson,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
 import { Core } from "@macrograph/runtime";
 import {
-	deserializeProject,
 	parseJsonWithContext,
 	serde,
 	serializeProject,
@@ -115,14 +117,14 @@ export default () => {
 						serde.Project,
 						projectStr,
 					);
-					void core
-						.load((c) => deserializeProject(c, parsed))
-						.then(() =>
-							importInvocationLogFromProject(
-								parsed.nodeInvocations,
+					void loadParsedProject(core, parsed, {
+						onAfterLoad: async (data) => {
+							await importInvocationLogFromProject(
+								data.nodeInvocations,
 								"default",
-							),
-						);
+							);
+						},
+					});
 				})
 				.finally(() => {
 					setLoaded(true);
@@ -138,11 +140,14 @@ export default () => {
 						serde.Project,
 						savedProject,
 					);
-					await core.load((c) => deserializeProject(c, parsed));
-					await importInvocationLogFromProject(
-						parsed.nodeInvocations,
-						"default",
-					);
+					await loadParsedProject(core, parsed, {
+						onAfterLoad: async (data) => {
+							await importInvocationLogFromProject(
+								data.nodeInvocations,
+								"default",
+							);
+						},
+					});
 				} catch {
 					/* handling this case is IMPORTANT!!! */
 				}
@@ -153,7 +158,9 @@ export default () => {
 	});
 
 	return (
-		<Show
+		<>
+			<LoadCheckerDialog />
+			<Show
 			when={loaded() && core.project}
 			keyed
 			fallback={
@@ -166,12 +173,14 @@ export default () => {
 				<Interface core={core} environment="browser" />
 			</PlatformContext.Provider>
 		</Show>
+		</>
 	);
 };
 
 export function ConnectionsDialogButton() {
 	return (
 		<>
+			<KeyboardShortcutsDialog />
 			<ConfigDialog />
 		</>
 	);

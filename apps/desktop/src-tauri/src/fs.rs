@@ -1,8 +1,18 @@
 use rspc::alpha::AlphaRouter;
 use serde::Serialize;
 use specta::Type;
+use tauri::command;
 
 use crate::R;
+
+/// File size in bytes (Tauri 1.x JS fs API has no metadata helper).
+#[command]
+#[specta::specta]
+pub fn file_size(path: String) -> Result<f64, String> {
+    std::fs::metadata(&path)
+        .map(|m| m.len() as f64)
+        .map_err(|e| e.to_string())
+}
 
 pub fn router() -> AlphaRouter<super::Ctx> {
     #[derive(Type, Serialize)]

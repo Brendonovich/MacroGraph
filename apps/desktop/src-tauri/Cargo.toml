@@ -61,7 +61,8 @@ tokio-websockets = { version = "0.13.2", features = [
 	"fastrand",
 	"sha1_smol",
 ] }
-futures-util = { version = "0.3.32", features = ["sink"] }
+futures-util = { version = "0.3.32", features = ["sink", "io"] }
+tokio-util = { version = "0.7", features = ["io"] }
 sha2 = "0.10.9"
 
 [features]

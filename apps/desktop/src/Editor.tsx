@@ -1,9 +1,12 @@
 import {
 	ConfigDialog,
+	KeyboardShortcutsDialog,
 	Interface,
+	LoadCheckerDialog,
 	PlatformContext,
 	importInvocationLogFromProject,
 	ensureEditorStorageMigrated,
+	loadParsedProject,
 	loadProjectJson,
 	setCursorBroadcastFn,
 	setPinDragBroadcastFn,
@@ -11,7 +14,7 @@ import {
 	type WireGraphPositionsEphemeral,
 } from "@macrograph/interface";
 import * as pkgs from "@macrograph/packages";
-import { deserializeProject, parseJsonWithContext, serde } from "@macrograph/runtime-serde";
+import { parseJsonWithContext, serde } from "@macrograph/runtime-serde";
 import { makePersisted } from "@solid-primitives/storage";
 import { convertFileSrc } from "@tauri-apps/api/tauri";
 import { Show, createSignal, onMount } from "solid-js";
@@ -116,11 +119,14 @@ export default function Editor() {
           serde.Project,
           savedProject,
         );
-        await core.load((c) => deserializeProject(c, serializedProject));
-        await importInvocationLogFromProject(
-          serializedProject.nodeInvocations,
-          workspaceKey,
-        );
+        await loadParsedProject(core, serializedProject, {
+          onAfterLoad: async (data) => {
+            await importInvocationLogFromProject(
+              data.nodeInvocations,
+              workspaceKey,
+            );
+          },
+        });
       }
 
       setLoaded(true);
@@ -128,7 +134,9 @@ export default function Editor() {
   });
 
   return (
-    <Show when={loaded() && core.project} keyed>
+    <>
+      <LoadCheckerDialog />
+      <Show when={loaded() && core.project} keyed>
       <PlatformContext.Provider value={platform}>
         <Interface
           core={core}
@@ -143,12 +151,14 @@ export default function Editor() {
         />
       </PlatformContext.Provider>
     </Show>
+    </>
   );
 }
 
 export function MenuItems() {
   return (
     <>
+      <KeyboardShortcutsDialog />
       <ConfigDialog />
       <RemoteHostDialog />
       <Button

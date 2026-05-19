@@ -36,6 +36,7 @@ import { DotGrid } from "./DotGrid";
 import { Node } from "./Node";
 import { GRID_SIZE } from "./util";
 import { isPointerOverGraphViewport } from "../../mosaicLayout";
+import { isPaneResizing, onPaneResizeEnd } from "../../paneResizeSession";
 import { getRemoteCursors, broadcastCursorPosition, getFollowUserId, getRemotePinDrags, getRemoteSelectionBoxes, broadcastPinDrag, broadcastSelectionBox } from "../../remoteHistorySync";
 
 type PanState = "none" | "waiting" | "active";
@@ -84,29 +85,20 @@ export const Graph = (props: Props) => {
 	const remotePinDragList = Solid.createMemo(() => getRemotePinDrags());
 	const remoteSelectionBoxList = Solid.createMemo(() => getRemoteSelectionBoxes());
 
-	let boundsInitialized = false;
+	let resizeRaf: number | undefined;
 
 	function onResize() {
+		if (resizeRaf !== undefined) return;
+		resizeRaf = requestAnimationFrame(() => {
+			resizeRaf = undefined;
+			applyResize();
+		});
+	}
+
+	function applyResize() {
+		if (isPaneResizing()) return;
+
 		const rect = ref()!.getBoundingClientRect()!;
-
-		if (boundsInitialized) {
-			const dx = rect.left - state.bounds.x;
-			const dy = rect.top - state.bounds.y;
-			const sizeChanged =
-				rect.width !== state.size.width ||
-				rect.height !== state.size.height;
-
-			// Only compensate for layout resizes, not viewport scroll from focus/scrollIntoView.
-			if ((dx !== 0 || dy !== 0) && sizeChanged) {
-				const s = viewState().scale;
-				props.onTranslateChange({
-					x: props.state.translate.x + dx / s,
-					y: props.state.translate.y + dy / s,
-				});
-			}
-		}
-
-		boundsInitialized = true;
 
 		const boundsValue = { x: rect.left, y: rect.top };
 		props.onBoundsChange(boundsValue);
@@ -153,6 +145,14 @@ export const Graph = (props: Props) => {
 	Solid.onMount(() => {
 		createEventListener(window, "resize", onResize);
 		createResizeObserver(ref, onResize);
+
+		Solid.onCleanup(() => {
+			if (resizeRaf !== undefined) cancelAnimationFrame(resizeRaf);
+		});
+
+		onPaneResizeEnd(() => {
+			if (ref()) applyResize();
+		});
 
 		if (!isMobile)
 			createEventListener(ref, "gesturestart", () => {

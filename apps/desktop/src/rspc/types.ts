@@ -32,11 +32,11 @@ export type RemoteServerMessage = { Text: string } | "Connected" | { ConnectedWi
 
 export type ObsEventMsg = { lifecycle?: string | null; event_type?: string | null; event_data?: any | null }
 
-export type Entry = { Dir: string } | { File: string }
-
 export type ObsConnectArgs = { url: string; password: string | null }
 
 export type OutboundSendArgs = { url: string; data: string }
+
+export type Entry = { Dir: string } | { File: string }
 
 export type ObsCallArgs = { url: string; requestType: string; requestData: any | null }
 

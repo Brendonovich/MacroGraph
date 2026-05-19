@@ -8,7 +8,7 @@ import {
 } from "@macrograph/runtime";
 import type { t } from "@macrograph/typesystem";
 import { createMousePosition } from "@solid-primitives/mouse";
-import { createEffect } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 
 import { config } from "../../../ConfigDialog";
 import type { GraphBounds } from "../../../context";
@@ -16,6 +16,7 @@ import { useInterfaceContext } from "../../../context";
 import { useGraphContext } from "../Context";
 import { colour } from "../util";
 import { getRemotePinDrags } from "../../../remoteHistorySync";
+import { isPaneResizing, onPaneResizeEnd } from "../../../paneResizeSession";
 
 export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 	const interfaceCtx = useInterfaceContext();
@@ -41,7 +42,13 @@ export const ConnectionRenderer = (props: { graphBounds: GraphBounds }) => {
 
 	let canvasRef: HTMLCanvasElement;
 
+	const [paintEpoch, setPaintEpoch] = createSignal(0);
+	onPaneResizeEnd(() => setPaintEpoch((n) => n + 1));
+
 	createEffect(() => {
+		paintEpoch();
+		if (isPaneResizing()) return;
+
 		const canvas = canvasRef.getContext("2d");
 		if (!canvas) return;
 

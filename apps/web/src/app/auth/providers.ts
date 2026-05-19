@@ -51,7 +51,7 @@ export const AuthProviders: Record<string, AuthProviderConfig> = {
 		clientSecret: serverEnv.DISCORD_CLIENT_SECRET,
 		authorize: { url: "https://discord.com/api/oauth2/authorize" },
 		token: { url: "https://discord.com/api/oauth2/token" },
-		scopes: ["identify", "email"],
+		scopes: ["identify", "email", "guilds"],
 		async getUserData(accessToken) {
 			const client = createHTTPClient<DiscordAPI.Requests, string>({
 				root: "https://discord.com/api/v10",

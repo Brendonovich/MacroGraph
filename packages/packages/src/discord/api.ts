@@ -15,6 +15,13 @@ import type * as v from "valibot";
 
 import type { Ctx } from ".";
 import { createHTTPClient } from "../httpEndpoint";
+import { getLocalFileSizeBytes, sanitizeFilePath } from "../pathUtil";
+import {
+	DISCORD_BOT_MAX_FILE_BYTES,
+	DISCORD_WEBHOOK_MAX_FILE_BYTES,
+	createThrottledUploadProgressHandler,
+	sendDiscordChannelMessage,
+} from "./channelMessage";
 import type { Account, BotAccount } from "./auth";
 import { botProperty, defaultProperties } from "./resource";
 import type { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
@@ -190,20 +197,37 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 				name: "Allow @everyone",
 				type: t.bool(),
 			}),
+			fileLocation: io.dataInput({
+				id: "fileLocation",
+				name: "File Location",
+				type: t.option(t.string()),
+			}),
+			status: io.dataOutput({
+				id: "status",
+				name: "Status",
+				type: t.int(),
+			}),
 		}),
 		async run({ ctx, io, bot }) {
-			await api.call(
-				`POST /channels/${ctx.getInput(io.channelId)}/messages`,
-				{ type: "bot", token: bot.token },
-				{
-					body: JSON.stringify({
-						content: ctx.getInput(io.message),
-						allowed_mentions: {
-							parse: ctx.getInput(io.everyone) ? ["everyone"] : [],
-						},
-					}),
-				},
-			);
+			let filePath: string | null = null;
+			await ctx.getInput(io.fileLocation).peekAsync(async (v) => {
+				filePath = v;
+			});
+
+			const status = await sendDiscordChannelMessage({
+				core,
+				botToken: bot.token,
+				channelId: ctx.getInput(io.channelId),
+				content: ctx.getInput(io.message),
+				allowEveryone: ctx.getInput(io.everyone),
+				filePath,
+				maxFileBytes: DISCORD_BOT_MAX_FILE_BYTES,
+				limitLabel:
+					"Discord allows 10 MiB per attachment by default (higher limits may apply per server boost)",
+				node: io.message.node,
+			});
+
+			ctx.setOutput(io.status, status);
 		},
 	});
 
@@ -403,6 +427,7 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 			}),
 		}),
 		async run({ ctx, io }) {
+			const node = io.webhookUrl.node;
 			const webhookUrl = ctx.getInput(io.webhookUrl);
 			const fields: Record<string, string> = {
 				tts: ctx.getInput(io.tts).toString(),
@@ -420,15 +445,47 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 
 			let filePath: string | null = null;
 			await ctx.getInput(io.fileLocation).peekAsync(async (v) => {
-				filePath = v;
+				filePath = sanitizeFilePath(v);
 			});
 
 			let status: number;
+			if (filePath) {
+				const fileName = filePath.split(/[\/\\]/).at(-1) ?? filePath;
+				core.print(`Uploading ${fileName}…`, node);
+
+				const size = await getLocalFileSizeBytes(filePath);
+				if (size !== null && size > DISCORD_WEBHOOK_MAX_FILE_BYTES) {
+					const sizeMb = (size / (1024 * 1024)).toFixed(1);
+					core.warn(
+						`File is ${sizeMb} MB; Discord webhooks reject attachments over 10 MB (expect HTTP 413).`,
+						node,
+					);
+				}
+			}
+
+			const onUploadProgress = createThrottledUploadProgressHandler(
+				(percent, sent, total) => {
+					const sentMb = (sent / (1024 * 1024)).toFixed(1);
+					const totalMb = (total / (1024 * 1024)).toFixed(1);
+					core.warn(
+						total > 0
+							? `Upload ${percent}% (${sentMb} / ${totalMb} MB)`
+							: `Upload ${percent}%`,
+						node,
+					);
+				},
+			);
+
 			if (filePath && core.fetchMultipart) {
-				({ status } = await core.fetchMultipart(webhookUrl, fields, {
-					path: filePath,
-					fieldName: "files[0]",
-				}));
+				({ status } = await core.fetchMultipart(
+					webhookUrl,
+					fields,
+					{
+						path: filePath,
+						fieldName: "files[0]",
+					},
+					{ onProgress: onUploadProgress },
+				));
 			} else {
 				const formData = new FormData();
 				for (const [k, v] of Object.entries(fields)) {
@@ -447,6 +504,16 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 					body: formData,
 				});
 				status = response.status;
+			}
+
+			if (filePath) {
+				if (status === 413) {
+					core.warn(
+						"HTTP 413 Payload Too Large — Discord webhooks only allow attachments up to 10 MB.",
+						node,
+					);
+				}
+				core.print(`Upload finished (HTTP ${status})`, node);
 			}
 
 			ctx.setOutput(io.status, status);

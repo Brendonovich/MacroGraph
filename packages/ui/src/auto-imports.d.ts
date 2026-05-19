@@ -29,6 +29,7 @@ declare global {
   const IconTablerCircle: typeof import('~icons/tabler/circle.jsx')['default']
   const IconTablerColumns: typeof import('~icons/tabler/columns.jsx')['default']
   const IconTablerCopy: typeof import('~icons/tabler/copy.jsx')['default']
+  const IconTablerKeyboard: typeof import('~icons/tabler/keyboard.jsx')['default']
   const IconTablerSettings: typeof import('~icons/tabler/settings.jsx')['default']
   const IconTdesignFolderImport: typeof import('~icons/tdesign/folder-import.jsx')['default']
 }

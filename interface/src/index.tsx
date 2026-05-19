@@ -97,6 +97,7 @@ import {
 	updateTabDragGhost,
 	updateTabDropTarget,
 } from "./tabDragSession";
+import { beginPaneResize, endPaneResize } from "./paneResizeSession";
 import { isCtrlEvent, isEditingText } from "./util";
 import {
 	tabButtonBackground,
@@ -106,8 +107,15 @@ import {
 import { PlatformContext, usePlatform } from "./platform";
 
 export * from "./platform";
+export {
+	LoadCheckerDialog,
+	loadParsedProject,
+	requestProjectLoadConfirmation,
+} from "./LoadCheckerDialog";
 export * from "./ConnectionsDialog";
 export * from "./ConfigDialog";
+export * from "./KeyboardShortcutsDialog";
+export * from "./keyboardShortcuts";
 export {
 	exportInvocationLogForGraphs,
 	importInvocationLogFromProject,
@@ -782,12 +790,22 @@ function ResizeHandle(props: {
 					const startWidth = props.width;
 
 					setDragging(true);
+					beginPaneResize();
 
 					Solid.createRoot((dispose) => {
 						let currentWidth = startWidth;
+						let raf = 0;
+
+						const flushWidth = () => {
+							raf = 0;
+							props.onResize?.(currentWidth);
+						};
 
 						Solid.onCleanup(() => {
 							setDragging(false);
+							if (raf) cancelAnimationFrame(raf);
+							flushWidth();
+							endPaneResize();
 							props.onResizeEnd?.(currentWidth);
 						});
 
@@ -798,7 +816,9 @@ function ResizeHandle(props: {
 									startWidth +
 									(e.clientX - startX) * (props.side === "right" ? 1 : -1);
 
-								props.onResize?.(currentWidth);
+								if (!raf) {
+									raf = requestAnimationFrame(flushWidth);
+								}
 							},
 						});
 					});
@@ -807,9 +827,6 @@ function ResizeHandle(props: {
 		</div>
 	);
 }
-
-let mosaicChordPending = false;
-let mosaicChordTimer: ReturnType<typeof setTimeout> | undefined;
 
 function createKeydownShortcuts(
 	currentGraph: Solid.Accessor<CurrentGraph | undefined>,
@@ -821,39 +838,6 @@ function createKeydownShortcuts(
 
 	createEventListener(window, "keydown", async (e) => {
 		if (isEditingText(e)) return;
-
-		if (isCtrlEvent(e) && e.code === "KeyK" && !e.shiftKey) {
-			mosaicChordPending = true;
-			clearTimeout(mosaicChordTimer);
-			mosaicChordTimer = setTimeout(() => {
-				mosaicChordPending = false;
-			}, 2000);
-			return;
-		}
-
-		if (isCtrlEvent(e) && mosaicChordPending) {
-			if (e.code === "KeyW") {
-				mosaicChordPending = false;
-				clearTimeout(mosaicChordTimer);
-				const next = closeGroup(
-					ctx.mosaicState,
-					ctx.mosaicState.focusedGroupId,
-				);
-				ctx.setMosaicWorkspaceState(next);
-				ctx.persistMosaicLayoutNow("shortcut-close-pane");
-				e.preventDefault();
-				return;
-			}
-			if (e.code === "Backslash") {
-				mosaicChordPending = false;
-				clearTimeout(mosaicChordTimer);
-				const next = splitFocusedGroup(ctx.mosaicState, "horizontal");
-				ctx.setMosaicWorkspaceState(next);
-				ctx.persistMosaicLayoutNow("shortcut-split-h");
-				e.preventDefault();
-				return;
-			}
-		}
 
 		switch (e.code) {
 			case "Backslash": {

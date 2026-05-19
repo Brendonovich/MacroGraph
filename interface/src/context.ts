@@ -50,6 +50,7 @@ import {
 	type WireGraphPositionsEphemeral,
 } from "./remoteHistorySync";
 import {
+	appendConsoleEntry,
 	appendInvocationReport,
 	flushInvocationLogPending,
 	invocationRowKey,
@@ -656,8 +657,17 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 					(key) => nodeInvocationLogByKey[key],
 				);
 			};
+			const unsubPrint = props.core.printSubscribe((item) => {
+				appendConsoleEntry(
+					setNodeInvocationLogByKey,
+					() => workspaceKey(),
+					item,
+					(key) => nodeInvocationLogByKey[key],
+				);
+			});
 			onCleanup(() => {
 				props.core.invocationReporter = undefined;
+				unsubPrint();
 				void flushInvocationLogPending();
 			});
 		});

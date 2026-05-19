@@ -6,6 +6,7 @@ import { createRoot, onCleanup } from "solid-js";
 
 import type { MosaicLeaf, MosaicNode, MosaicSplit } from "../mosaicLayout";
 import { clampRatio } from "../mosaicLayout";
+import { beginPaneResize, endPaneResize } from "../paneResizeSession";
 
 function MosaicSplitHandle(props: {
 	direction: "horizontal" | "vertical";
@@ -46,6 +47,7 @@ function MosaicSplitHandle(props: {
 					const startRatio = props.ratio;
 
 					setDragging(true);
+					beginPaneResize();
 
 					let raf = 0;
 					let pendingRatio: number | null = null;
@@ -62,6 +64,7 @@ function MosaicSplitHandle(props: {
 							setDragging(false);
 							if (raf) cancelAnimationFrame(raf);
 							flushRatio();
+							endPaneResize();
 							props.onResizeEnd?.();
 						});
 
@@ -93,10 +96,24 @@ function MosaicSplitView(props: {
 	onSplitResizeEnd?: () => void;
 }) {
 	const isHorizontal = () => props.split.direction === "horizontal";
-	const firstSize = () => `${props.split.ratio * 100}%`;
+	/** Local preview during drag — avoids setMosaicState on every frame. */
+	const [liveRatio, setLiveRatio] = Solid.createSignal<number | null>(null);
+	const ratio = () => liveRatio() ?? props.split.ratio;
+	const firstSize = () => `${ratio() * 100}%`;
 	const childPath = (branch: number) => {
 		const p = props.path;
 		return p.length ? `${p.join(".")}.${branch}` : String(branch);
+	};
+
+	const previewRatio = (_path: number[], next: number) => {
+		setLiveRatio(next);
+	};
+
+	const commitRatio = () => {
+		const next = liveRatio();
+		if (next !== null) props.onSplitRatioChange(props.path, next);
+		setLiveRatio(null);
+		props.onSplitResizeEnd?.();
 	};
 
 	return (
@@ -124,10 +141,10 @@ function MosaicSplitView(props: {
 			</div>
 			<MosaicSplitHandle
 				direction={props.split.direction}
-				ratio={props.split.ratio}
+				ratio={ratio()}
 				path={props.path}
-				onRatioChange={props.onSplitRatioChange}
-				onResizeEnd={props.onSplitResizeEnd}
+				onRatioChange={previewRatio}
+				onResizeEnd={commitRatio}
 			/>
 			<div class="flex-1 min-h-0 min-w-0 overflow-hidden">
 				<MosaicLayout

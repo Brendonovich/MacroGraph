@@ -14,8 +14,8 @@ const AUTH_URL = `${env.VITE_MACROGRAPH_API_URL}/auth`;
 
 export const core = new Core({
 	fetch: fetch as any,
-	fetchMultipart: async (url, fields, file) => {
-		const res = await fetchMultipart(url, fields, file);
+	fetchMultipart: async (url, fields, file, options) => {
+		const res = await fetchMultipart(url, fields, file, options);
 		return { status: res.status };
 	},
 	api: rawApi,

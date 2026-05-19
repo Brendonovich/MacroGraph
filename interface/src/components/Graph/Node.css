@@ -1,3 +1,17 @@
 .active-fade-in {
     opacity: 0.5;
 }
+
+@keyframes node-running-pulse {
+    0%,
+    100% {
+        opacity: 0.55;
+    }
+    50% {
+        opacity: 0.85;
+    }
+}
+
+.node-running {
+    animation: node-running-pulse 1.2s ease-in-out infinite;
+}

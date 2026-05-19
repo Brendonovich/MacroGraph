@@ -43,7 +43,7 @@ function formatInvocationErrorText(err: NonNullable<StoredNodeInvocation["error"
 	return err.message;
 }
 
-const typeFilterOptions: EntryType[] = ["invocation", "warn", "error"];
+const typeFilterOptions: EntryType[] = ["invocation", "log", "warn", "error"];
 
 const typeFilterLabels: Record<EntryType, string> = {
 	invocation: "Invocations",
