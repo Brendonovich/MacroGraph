@@ -18,7 +18,6 @@ import { createHTTPClient } from "../httpEndpoint";
 import type { Account, BotAccount } from "./auth";
 import { botProperty, defaultProperties } from "./resource";
 import type { GUILD_MEMBER_SCHEMA, ROLE_SCHEMA, USER_SCHEMA } from "./schemas";
-import { readBinaryFile } from "@tauri-apps/api/fs";
 
 export type Requests = {
 	[_: `POST /channels/${string}/messages`]: any;
@@ -404,33 +403,53 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 			}),
 		}),
 		async run({ ctx, io }) {
-			const formData = new FormData();
+			const webhookUrl = ctx.getInput(io.webhookUrl);
+			const fields: Record<string, string> = {
+				tts: ctx.getInput(io.tts).toString(),
+			};
 
 			ctx.getInput(io.content).peek((v) => {
-				formData.set("content", v);
+				fields.content = v;
 			});
 			ctx.getInput(io.avatarUrl).peek((v) => {
-				formData.set("avatar_url", v);
+				fields.avatar_url = v;
 			});
 			ctx.getInput(io.username).peek((v) => {
-				formData.set("username", v);
+				fields.username = v;
 			});
-			formData.set("tts", ctx.getInput(io.tts).toString());
 
+			let filePath: string | null = null;
 			await ctx.getInput(io.fileLocation).peekAsync(async (v) => {
-				formData.set(
-					"files[0]",
-					new Blob([await readBinaryFile(v)]),
-					v.split(/[\/\\]/).at(-1),
-				);
+				filePath = v;
 			});
 
-			const response = await core.fetch(ctx.getInput(io.webhookUrl), {
-				method: "POST",
-				body: formData,
-			});
+			let status: number;
+			if (filePath && core.fetchMultipart) {
+				({ status } = await core.fetchMultipart(webhookUrl, fields, {
+					path: filePath,
+					fieldName: "files[0]",
+				}));
+			} else {
+				const formData = new FormData();
+				for (const [k, v] of Object.entries(fields)) {
+					formData.set(k, v);
+				}
+				if (filePath) {
+					const { readBinaryFile } = await import("@tauri-apps/api/fs");
+					formData.set(
+						"files[0]",
+						new Blob([await readBinaryFile(filePath)]),
+						filePath.split(/[\/\\]/).at(-1)!,
+					);
+				}
+				const response = await core.fetch(webhookUrl, {
+					method: "POST",
+					body: formData,
+				});
+				status = response.status;
+			}
 
-			ctx.setOutput(io.status, response.status);
+			ctx.setOutput(io.status, status);
 		},
 	});
 }

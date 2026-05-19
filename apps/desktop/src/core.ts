@@ -7,13 +7,17 @@ import "tauri-plugin-midi";
 
 import { rawApi } from "./api";
 import { env } from "./env";
-import { fetch } from "./http";
+import { fetch, fetchMultipart } from "./http";
 import { client } from "./rspc";
 
 const AUTH_URL = `${env.VITE_MACROGRAPH_API_URL}/auth`;
 
 export const core = new Core({
 	fetch: fetch as any,
+	fetchMultipart: async (url, fields, file) => {
+		const res = await fetchMultipart(url, fields, file);
+		return { status: res.status };
+	},
 	api: rawApi,
 	oauth: {
 		authorize: (provider) =>

@@ -14,6 +14,14 @@ export function fetch(method: string, url: string, headers: ([string, string])[]
     return invoke()<number>("fetch", { method,url,headers,data,connectTimeout,maxRedirections })
 }
 
+/**
+ * POST multipart/form-data with an optional file streamed from disk (avoids loading
+ * large files into the JS runtime before upload).
+ */
+export function fetchMultipart(url: string, fields: ([string, string])[], filePath: string | null, fileFieldName: string | null, connectTimeout: number | null) {
+    return invoke()<number>("fetch_multipart", { url,fields,filePath,fileFieldName,connectTimeout })
+}
+
 export function fetchCancel(rid: number) {
     return invoke()<null>("fetch_cancel", { rid })
 }

@@ -1,7 +1,9 @@
 use std::{collections::HashMap, time::Duration};
 
 use http::{header, HeaderName, HeaderValue, Method, StatusCode};
+use reqwest::multipart;
 use reqwest::redirect::Policy;
+use std::path::Path;
 use serde::Serialize;
 use specta::Type;
 use tauri::{command, AppHandle};
@@ -107,6 +109,60 @@ pub async fn fetch(
         }
         _ => Err(Error::SchemeNotSupport(scheme.to_string())),
     }
+}
+
+/// POST multipart/form-data with an optional file streamed from disk (avoids loading
+/// large files into the JS runtime before upload).
+#[command]
+#[specta::specta]
+pub async fn fetch_multipart(
+    app: AppHandle<tauri::Wry>,
+    url: url::Url,
+    fields: Vec<(String, String)>,
+    file_path: Option<String>,
+    file_field_name: Option<String>,
+    connect_timeout: Option<u32>,
+) -> super::Result<RequestId> {
+    let scheme = url.scheme();
+    if scheme != "http" && scheme != "https" {
+        return Err(Error::SchemeNotSupport(scheme.to_string()));
+    }
+
+    let mut form = multipart::Form::new();
+    for (key, value) in fields {
+        form = form.text(key, value);
+    }
+
+    if let (Some(path), Some(field)) = (file_path, file_field_name) {
+        let path_ref = Path::new(&path);
+        let file_name = path_ref
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("file")
+            .to_string();
+        let bytes = tokio::fs::read(path_ref).await?;
+        let part = multipart::Part::bytes(bytes).file_name(file_name);
+        form = form.part(field, part);
+    }
+
+    let mut builder = reqwest::ClientBuilder::new();
+    if let Some(timeout) = connect_timeout {
+        builder = builder.connect_timeout(Duration::from_millis(timeout as u64));
+    }
+
+    let request = builder
+        .build()?
+        .post(url)
+        .header(header::USER_AGENT, HeaderValue::from_static("tauri"))
+        .multipart(form);
+
+    let http_state = app.http();
+    let rid = http_state.next_id();
+    let fut = async move { Ok(request.send().await.map_err(Into::into)) };
+    let mut request_table = http_state.requests.lock().await;
+    request_table.insert(rid, FetchRequest::new(Box::pin(fut)));
+
+    Ok(rid)
 }
 
 #[command]

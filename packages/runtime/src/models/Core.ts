@@ -90,6 +90,12 @@ export class Core {
 	eventNodeMappings = new Map<Package, Map<string, Set<Node>>>();
 
 	fetch: typeof fetch;
+	/** POST multipart with a file streamed from disk (desktop). Falls back to fetch when unset. */
+	fetchMultipart?: (
+		url: string,
+		fields: Record<string, string>,
+		file?: { path: string; fieldName: string },
+	) => Promise<{ status: number }>;
 	oauth: OAuth;
 	api: InitClientReturn<typeof contract, any>;
 
@@ -156,12 +162,14 @@ export class Core {
 
 	constructor(args?: {
 		fetch?: typeof fetch;
+		fetchMultipart?: Core["fetchMultipart"];
 		oauth?: OAuth;
 		api?: InitClientReturn<typeof contract, any>;
 		/** Remote web editor: load packages for UI but do not connect to integrations. */
 		remoteShell?: boolean;
 	}) {
 		this.fetch = args?.fetch ?? fetch;
+		this.fetchMultipart = args?.fetchMultipart;
 		this.oauth = args?.oauth!;
 		this.api = args?.api!;
 		this.remoteShell = args?.remoteShell ?? false;

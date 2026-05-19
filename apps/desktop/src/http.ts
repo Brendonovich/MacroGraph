@@ -1,5 +1,22 @@
 import * as commands from "./commands";
 
+async function completeFetch(rid: number): Promise<Response> {
+	const { status, statusText, url, headers } = await commands.fetchSend(rid);
+	const body = await commands.fetchReadBody(rid);
+
+	const res =
+		body.length === 0
+			? new Response(new Uint8Array(body))
+			: new Response(new Uint8Array(body), {
+					headers,
+					status,
+					statusText,
+				});
+
+	Object.defineProperty(res, "url", { value: url });
+	return res;
+}
+
 export interface ClientOptions {
 	/**
 	 * Defines the maximum number of redirects the client should follow.
@@ -40,21 +57,21 @@ export async function fetch(
 		commands.fetchCancel(rid);
 	});
 
-	const { status, statusText, url, headers } = await commands.fetchSend(rid);
+	return completeFetch(rid);
+}
 
-	const body = await commands.fetchReadBody(rid);
-
-	const res =
-		body.length === 0
-			? new Response(new Uint8Array(body))
-			: new Response(new Uint8Array(body), {
-					headers,
-					status,
-					statusText,
-				});
-
-	// url is read only but seems like we can do this
-	Object.defineProperty(res, "url", { value: url });
-
-	return res;
+/** POST multipart/form-data with an optional file streamed from disk in Rust. */
+export async function fetchMultipart(
+	url: string,
+	fields: Record<string, string>,
+	file?: { path: string; fieldName: string },
+): Promise<Response> {
+	const rid = await commands.fetchMultipart(
+		url,
+		Object.entries(fields),
+		file?.path ?? null,
+		file?.fieldName ?? null,
+		null,
+	);
+	return completeFetch(rid);
 }

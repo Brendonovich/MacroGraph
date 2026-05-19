@@ -45,6 +45,7 @@ async fn main() {
         })
         .invoke_handler(tauri_handlers![
             http::fetch,
+            http::fetch_multipart,
             http::fetch_cancel,
             http::fetch_send,
             http::fetch_read_body
