@@ -24,6 +24,27 @@ import type { GraphContext, SelectedItemID } from "./Context";
 export const GRID_SIZE = 15;
 export const SHIFT_MULTIPLIER = 10;
 
+export const POINTER_DRAG_BUFFER = 3;
+
+/** Left button still held — stray pointermoves after release (e.g. Chrome Remote Desktop) lack this. */
+export function primaryPointerButtonHeld(e: PointerEvent) {
+	return (e.buttons & 1) === 1;
+}
+
+export function secondaryPointerButtonHeld(e: PointerEvent) {
+	return (e.buttons & 2) === 2;
+}
+
+export function tryCapturePointer(e: PointerEvent) {
+	const target = e.currentTarget;
+	if (!(target instanceof Element)) return;
+	try {
+		target.setPointerCapture(e.pointerId);
+	} catch {
+		/* ignore */
+	}
+}
+
 const PrimitiveVariantColours: Record<PrimitiveVariant, string> = {
 	bool: "#DC2626",
 	string: "#DA5697",
@@ -53,7 +74,7 @@ export const colour = (type: AnyType): string => {
 };
 
 export function handleSelectableItemPointerDown(
-	e: MouseEvent,
+	e: PointerEvent,
 	graph: GraphContext,
 	interfaceCtx: InterfaceContext,
 	id: SelectedItemID,
@@ -61,6 +82,8 @@ export function handleSelectableItemPointerDown(
 	e.stopPropagation();
 
 	if (e.button !== 0) return;
+
+	tryCapturePointer(e);
 
 	const prevSelection = [...graph.state.selectedItemIds];
 
@@ -188,12 +211,15 @@ export function handleSelectableItemPointerDown(
 
 	createRoot((dispose) => {
 		interfaceCtx.onGraphLivePointerSession?.(true);
-		createEventListenerMap(window, {
-			pointerup: (e) => {
-				flushPendingLivePositions();
-				dispose();
+		let ended = false;
 
-				if (!didDrag) {
+		const finishPointerSession = (e: PointerEvent) => {
+			if (ended) return;
+			ended = true;
+			flushPendingLivePositions();
+			dispose();
+
+			if (!didDrag) {
 					if (isCtrlEvent(e)) {
 						if (isSelected) {
 							interfaceCtx.execute("setGraphSelection", {
@@ -272,8 +298,18 @@ export function handleSelectableItemPointerDown(
 				}
 
 				interfaceCtx.onGraphLivePointerSession?.(false);
-			},
+		};
+
+		createEventListenerMap(window, {
+			pointerup: finishPointerSession,
+			pointercancel: finishPointerSession,
+			lostpointercapture: finishPointerSession,
 			pointermove: (e) => {
+				if (!primaryPointerButtonHeld(e)) {
+					finishPointerSession(e);
+					return;
+				}
+
 				didDrag = true;
 
 				const mousePosition = graph.toGraphSpace({

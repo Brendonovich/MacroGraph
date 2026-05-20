@@ -442,10 +442,19 @@ export function createCtx(
 		oldUrl: string,
 		newUrlRaw: string,
 	): Promise<boolean> {
-		const newUrl = newUrlRaw.trim();
+		const newUrl = canonicalWsUrl(newUrlRaw);
 		if (!websockets.has(oldUrl) || !newUrl) return false;
 		if (newUrl === oldUrl) return true;
 		if (websockets.has(newUrl)) return false;
+		const newEndpoint = socketEndpointKey(newUrl);
+		if (
+			newEndpoint &&
+			[...websockets.keys()].some(
+				(u) => u !== oldUrl && socketEndpointKey(u) === newEndpoint,
+			)
+		) {
+			return false;
+		}
 		const name = wsNames.get(oldUrl) ?? defaultNameFromUrl(oldUrl);
 		await removeWebsocket(oldUrl);
 		await addWebsocket(newUrl, name);

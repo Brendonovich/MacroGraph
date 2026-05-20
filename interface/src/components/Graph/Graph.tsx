@@ -34,7 +34,13 @@ import {
 } from "./Context";
 import { DotGrid } from "./DotGrid";
 import { Node } from "./Node";
-import { GRID_SIZE } from "./util";
+import {
+	GRID_SIZE,
+	POINTER_DRAG_BUFFER,
+	primaryPointerButtonHeld,
+	secondaryPointerButtonHeld,
+	tryCapturePointer,
+} from "./util";
 import { isPointerOverGraphViewport } from "../../mosaicLayout";
 import { isPaneResizing, onPaneResizeEnd } from "../../paneResizeSession";
 import { getRemoteCursors, broadcastCursorPosition, getFollowUserId, getRemotePinDrags, getRemoteSelectionBoxes, broadcastPinDrag, broadcastSelectionBox } from "../../remoteHistorySync";
@@ -745,49 +751,70 @@ export const Graph = (props: Props) => {
 			};
 
 			let didMove = false;
+			let ended = false;
 
-			createEventListenerMap(window, {
-				pointerup: (e) => {
-					dispose();
+			const finishDragAreaSession = (e: PointerEvent) => {
+				if (ended) return;
+				ended = true;
+				dispose();
 
-					broadcastSelectionBox({
-						id: "",
-						...graphRef(),
-						x: 0,
-						y: 0,
-						width: 0,
-						height: 0,
-					});
+				broadcastSelectionBox({
+					id: "",
+					...graphRef(),
+					x: 0,
+					y: 0,
+					width: 0,
+					height: 0,
+				});
 
-					if (!didMove) {
-						if (prevSelection.length !== 0)
+				if (!didMove) {
+					if (prevSelection.length !== 0)
+						interfaceCtx.execute("setGraphSelection", {
+							...graphRef(),
+							selection: [],
+							prev: prevSelection,
+						});
+				} else {
+					const [items] = getItems(e);
+					setDragArea(null);
+
+					if (items.length === 0) {
+						interfaceCtx.setState({ status: "idle" });
+						if (prevSelection.length > 0)
 							interfaceCtx.execute("setGraphSelection", {
 								...graphRef(),
 								selection: [],
 								prev: prevSelection,
 							});
 					} else {
-						const [items] = getItems(e);
-						setDragArea(null);
-
-						if (items.length === 0) {
-							interfaceCtx.setState({ status: "idle" });
-							if (prevSelection.length > 0)
-								interfaceCtx.execute("setGraphSelection", {
-									...graphRef(),
-									selection: [],
-									prev: prevSelection,
-								});
-						} else {
-							interfaceCtx.execute("setGraphSelection", {
-								...graphRef(),
-								selection: items,
-								prev: prevSelection,
-							});
-						}
+						interfaceCtx.execute("setGraphSelection", {
+							...graphRef(),
+							selection: items,
+							prev: prevSelection,
+						});
 					}
-				},
+				}
+			};
+
+			createEventListenerMap(window, {
+				pointerup: finishDragAreaSession,
+				pointercancel: finishDragAreaSession,
+				lostpointercapture: finishDragAreaSession,
 				pointermove: (e) => {
+					if (!primaryPointerButtonHeld(e)) {
+						finishDragAreaSession(e);
+						return;
+					}
+
+					const dx = e.clientX - initialClientXY.x;
+					const dy = e.clientY - initialClientXY.y;
+					if (
+						!didMove &&
+						Math.abs(dx) < POINTER_DRAG_BUFFER &&
+						Math.abs(dy) < POINTER_DRAG_BUFFER
+					)
+						return;
+
 					didMove = true;
 
 					const [items, rect] = getItems(e);
@@ -1046,6 +1073,8 @@ export const Graph = (props: Props) => {
 					}
 				}}
 				onPointerDown={(e) => {
+					if (e.pointerType !== "touch") tryCapturePointer(e);
+
 					setTimeout(() => {
 						if (gesture.dragStarted) return;
 						const { pointerId } = e;
@@ -1081,6 +1110,7 @@ export const Graph = (props: Props) => {
 										pointermove: (e) => {
 											if (gesture.dragStarted || e.pointerId !== pointerId)
 												return;
+											if (!primaryPointerButtonHeld(e)) return;
 
 											const diff = {
 												x: start.x - e.clientX,
@@ -1211,17 +1241,28 @@ export const Graph = (props: Props) => {
 									});
 
 									Solid.createRoot((dispose) => {
+										let ended = false;
+										const finishPanSession = () => {
+											if (ended) return;
+											ended = true;
+											dispose();
+											translateSession.stop();
+										};
+
 										Solid.createEffect(() => {
 											if (pan() === "active")
 												interfaceCtx.setState({ status: "idle" });
 										});
 
 										createEventListenerMap(window, {
-											pointerup: () => {
-												dispose();
-												translateSession.stop();
-											},
+											pointerup: finishPanSession,
+											pointercancel: finishPanSession,
+											lostpointercapture: finishPanSession,
 											pointermove: (e) => {
+												if (!secondaryPointerButtonHeld(e)) {
+													finishPanSession();
+													return;
+												}
 												translateSession.updateControlPoint({
 													x: e.clientX,
 													y: e.clientY,

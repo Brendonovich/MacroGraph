@@ -24,6 +24,33 @@ export function canonicalWsUrl(raw: string): string {
 	}
 }
 
+/** Map graph/settings input to the configured client key (trailing `/`, etc.). */
+export function findConfiguredWsUrl(
+	input: string,
+	configuredKeys: Iterable<string>,
+	names?: Map<string, string>,
+): string | null {
+	const trimmed = input.trim();
+	const canonical = canonicalWsUrl(trimmed);
+	const keys = [...configuredKeys];
+
+	if (keys.includes(canonical)) return canonical;
+
+	const endpoint = socketEndpointKey(canonical);
+	if (endpoint) {
+		const match = keys.find((u) => socketEndpointKey(u) === endpoint);
+		if (match) return match;
+	}
+
+	if (names) {
+		for (const [u, name] of names) {
+			if (name === trimmed || name === canonical) return u;
+		}
+	}
+
+	return null;
+}
+
 /** Stable key for the same logical target (host + port). */
 export function socketEndpointKey(url: string): string | null {
 	try {

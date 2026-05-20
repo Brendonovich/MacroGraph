@@ -3,6 +3,7 @@ import type { OutboundWsBridge } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
 import { createCtx, type Ctx } from "./ctx";
+import { canonicalWsUrl, findConfiguredWsUrl } from "./wsPersist";
 
 /** Label/value delimiter for string suggestions; must match TextInput. */
 const WS_SUGGEST_SEP = "\x1e";
@@ -13,11 +14,8 @@ function resolveWsUrl(input: string, sockets: Ctx): string {
 	if (sepIdx !== -1) {
 		url = url.slice(sepIdx + WS_SUGGEST_SEP.length).trim();
 	}
-	if (sockets.websockets.has(url)) return url;
-	for (const [u, name] of sockets.wsNames) {
-		if (name === url) return u;
-	}
-	return url;
+	const configured = findConfiguredWsUrl(url, sockets.websockets.keys(), sockets.wsNames);
+	return configured ?? canonicalWsUrl(url);
 }
 
 export function pkg(opts?: { outboundWs?: OutboundWsBridge }) {
