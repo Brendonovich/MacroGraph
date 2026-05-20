@@ -5,5 +5,6 @@ export function mosaicDebug(
 	data?: Record<string, unknown>,
 ) {
 	if (!MOSAIC_DEBUG) return;
-	console.log("[mosaic-debug]", phase, data ?? {});
+	void phase;
+	void data;
 }

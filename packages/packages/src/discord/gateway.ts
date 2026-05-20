@@ -13,6 +13,15 @@ import type { GUILD_MEMBER_SCHEMA } from "./schemas";
 
 export function createGateway([, setPersisted]: PersistedStore) {
 	const sockets = new ReactiveMap<string, WebSocket>();
+	const heartbeatTimers = new Map<string, ReturnType<typeof setInterval>>();
+
+	function clearHeartbeat(botId: string) {
+		const t = heartbeatTimers.get(botId);
+		if (t !== undefined) {
+			clearInterval(t);
+			heartbeatTimers.delete(botId);
+		}
+	}
 
 	const connectSocket = async (account: BotAccount) => {
 		if (getRemoteShellMode()) return;
@@ -39,9 +48,15 @@ export function createGateway([, setPersisted]: PersistedStore) {
 						const { heartbeat_interval } = d;
 						ws.send(JSON.stringify({ op: 1, d: null }));
 
-						setInterval(() => {
-							ws.send(JSON.stringify({ op: 1, d: seq }));
-						}, heartbeat_interval);
+						clearHeartbeat(botId);
+						heartbeatTimers.set(
+							botId,
+							setInterval(() => {
+								if (ws.readyState === WebSocket.OPEN) {
+									ws.send(JSON.stringify({ op: 1, d: seq }));
+								}
+							}, heartbeat_interval),
+						);
 
 						state = "AwaitingHeartbeatAck";
 
@@ -73,6 +88,7 @@ export function createGateway([, setPersisted]: PersistedStore) {
 				}
 			};
 			ws.onclose = () => {
+				clearHeartbeat(botId);
 				sockets.delete(botId);
 			};
 		});
@@ -81,6 +97,7 @@ export function createGateway([, setPersisted]: PersistedStore) {
 	};
 
 	const disconnectSocket = (botId: string) => {
+		clearHeartbeat(botId);
 		const ws = sockets.get(botId);
 		if (!ws) return;
 

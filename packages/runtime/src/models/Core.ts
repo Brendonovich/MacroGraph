@@ -61,32 +61,40 @@ function nodeRunningKey(node: Node) {
 /** Tracks nodes currently executing (for sustained UI feedback on long runs). */
 class NodeRunningTracker {
 	private keys = new Set<string>();
-	private listeners = new Set<() => void>();
+	private listeners = new Map<string, Set<() => void>>();
 
 	start(node: Node) {
 		const key = nodeRunningKey(node);
 		if (this.keys.has(key)) return;
 		this.keys.add(key);
 		NODE_EMIT.emit(node);
-		this.notify();
+		this.notifyKey(key);
 	}
 
 	end(node: Node) {
-		if (!this.keys.delete(nodeRunningKey(node))) return;
-		this.notify();
+		const key = nodeRunningKey(node);
+		if (!this.keys.delete(key)) return;
+		this.notifyKey(key);
 	}
 
 	isRunning(node: Node) {
 		return this.keys.has(nodeRunningKey(node));
 	}
 
-	subscribe(cb: () => void) {
-		this.listeners.add(cb);
-		return () => this.listeners.delete(cb);
+	/** Only notifies when this node's running state changes (not global fan-out). */
+	subscribe(node: Node, cb: () => void) {
+		const key = nodeRunningKey(node);
+		if (!this.listeners.has(key)) this.listeners.set(key, new Set());
+		const set = this.listeners.get(key)!;
+		set.add(cb);
+		return () => {
+			set.delete(cb);
+			if (set.size === 0) this.listeners.delete(key);
+		};
 	}
 
-	private notify() {
-		for (const cb of this.listeners) cb();
+	private notifyKey(key: string) {
+		for (const cb of this.listeners.get(key) ?? []) cb();
 	}
 }
 
@@ -126,6 +134,11 @@ export class Core {
 	packages = [] as Package[];
 
 	eventNodeMappings = new Map<Package, Map<string, Set<Node>>>();
+
+	/** False until {@link finalizeProjectSetup} runs (after load / first editor mount). */
+	queueProcessingEnabled = false;
+
+	private projectSetupGeneration = 0;
 
 	fetch: typeof fetch;
 	/** POST multipart with a file streamed from disk (desktop). Falls back to fetch when unset. */
@@ -244,6 +257,9 @@ export class Core {
 
 	// async bc of #402, the project's reactivity needs to be entirely decoupled from the ui
 	async load(getProject: (core: Core) => Promise<Project>) {
+		const generation = ++this.projectSetupGeneration;
+		this.queueProcessingEnabled = false;
+
 		await new Promise<void>((res) => {
 			this.eventNodeMappings.clear();
 			getProject(this).then((project) => {
@@ -254,6 +270,39 @@ export class Core {
 			});
 		});
 		this.project.disableSave = false;
+		await this.finalizeProjectSetup(generation);
+	}
+
+	/** Let node/IO effects flush after deserialize before firing startup events. */
+	private flushReactiveSetup(): Promise<void> {
+		return new Promise((resolve) => {
+			queueMicrotask(() => {
+				queueMicrotask(() => {
+					setTimeout(resolve, 0);
+				});
+			});
+		});
+	}
+
+	/**
+	 * Runs after the project graph is loaded and reactive listeners are registered.
+	 * Emits Macrograph Started, then allows queues to process.
+	 */
+	async finalizeProjectSetup(generation = ++this.projectSetupGeneration) {
+		this.queueProcessingEnabled = false;
+		await this.flushReactiveSetup();
+		if (generation !== this.projectSetupGeneration) return;
+
+		const utilsPkg = this.packages.find((p) => p.name === "Utils");
+		if (utilsPkg) {
+			this.emitEvent(utilsPkg as Package<any, any>, {
+				name: "MGLoaded",
+				data: {},
+			});
+		}
+
+		this.queueProcessingEnabled = true;
+		this.project.resumeDeferredQueues();
 	}
 
 	schema(pkg: string, name: string) {
@@ -283,30 +332,34 @@ export class Core {
 
 	invocationReporter?: (report: NodeInvocationReport) => void;
 
-	print(msg: string, node: Node) {
+	print(msg: string, node?: Node) {
 		this.consoleLog("log", msg, node);
 	}
 
-	warn(msg: string, node: Node) {
+	warn(msg: string, node?: Node) {
 		this.consoleLog("warn", msg, node);
 	}
 
-	error(msg: string, node: Node) {
+	error(msg: string, node?: Node) {
 		this.consoleLog("error", msg, node);
 	}
 
-	private consoleLog(type: PrintType, msg: string, node: Node) {
+	private consoleLog(type: PrintType, msg: string, node?: Node) {
 		for (const cb of this.printListeners) {
 			cb({
 				type,
 				value: msg,
 				timestamp: new Date(),
-				graph: {
-					name: node.graph.name,
-					id: node.graph.id,
-					kind: node.graph.kind,
-				},
-				node: { name: node.state.name, id: node.id },
+				graph: node
+					? {
+							name: node.graph.name,
+							id: node.graph.id,
+							kind: node.graph.kind,
+						}
+					: { name: "", id: -1, kind: "graph" },
+				node: node
+					? { name: node.state.name, id: node.id }
+					: { name: "", id: -1 },
 			});
 		}
 	}
@@ -345,6 +398,8 @@ export type NodeInvocationReport = {
 export class ExecutionContext {
 	data = new Map<DataOutput<any> | ScopeOutput, any>();
 	variableScope: Map<string, any> | null = null;
+	/** Queue graph run: id of the {@link QueueEntry} being executed. */
+	queueEntryId?: string;
 
 	private replayInputByPinId?: Record<string, unknown>;
 	private replaySnapshotNodeId?: number;
@@ -393,6 +448,7 @@ export class ExecutionContext {
 					data,
 					properties: node.schema.properties ?? {},
 					graph: node.graph,
+					node,
 				}),
 			);
 		} catch (e) {
@@ -500,6 +556,7 @@ export class ExecutionContext {
 				if (!variable) return;
 				variable.value = value;
 			},
+			queueEntryId: execCtx.queueEntryId,
 		};
 	}
 
@@ -569,6 +626,7 @@ export class ExecutionContext {
 						io: node.ioReturn,
 						properties: node.schema.properties ?? {},
 						graph: node.graph,
+						node,
 					}),
 				);
 			} catch (e) {
@@ -607,6 +665,8 @@ export class ExecutionContext {
 			const msg = err instanceof Error ? err.message : String(err);
 			node.graph.project.core.error(`${node.state.name}: ${msg}`, node);
 		}
+
+		if (!node.state.trackInvocations) return;
 
 		const reporter = node.graph.project.core.invocationReporter;
 		if (!reporter) return;

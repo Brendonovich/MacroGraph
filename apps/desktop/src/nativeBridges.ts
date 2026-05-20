@@ -10,6 +10,8 @@ export const obsNativeBridge: ObsNativeBridge = {
 		]) as unknown as Promise<void>,
 	disconnect: (args) =>
 		client.mutation(["obsNative.disconnect", args.url]) as unknown as Promise<void>,
+	disconnectAll: () =>
+		client.mutation(["obsNative.disconnectAll", null]) as unknown as Promise<void>,
 	call: (args) =>
 		client.mutation([
 			"obsNative.call",
@@ -36,6 +38,14 @@ export const outboundWsBridge: OutboundWsBridge = {
 		client.mutation(["outboundWs.open", url]) as unknown as Promise<void>,
 	close: (url) =>
 		client.mutation(["outboundWs.close", url]) as unknown as Promise<void>,
+	closeAll: () =>
+		client.mutation(["outboundWs.closeAll", null]) as unknown as Promise<void>,
+	list: () =>
+		client.query(["outboundWs.list", null]) as unknown as Promise<string[]>,
+	isConnected: (url) =>
+		client.query(["outboundWs.isConnected", url]) as unknown as Promise<boolean>,
+	pruneExcept: (keep) =>
+		client.mutation(["outboundWs.pruneExcept", keep]) as unknown as Promise<void>,
 	send: (args) =>
 		client.mutation(["outboundWs.send", args]) as unknown as Promise<void>,
 	subscribeMessages(url, handler) {

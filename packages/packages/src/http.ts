@@ -171,9 +171,7 @@ export function pkg(core: Core) {
 
 			if (response.body && response.status === 200) {
 				const data = await streamToArrayBuffer(response.body);
-				console.log("array buffer created");
 				writeBinaryFile(ctx.getInput(io.path), data);
-				console.log("file written");
 				ctx.setOutput(io.responseBody, None);
 			} else {
 				ctx.setOutput(

@@ -502,7 +502,6 @@ export function installRemoteHostBridge(opts: {
 					const body = parsed as Record<string, unknown>;
 					const cursor = parseCursorMessage(body);
 					if (!cursor) {
-						console.warn("remoteHostBridge: failed to parse cursor", body);
 						return;
 					}
 					const name = userNames.get(clientId) ?? `client-${clientId}`;
@@ -556,7 +555,6 @@ export function installRemoteHostBridge(opts: {
 					return;
 				}
 
-				console.warn("remoteHostBridge: unknown message type", wireType);
 			},
 		});
 
@@ -578,7 +576,16 @@ export function installRemoteHostBridge(opts: {
 	let cleanupNodeEmit: (() => void) | undefined;
 	createEffect(() => {
 		if (!remoteHostSettings.enabled) return;
+		let nodeExecWindowStart = 0;
+		let nodeExecWindowCount = 0;
 		cleanupNodeEmit = NODE_EMIT.onAny((node) => {
+			const now = Date.now();
+			if (now - nodeExecWindowStart > 1000) {
+				nodeExecWindowStart = now;
+				nodeExecWindowCount = 0;
+			}
+			if (nodeExecWindowCount >= 30) return;
+			nodeExecWindowCount++;
 			const port = remoteHostSettings.port;
 			const data = stringifyNodeExecuteWire(graphRefOf(node.graph), node.id);
 			void client.mutation([

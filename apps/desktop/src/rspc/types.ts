@@ -2,18 +2,24 @@
 
 export type Procedures = {
     queries: 
-        { key: "fs.list", input: string, result: Entry[] },
+        { key: "fs.list", input: string, result: Entry[] } | 
+        { key: "outboundWs.isConnected", input: string, result: boolean } | 
+        { key: "outboundWs.list", input: never, result: string[] },
     mutations: 
         { key: "obsNative.call", input: ObsCallArgs, result: any } | 
         { key: "obsNative.callBatch", input: ObsBatchArgs, result: any[] } | 
         { key: "obsNative.connect", input: ObsConnectArgs, result: null } | 
         { key: "obsNative.disconnect", input: string, result: null } | 
+        { key: "obsNative.disconnectAll", input: never, result: null } | 
         { key: "outboundWs.close", input: string, result: null } | 
+        { key: "outboundWs.closeAll", input: never, result: null } | 
         { key: "outboundWs.open", input: string, result: null } | 
+        { key: "outboundWs.pruneExcept", input: string[], result: null } | 
         { key: "outboundWs.send", input: OutboundSendArgs, result: null } | 
         { key: "remoteHost.send", input: { port: number; client: number | null; except_client?: number | null; data: string }, result: null } | 
         { key: "remoteHost.setPassword", input: string | null, result: null } | 
         { key: "shell.execute", input: string, result: null } | 
+        { key: "websocket.disconnectAllClients", input: never, result: null } | 
         { key: "websocket.send", input: { port: number; client: number | null; data: string }, result: null },
     subscriptions: 
         { key: "loginListen", input: never, result: string | null } | 
@@ -24,20 +30,20 @@ export type Procedures = {
         { key: "websocket.server", input: number, result: [number, Message] }
 };
 
+export type OutboundClientMsg = "Open" | { Text: string } | "Closed" | { Error: string }
+
 export type ObsBatchArgs = { url: string; requests: any[] }
-
-export type OutboundClientMsg = "Open" | { Text: string } | "Closed"
-
-export type RemoteServerMessage = { Text: string } | "Connected" | { ConnectedWithUser: { username: string } } | "Disconnected"
-
-export type ObsEventMsg = { lifecycle?: string | null; event_type?: string | null; event_data?: any | null }
 
 export type ObsConnectArgs = { url: string; password: string | null }
 
-export type OutboundSendArgs = { url: string; data: string }
+export type Message = { Text: string } | "Connected" | "Disconnected"
 
-export type Entry = { Dir: string } | { File: string }
+export type OutboundSendArgs = { url: string; data: string }
 
 export type ObsCallArgs = { url: string; requestType: string; requestData: any | null }
 
-export type Message = { Text: string } | "Connected" | "Disconnected"
+export type Entry = { Dir: string } | { File: string }
+
+export type ObsEventMsg = { lifecycle?: string | null; eventType?: string | null; eventData?: any | null }
+
+export type RemoteServerMessage = { Text: string } | "Connected" | { ConnectedWithUser: { username: string } } | "Disconnected"

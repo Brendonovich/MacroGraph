@@ -465,7 +465,20 @@ export function deserializeQueue(
 	}
 	const rawData = data as Record<string, unknown>;
 	const rawItems = "value" in rawData ? rawData.value : rawData.items ?? [];
-	queue.items = (rawItems as any[]).map((item: any) => deserializeValue(item, type));
+	queue.items = (rawItems as any[]).map((item: any) => {
+		if (
+			item &&
+			typeof item === "object" &&
+			typeof item.id === "string" &&
+			"value" in item
+		) {
+			return {
+				id: item.id,
+				value: deserializeValue(item.value, type),
+			};
+		}
+		return runtime.createQueueEntry(deserializeValue(item, type));
+	});
 	queue.paused = data.paused ?? false;
 	return queue;
 }
@@ -579,6 +592,7 @@ export function deserializeNode(
 			{},
 		),
 		foldPins: data.foldPins,
+		trackInvocations: data.trackInvocations,
 	});
 
 	for (const [key, value] of Object.entries(data.defaultValues)) {

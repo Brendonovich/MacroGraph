@@ -211,6 +211,35 @@ export function pkg() {
 	});
 
 	pkg.createSchema({
+		name: "Get Random List Item",
+		type: "pure",
+		createIO({ io }) {
+			const w = io.wildcard("");
+
+			return {
+				list: io.dataInput({
+					id: "list",
+					type: t.list(t.wildcard(w)),
+				}),
+				return: io.dataOutput({
+					id: "return",
+					name: "Value",
+					type: t.option(t.wildcard(w)),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			const array = ctx.getInput(io.list);
+			if (array.length === 0) {
+				ctx.setOutput(io.return, Maybe(undefined));
+				return;
+			}
+			const index = Math.floor(Math.random() * array.length);
+			ctx.setOutput(io.return, Maybe(array[index]));
+		},
+	});
+
+	pkg.createSchema({
 		name: "Join String List",
 		type: "pure",
 		createIO({ io }) {

@@ -4672,6 +4672,7 @@ dependencies = [
  "sha1_smol",
  "simdutf8",
  "tokio",
+ "tokio-native-tls",
  "tokio-util",
 ]
 

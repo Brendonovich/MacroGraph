@@ -8,6 +8,8 @@ import { ExecutionContext } from "./Core";
 import type { Project } from "./Project";
 import { DataOutput } from "./IO";
 
+export const MAX_FUNCTION_QUEUE_ITEMS = 500;
+
 export type FnQueueItem = {
 	functionId: number;
 	data: Record<string, any>;
@@ -30,12 +32,13 @@ export class FunctionQueue extends Disposable {
 	owner: Project;
 
 	items: FnQueueItem[] = [];
+	/** Items currently executing (shown in UI). */
+	running: FnQueueItem[] = [];
 	paused: boolean = false;
 	processing: boolean = false;
 	inFlight: number = 0;
 
 	private runningItems = new Set<FnQueueItem>();
-	private drainWaiters: Array<() => void> = [];
 
 	constructor(args: FunctionQueueArgs) {
 		super();
@@ -63,6 +66,14 @@ export class FunctionQueue extends Disposable {
 					},
 				),
 			);
+			createEffect(
+				on(
+					() => trackDeep(self.running),
+					() => {
+						self.owner.emit("modified");
+					},
+				),
+			);
 		});
 
 		return self;
@@ -71,9 +82,21 @@ export class FunctionQueue extends Disposable {
 	addItem(item: FnQueueItem): Promise<Record<string, any>> {
 		return new Promise((resolve) => {
 			item.resolve = resolve;
-			this.items = [...this.items, item];
+			const next = [...this.items, item];
+			let droppedCount = 0;
+			while (next.length > MAX_FUNCTION_QUEUE_ITEMS) {
+				const dropped = next.shift();
+				droppedCount++;
+				if (dropped?.resolve) dropped.resolve({});
+			}
+			if (droppedCount > 0) {
+				this.owner.core.warn(
+					`Function queue "${this.name}" dropped ${droppedCount} waiter(s) (max ${MAX_FUNCTION_QUEUE_ITEMS})`,
+				);
+			}
+			this.items = next;
 			if (!this.paused) {
-				void this.startProcessing();
+				this.scheduleProcessing();
 			}
 		});
 	}
@@ -81,7 +104,7 @@ export class FunctionQueue extends Disposable {
 	setPaused(value: boolean) {
 		this.paused = value;
 		if (!value && this.items.length > 0) {
-			void this.startProcessing();
+			this.scheduleProcessing();
 		}
 	}
 
@@ -94,90 +117,125 @@ export class FunctionQueue extends Disposable {
 		this.items = this.items.filter((i) => i.functionId !== functionId);
 	}
 
+	private claimNextItem(): FnQueueItem | undefined {
+		const item = this.items[0];
+		if (item === undefined) return undefined;
+		this.removeItem(item);
+		return item;
+	}
+
+	private requeueItem(item: FnQueueItem) {
+		this.items = [item, ...this.items];
+	}
+
 	advance(node?: Node): boolean {
 		if (this.paused) {
 			this.owner.core.error("Function queue is paused", node);
 			return false;
 		}
 
-		const next = this.items.find((item) => !this.runningItems.has(item));
-		if (!next) {
+		const next = this.claimNextItem();
+		if (next === undefined) {
 			this.owner.core.error("No waiting items to advance", node);
 			return false;
 		}
 
-		void this.runFunctionItem(next);
-
-		if (!this.processing && this.items.length > 0 && !this.paused) {
-			void this.startProcessing();
-		}
+		void this.runFunctionItem(next, true);
 
 		return true;
 	}
 
-	private async drainInFlight() {
-		if (this.inFlight === 0) return;
-		await new Promise<void>((resolve) => {
-			this.drainWaiters.push(resolve);
+	private maybeScheduleNext() {
+		if (this.paused) return;
+		if (this.items.length === 0) return;
+		if (this.inFlight > 0) return;
+		this.scheduleProcessing();
+	}
+
+	private processingScheduled = false;
+	private deferredProcessing = false;
+
+	resumeDeferredProcessing() {
+		if (!this.deferredProcessing) return;
+		this.deferredProcessing = false;
+		this.scheduleProcessing();
+	}
+
+	private scheduleProcessing() {
+		if (!this.owner.core.queueProcessingEnabled) {
+			this.deferredProcessing = true;
+			return;
+		}
+		if (this.processingScheduled || this.processing) return;
+		if (this.items.length === 0 || this.paused) return;
+		this.processingScheduled = true;
+		queueMicrotask(() => {
+			this.processingScheduled = false;
+			void this.startProcessing();
 		});
 	}
 
-	private notifyDrain() {
-		if (this.inFlight === 0) {
-			const waiters = this.drainWaiters;
-			this.drainWaiters = [];
-			for (const resolve of waiters) resolve();
+	private addRunning(item: FnQueueItem) {
+		if (this.runningItems.has(item)) return;
+		this.runningItems.add(item);
+		this.running = [...this.running, item];
+	}
+
+	private removeRunning(item: FnQueueItem) {
+		if (!this.runningItems.has(item)) return;
+		this.runningItems.delete(item);
+		const idx = this.running.indexOf(item);
+		if (idx >= 0) {
+			this.running = [
+				...this.running.slice(0, idx),
+				...this.running.slice(idx + 1),
+			];
 		}
 	}
 
 	async startProcessing() {
 		if (this.processing) return;
+		if (this.paused || this.items.length === 0) return;
+		if (this.inFlight > 0) return;
 
 		this.processing = true;
 		try {
-			while (this.items.length > 0 && !this.paused) {
-				if (this.inFlight > 0) {
-					await this.drainInFlight();
-				}
-
-				const item = this.items[0];
-				if (!item || this.runningItems.has(item)) {
-					if (this.inFlight > 0) await this.drainInFlight();
-					if (this.items.length === 0 || this.paused) break;
-					const head = this.items[0];
-					if (!head || this.runningItems.has(head)) break;
-					continue;
-				}
-
-				await this.runFunctionItem(item);
-			}
+			const item = this.claimNextItem();
+			if (item === undefined) return;
+			void this.runFunctionItem(item, true);
 		} finally {
 			this.processing = false;
-			if (this.items.length > 0 && !this.paused && this.inFlight === 0) {
-				void this.startProcessing();
-			}
 		}
 	}
 
-	private async runFunctionItem(item: FnQueueItem) {
+	private async runFunctionItem(
+		item: FnQueueItem,
+		alreadyDequeued = false,
+	) {
 		if (this.runningItems.has(item)) return;
 
 		if (item.functionId === undefined) {
-			this.removeItem(item);
+			if (alreadyDequeued) this.requeueItem(item);
+			else this.removeItem(item);
+			this.maybeScheduleNext();
 			return;
 		}
 
 		const fn = this.owner.functions.get(item.functionId);
 		if (!fn) {
 			if (item.resolve) item.resolve({});
-			this.removeItem(item);
+			if (alreadyDequeued) this.requeueItem(item);
+			else this.removeItem(item);
+			this.maybeScheduleNext();
 			return;
 		}
 
 		const fnGraph = this.owner.getGraphByKind("function", fn.graphId);
 		if (!fnGraph) {
 			if (item.resolve) item.resolve({});
-			this.removeItem(item);
+			if (alreadyDequeued) this.requeueItem(item);
+			else this.removeItem(item);
+			this.maybeScheduleNext();
 			return;
 		}
 
@@ -187,11 +245,14 @@ export class FunctionQueue extends Disposable {
 			) ?? [...fnGraph.nodes.values()][0];
 		if (!inNode) {
 			if (item.resolve) item.resolve({});
-			this.removeItem(item);
+			if (alreadyDequeued) this.requeueItem(item);
+			else this.removeItem(item);
+			this.maybeScheduleNext();
 			return;
 		}
 
-		this.runningItems.add(item);
+		if (!alreadyDequeued) this.removeItem(item);
+		this.addRunning(item);
 		this.inFlight++;
 
 		try {
@@ -214,14 +275,11 @@ export class FunctionQueue extends Disposable {
 			await execCtx.runAsync({});
 			await this.finishItem(item, execCtx, fnGraph);
 		} finally {
-			this.runningItems.delete(item);
-			this.removeItem(item);
+			this.removeRunning(item);
+			if (!alreadyDequeued) this.removeItem(item);
 			this.inFlight--;
-			this.notifyDrain();
 
-			if (!this.processing && this.items.length > 0 && !this.paused) {
-				void this.startProcessing();
-			}
+			this.maybeScheduleNext();
 		}
 	}
 

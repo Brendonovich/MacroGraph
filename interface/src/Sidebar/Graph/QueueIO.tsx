@@ -44,9 +44,40 @@ function QueueSettings(props: { queue: Queue }) {
 						<span class="text-sm text-neutral-200">Paused</span>
 					</label>
 					<div class="text-xs text-neutral-400">
-						{props.queue.items.length} item{props.queue.items.length !== 1 ? 's' : ''} in queue
+						{props.queue.running.length} running, {props.queue.items.length} waiting
 					</div>
 				</div>
+			</div>
+		</SidebarSection>
+	);
+}
+
+function QueueRunning(props: { queue: Queue }) {
+	const running = createMemo(() => props.queue.running);
+
+	return (
+		<SidebarSection title="Running" class="flex flex-col max-h-48">
+			<div class="flex-1 overflow-y-auto flex flex-col p-2 space-y-2">
+				<Show
+					when={running().length > 0}
+					fallback={
+						<p class="text-xs text-neutral-500 px-1">No items running</p>
+					}
+				>
+					<For each={running()}>
+						{(entry) => (
+							<div class="flex flex-row items-end gap-1 rounded p-1 bg-amber-950/40 border border-amber-700/40 text-left w-full">
+								<pre class="flex-1 whitespace-pre-wrap max-w-full text-xs text-amber-100/90">
+									{JSON.stringify(
+										serializeValue(entry.value, props.queue.itemType),
+										null,
+										2,
+									)}
+								</pre>
+							</div>
+						)}
+					</For>
+				</Show>
 			</div>
 		</SidebarSection>
 	);
@@ -57,7 +88,7 @@ function QueueItems(props: { queue: Queue }) {
 	const items = createMemo(() => props.queue.items);
 
 	return (
-		<SidebarSection title="Queue Items" class="flex-1 overflow-y-hidden flex flex-col">
+		<SidebarSection title="Waiting" class="flex-1 overflow-y-hidden flex flex-col">
 			<Show when={items().length > 0}>
 				<div class="flex flex-row justify-end p-1">
 					<button
@@ -76,12 +107,12 @@ function QueueItems(props: { queue: Queue }) {
 			</Show>
 			<div class="flex-1 overflow-y-auto flex flex-col p-2 space-y-2">
 				<For each={items()}>
-					{(item, index) => (
+					{(entry, index) => (
 						<ContextMenu>
 							<ContextMenu.Trigger class="flex flex-row items-end gap-1 rounded p-1 bg-black/30 text-left w-full">
 								<pre class="flex-1 whitespace-pre-wrap max-w-full text-xs">
 									{JSON.stringify(
-										serializeValue(item, props.queue.itemType),
+										serializeValue(entry.value, props.queue.itemType),
 										null,
 										2,
 									)}
@@ -113,6 +144,7 @@ export function QueueIO(props: { queue: Queue }) {
 	return (
 		<>
 			<QueueSettings queue={props.queue} />
+			<QueueRunning queue={props.queue} />
 			<QueueItems queue={props.queue} />
 		</>
 	);

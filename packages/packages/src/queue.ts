@@ -1,4 +1,4 @@
-import { Package, type PropertyDef } from "@macrograph/runtime";
+import { Package, hasConnection, type PropertyDef } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
 const queueProperty = {
@@ -217,13 +217,23 @@ export function pkg(core?: any) {
 			)?.[1];
 			if (!queue) return;
 
-			const item = ctx.getInput(io.item);
-
-			queue.completeItem(item);
+			const entryId = ctx.queueEntryId;
+			let eventItem = entryId
+				? queue.getEntryValue(entryId)
+				: queue.getActiveItem();
+			if (entryId) queue.completeEntry(entryId);
+			else queue.completeItem();
+			if (io.item && hasConnection(io.item)) {
+				try {
+					eventItem = ctx.getInput(io.item);
+				} catch {
+					// Missing optional data must not fail iteration.
+				}
+			}
 
 			pkg.emitEvent({
 				name: `iterated:${queue.id}`,
-				data: { queueId: queue.id, item },
+				data: { queueId: queue.id, item: eventItem },
 			});
 		},
 	});

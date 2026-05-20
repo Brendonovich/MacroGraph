@@ -16,8 +16,8 @@ import { type GraphRef, graphRefKey } from "./graphRef";
 export type { GraphRef } from "./graphRef";
 export { graphRefKey, graphRefsEqual } from "./graphRef";
 import { GraphFunction, type FunctionArgs } from "./Function";
-import type { ResourceType } from "./Package";
-import { Queue, type QueueArgs } from "./Queue";
+import { resolveResourceSources, type ResourceType } from "./Package";
+import { Queue, normalizeQueueEntries, type QueueArgs } from "./Queue";
 import { FunctionQueue, type FunctionQueueArgs } from "./FunctionQueue";
 import { Variable, type VariableArgs } from "./Variable";
 
@@ -294,6 +294,15 @@ export class Project {
 		return fn;
 	}
 
+	resumeDeferredQueues() {
+		for (const [, q] of this.queues) {
+			q.resumeDeferredProcessing();
+		}
+		for (const [, q] of this.functionQueues) {
+			q.resumeDeferredProcessing();
+		}
+	}
+
 	deleteFunction(id: number) {
 		const fn = this.functions.get(id);
 		if (!fn) return;
@@ -329,7 +338,7 @@ export class Project {
 		if ("sources" in args.type) {
 			item = {
 				...itemBase,
-				sourceId: args.type.sources(args.type.package)[0]?.id ?? null,
+				sourceId: resolveResourceSources(args.type)[0]?.id ?? null,
 			};
 		} else {
 			item = { ...itemBase, value: args.type.type.default() };
@@ -400,7 +409,7 @@ export class Project {
 
 	setQueueValue(id: number, value: any[]) {
 		const queue = this.queues.get(id);
-		if (queue) queue.items = value;
+		if (queue) queue.items = normalizeQueueEntries(value);
 	}
 
 	removeQueue(id: number) {

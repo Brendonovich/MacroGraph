@@ -55,6 +55,9 @@ export const wsProvider = createWsProvider({
 	async stopServer(unsubscribe) {
 		unsubscribe();
 	},
+	async disconnectAllClients() {
+		return client.mutation(["websocket.disconnectAllClients", null]);
+	},
 	async sendMessage(data) {
 		return client.mutation([
 			"websocket.send",

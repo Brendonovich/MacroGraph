@@ -2381,10 +2381,6 @@ export function pkg(core: Core) {
 		},
 	});
 
-	setTimeout(() => {
-		pkg.emitEvent({ name: "MGLoaded", data: {} });
-	}, 5000);
-
 	pkg.createEventSchema({
 		event: "custom",
 		name: "Custom Event",

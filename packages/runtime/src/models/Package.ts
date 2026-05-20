@@ -260,6 +260,10 @@ export type OnEvent<TEventsMap extends EventsMap = EventsMap> = (
 	_: Events<TEventsMap>,
 ) => void;
 
+type ResourceSourcesFn<TValue, TPkg extends Package<any, any>> = (
+	pkg: TPkg,
+) => Array<{ id: string; display: string; value: TValue }>;
+
 export type ResourceType<
 	TValue,
 	TPkg extends Package<any, any> = Package<any, any>,
@@ -268,9 +272,24 @@ export type ResourceType<
 			sources: (
 				pkg: TPkg,
 			) => Array<{ id: string; display: string; value: TValue }>;
+			/** Un-memoized `sources`; use when resolving properties outside reactive scope (graph exec). */
+			sourcesNow?: ResourceSourcesFn<TValue, TPkg>;
 	  }
 	| { type: BaseType<TValue> }
 );
+
+/** Fresh resource sources list (not a stale Solid memo snapshot). */
+export function resolveResourceSources<TValue, TPkg extends Package<any, any>>(
+	type: ResourceType<TValue, TPkg>,
+): Array<{ id: string; display: string; value: TValue }> {
+	if ("sourcesNow" in type && type.sourcesNow) {
+		return type.sourcesNow(type.package);
+	}
+	if ("sources" in type) {
+		return type.sources(type.package);
+	}
+	return [];
+}
 
 export type inferResourceTypeValue<T> = T extends ResourceType<
 	infer TValue,
@@ -295,6 +314,7 @@ export function createResourceType<
 
 	if ("sources" in type) {
 		const oldSources = type.sources;
+		type.sourcesNow = oldSources;
 		type.sources = createLazyMemo(() => oldSources(type.package));
 	}
 

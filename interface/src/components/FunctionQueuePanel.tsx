@@ -8,6 +8,46 @@ import {
 } from "./Graph/ContextMenu";
 import { useInterfaceContext } from "../context";
 
+function FunctionQueueRunning(props: {
+	queue: FunctionQueue;
+	functionName: (functionId: number) => string;
+}) {
+	const running = createMemo(() => props.queue.running);
+
+	return (
+		<section class="flex flex-col gap-3">
+			<h2 class="text-sm font-medium text-neutral-300 uppercase tracking-wide">
+				Running
+			</h2>
+			<Show
+				when={running().length > 0}
+				fallback={
+					<p class="text-sm text-neutral-500 rounded-lg border border-dashed border-neutral-700 p-4 text-center">
+						No items running
+					</p>
+				}
+			>
+				<div class="flex flex-col gap-2">
+					<For each={running()}>
+						{(item) => (
+							<div class="flex flex-row items-start gap-2 rounded-lg border border-amber-700/40 bg-amber-950/40 p-3 text-left w-full">
+								<div class="flex flex-col gap-1 min-w-0 flex-1">
+									<span class="text-sm font-medium text-amber-200">
+										{props.functionName(item.functionId)}
+									</span>
+									<pre class="whitespace-pre-wrap text-xs text-amber-100/90 overflow-x-auto">
+										{JSON.stringify(item.data, null, 2)}
+									</pre>
+								</div>
+							</div>
+						)}
+					</For>
+				</div>
+			</Show>
+		</section>
+	);
+}
+
 export function FunctionQueuePanel(props: { queue: FunctionQueue }) {
 	const ctx = useInterfaceContext();
 	const items = createMemo(() => props.queue.items);
@@ -47,15 +87,17 @@ export function FunctionQueuePanel(props: { queue: FunctionQueue }) {
 						<span class="text-sm text-neutral-200">Paused</span>
 					</label>
 					<div class="text-xs text-neutral-400 pt-1">
-						{props.queue.items.length} item{props.queue.items.length !== 1 ? "s" : ""} in queue
+						{props.queue.running.length} running, {props.queue.items.length} waiting
 					</div>
 				</div>
 			</section>
 
+			<FunctionQueueRunning queue={props.queue} functionName={functionName} />
+
 			<section class="flex flex-col gap-3 flex-1 min-h-0">
 				<div class="flex flex-row items-center justify-between">
 					<h2 class="text-sm font-medium text-neutral-300 uppercase tracking-wide">
-						Queue items
+						Waiting
 					</h2>
 					<Show when={items().length > 0}>
 						<button

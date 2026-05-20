@@ -127,6 +127,8 @@ export default function Editor() {
             );
           },
         });
+      } else {
+        await core.finalizeProjectSetup();
       }
 
       setLoaded(true);

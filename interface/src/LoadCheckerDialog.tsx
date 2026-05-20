@@ -27,6 +27,7 @@ import {
 import clsx from "clsx";
 import { For, Show, createMemo, createRoot, createSignal } from "solid-js";
 
+import { saveProjectToStorage } from "./projectStorage";
 import { createTokenisedSearchFilter, tokeniseString } from "./util";
 
 type LoadConfirmResult = {
@@ -459,7 +460,7 @@ export function LoadCheckerDialog() {
 			modal
 		>
 			<Show when={pending()} keyed>
-				{(p) => <LoadCheckerDialogContent {...p()} />}
+				{(p) => <LoadCheckerDialogContent {...p} />}
 			</Show>
 		</Dialog>
 	);
@@ -470,6 +471,8 @@ export async function loadParsedProject(
 	parsed: serde.Project,
 	options?: {
 		skipConfirmation?: boolean;
+		/** Persist loaded project to IndexedDB under this workspace key (e.g. file path). */
+		persistWorkspaceKey?: string;
 		onAfterLoad?: (data: serde.Project) => Promise<void>;
 	},
 ): Promise<boolean> {
@@ -492,10 +495,16 @@ export async function loadParsedProject(
 		);
 		await core.load((c) => deserializeProject(c, data));
 		await options?.onAfterLoad?.(data);
+		if (options?.persistWorkspaceKey) {
+			await saveProjectToStorage(core.project, options.persistWorkspaceKey);
+		}
 		return true;
 	}
 
 	await core.load((c) => deserializeProject(c, migrated));
 	await options?.onAfterLoad?.(migrated);
+	if (options?.persistWorkspaceKey) {
+		await saveProjectToStorage(core.project, options.persistWorkspaceKey);
+	}
 	return true;
 }

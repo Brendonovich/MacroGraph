@@ -4,15 +4,31 @@ import { createSignal } from "solid-js";
 
 export type Ctx = ReturnType<typeof createCtx>;
 
-export function createCtx() {
-	const ports = [
-		59129, 20000, 39273, 42152, 43782, 46667, 35679, 37170, 38501, 33952, 30546,
-	];
+const PORTS = [
+	59129, 20000, 39273, 42152, 43782, 46667, 35679, 37170, 38501, 33952, 30546,
+];
 
+const ENABLED_KEY = "voicemodEnabled";
+const RETRY_MS = 30_000;
+
+function readEnabled(): boolean {
+	try {
+		return localStorage.getItem(ENABLED_KEY) === "1";
+	} catch {
+		return false;
+	}
+}
+
+export function createCtx() {
+	const [enabled, setEnabledState] = createSignal(readEnabled());
 	const [state, setState] = createSignal<Option<WebSocket>>(None);
+	const [connecting, setConnecting] = createSignal(false);
 	const [voices, setVoices] = createSignal<Map<string, string>>(new Map());
 	const [voiceChanger, setVoiceChanger] = createSignal(false);
 	const [hearVoice, setHearVoice] = createSignal(false);
+
+	let connectGeneration = 0;
+	let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
 	type Voice = {
 		bitmapChecksum: string;
@@ -42,105 +58,177 @@ export function createCtx() {
 		};
 	};
 
+	function clearRetry() {
+		if (retryTimer !== undefined) {
+			clearTimeout(retryTimer);
+			retryTimer = undefined;
+		}
+	}
+
+	function scheduleRetry() {
+		clearRetry();
+		if (!enabled() || getRemoteShellMode()) return;
+		retryTimer = setTimeout(() => {
+			retryTimer = undefined;
+			connect();
+		}, RETRY_MS);
+	}
+
+	function stopConnection() {
+		connectGeneration += 1;
+		clearRetry();
+		const ws = state();
+		if (ws.isSome()) {
+			ws.unwrap().close();
+		}
+		setState(None);
+		setConnecting(false);
+	}
+
+	function attachSocket(ws: WebSocket, generation: number) {
+		ws.send(
+			JSON.stringify({
+				id: crypto.randomUUID(),
+				action: "registerClient",
+				payload: {
+					clientKey: "controlapi-xSVAjWxbl",
+				},
+			}),
+		);
+		setTimeout(() => {
+			if (generation !== connectGeneration) return;
+			ws.send(
+				JSON.stringify({
+					action: "getVoices",
+					id: "doesntMatter",
+					payload: {},
+				}),
+			);
+		}, 2000);
+		setTimeout(() => {
+			if (generation !== connectGeneration) return;
+			ws.send(
+				JSON.stringify({
+					action: "getHearMyselfStatus",
+					id: "doesntMatter",
+					payload: {},
+				}),
+			);
+		}, 2000);
+		setTimeout(() => {
+			if (generation !== connectGeneration) return;
+			ws.send(
+				JSON.stringify({
+					action: "getVoiceChangerStatus",
+					id: "doesntMatter",
+					payload: {},
+				}),
+			);
+		}, 2000);
+
+		ws.addEventListener("close", () => {
+			if (generation !== connectGeneration) return;
+			setState(None);
+			setConnecting(false);
+			if (enabled()) scheduleRetry();
+		});
+
+		ws.addEventListener("message", (event) => {
+			const data = JSON.parse(event.data) as ActionData;
+			if (data.actionType === "getVoices") {
+				setVoices(
+					new Map(
+						data.payload.voices.map(
+							(voice: { friendlyName: string; id: string }) => [
+								voice.friendlyName,
+								voice.id,
+							],
+						),
+					),
+				);
+			}
+			if (data.actionType === "toggleVoiceChanger") {
+				setVoiceChanger(data.actionObject.value);
+			}
+			if (data.actionType === "toggleHearMyVoice") {
+				setHearVoice(data.actionObject.value);
+			}
+		});
+	}
+
 	const connect = () => {
-		if (getRemoteShellMode()) return;
+		if (getRemoteShellMode() || !enabled()) return;
+		if (state().isSome() || connecting()) return;
+
+		clearRetry();
+
+		const generation = ++connectGeneration;
+		setConnecting(true);
+
 		let connected = false;
-		for (const port of ports) {
-			if (connected) break;
+		let pending = PORTS.length;
+
+		const finishAttempt = () => {
+			pending -= 1;
+			if (connected || pending > 0) return;
+			if (generation !== connectGeneration) return;
+			setConnecting(false);
+			if (enabled()) scheduleRetry();
+		};
+
+		for (const port of PORTS) {
 			const ws = new WebSocket(`ws://localhost:${port}/v1`);
 			ws.addEventListener("error", () => {
 				ws.close();
+				finishAttempt();
 			});
-			ws.addEventListener("open", (event) => {
+			ws.addEventListener("open", () => {
+				if (connected || generation !== connectGeneration) {
+					ws.close();
+					finishAttempt();
+					return;
+				}
 				connected = true;
+				clearRetry();
 				setState(Some(ws));
-				ws.send(
-					JSON.stringify({
-						id: crypto.randomUUID(),
-						action: "registerClient",
-						payload: {
-							clientKey: "controlapi-xSVAjWxbl",
-						},
-					}),
-				);
-				setTimeout(() => {
-					ws.send(
-						JSON.stringify({
-							action: "getVoices",
-							id: "doesntMatter",
-							payload: {},
-						}),
-					);
-				}, 2000);
-				setTimeout(() => {
-					ws.send(
-						JSON.stringify({
-							action: "getHearMyselfStatus",
-							id: "doesntMatter",
-							payload: {},
-						}),
-					);
-				}, 2000);
-				setTimeout(() => {
-					ws.send(
-						JSON.stringify({
-							action: "getVoiceChangerStatus",
-							id: "doesntMatter",
-							payload: {},
-						}),
-					);
-				}, 2000);
-				ws.addEventListener("close", (event) => {
-					console.log(`Port: ${port} Closed.`);
-					setState(None);
-					setTimeout(() => {
-						connect();
-					}, 30000);
-				});
-				ws.addEventListener("message", (event) => {
-					const data = JSON.parse(event.data) as ActionData;
-					if (data.actionType === "getVoices") {
-						setVoices(
-							new Map(
-								data.payload.voices.map(
-									(voice: { friendlyName: string; id: string }) => [
-										voice.friendlyName,
-										voice.id,
-									],
-								),
-							),
-						);
-					}
-					if (data.actionType === "toggleVoiceChanger") {
-						setVoiceChanger(data.actionObject.value);
-					}
-					if (data.actionType === "toggleHearMyVoice") {
-						setHearVoice(data.actionObject.value);
-					}
-
-					console.log(voices());
-				});
+				setConnecting(false);
+				attachSocket(ws, generation);
+				finishAttempt();
 			});
-		}
-
-		if (state() === None) {
-			setTimeout(() => {
-				connect();
-			}, 30000);
 		}
 	};
 
-	if (!getRemoteShellMode()) connect();
+	const setEnabled = (on: boolean) => {
+		try {
+			if (on) localStorage.setItem(ENABLED_KEY, "1");
+			else localStorage.removeItem(ENABLED_KEY);
+		} catch {
+			/* ignore */
+		}
+		setEnabledState(on);
+		if (!on) {
+			stopConnection();
+			return;
+		}
+		connect();
+	};
+
+	if (!getRemoteShellMode() && enabled()) {
+		connect();
+	}
 
 	return {
+		enabled,
+		setEnabled,
 		state,
-		setState,
+		connecting,
+		connect,
 		voices,
-		setVoices,
 		voiceChanger,
 		hearVoice,
 		collectHostMirror() {
 			return {
+				enabled: enabled(),
 				voiceEntries: [...voices().entries()] as [string, string][],
 				voiceChanger: voiceChanger(),
 				hearVoice: hearVoice(),
@@ -150,6 +238,7 @@ export function createCtx() {
 		applyHostMirror(data: unknown) {
 			if (!getRemoteShellMode() || !data || typeof data !== "object") return;
 			const d = data as {
+				enabled?: boolean;
 				voiceEntries?: [string, string][];
 				voiceChanger?: boolean;
 				hearVoice?: boolean;

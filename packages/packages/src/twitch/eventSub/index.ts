@@ -391,6 +391,7 @@ export function createEventSub(
 		}
 		activeSockets.delete(userId);
 		sessions.delete(userId);
+		listenerTargets.delete(userId);
 	}
 
 	return {

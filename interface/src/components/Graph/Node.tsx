@@ -5,6 +5,7 @@ import {
 	DataOutput as DataOutputModel,
 	ExecInput as ExecInputModel,
 	ExecOutput as ExecOutputModel,
+	NODE_EMIT,
 	NODE_RUNNING,
 	type Node as NodeModel,
 	type NodeSchemaVariant,
@@ -39,6 +40,7 @@ import {
 } from "./IO";
 import "./Node.css";
 import { GRID_SIZE, handleSelectableItemPointerDown } from "./util";
+import { trackNodeMount } from "../../graphPerf";
 import { isPaneResizing } from "../../paneResizeSession";
 import { usePlatform } from "../../platform";
 
@@ -74,14 +76,28 @@ export const Node = (props: Props) => {
 	const graph = useGraphContext();
 	const interfaceCtx = useInterfaceContext();
 
+	const [active, setActive] = Solid.createSignal(0);
 	const [running, setRunning] = Solid.createSignal(NODE_RUNNING.isRunning(node()));
 
 	Solid.onMount(() => {
+		trackNodeMount();
+
+		const unsubEmit = NODE_EMIT.subscribe(node(), (data) => {
+			if (node().id === data.id && data.schema === node().schema) {
+				setActive(1);
+				setTimeout(() => setActive(0), 200);
+			}
+		});
+
 		setRunning(NODE_RUNNING.isRunning(node()));
-		const unsub = NODE_RUNNING.subscribe(() => {
+		const unsubRunning = NODE_RUNNING.subscribe(node(), () => {
 			setRunning(NODE_RUNNING.isRunning(node()));
 		});
-		Solid.onCleanup(unsub);
+
+		Solid.onCleanup(() => {
+			unsubEmit();
+			unsubRunning();
+		});
 	});
 
 	const [editingName, setEditingName] = Solid.createSignal(false);
@@ -256,6 +272,7 @@ export const Node = (props: Props) => {
 				<div
 					class={clsx(
 						"h-6 duration-100 text-md font-medium flex flex-col items-stretch",
+						active() === 1 && "opacity-50",
 						running() && "node-running opacity-60",
 						SchemaVariantColours[
 							(() => {
@@ -324,6 +341,19 @@ export const Node = (props: Props) => {
 											Open Function
 										</ContextMenuItem>
 									)}
+									<ContextMenuItem
+										onSelect={() => {
+											interfaceCtx.execute("setNodeTrackInvocations", {
+												...graphRefOf(graph.model()),
+												nodeId: node().id,
+												trackInvocations: !node().state.trackInvocations,
+											});
+										}}
+									>
+										{node().state.trackInvocations
+											? "Stop tracking invocations"
+											: "Track invocations"}
+									</ContextMenuItem>
 									<ContextMenuItem
 										onSelect={() => {
 											interfaceCtx.execute("setNodeFoldPins", {

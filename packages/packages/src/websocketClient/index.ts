@@ -2,10 +2,23 @@ import { Package } from "@macrograph/runtime";
 import type { OutboundWsBridge } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 
-import { createCtx } from "./ctx";
+import { createCtx, type Ctx } from "./ctx";
 
 /** Label/value delimiter for string suggestions; must match TextInput. */
 const WS_SUGGEST_SEP = "\x1e";
+
+function resolveWsUrl(input: string, sockets: Ctx): string {
+	let url = input.trim();
+	const sepIdx = url.indexOf(WS_SUGGEST_SEP);
+	if (sepIdx !== -1) {
+		url = url.slice(sepIdx + WS_SUGGEST_SEP.length).trim();
+	}
+	if (sockets.websockets.has(url)) return url;
+	for (const [u, name] of sockets.wsNames) {
+		if (name === url) return u;
+	}
+	return url;
+}
 
 export function pkg(opts?: { outboundWs?: OutboundWsBridge }) {
 	const sockets = createCtx(
@@ -13,9 +26,18 @@ export function pkg(opts?: { outboundWs?: OutboundWsBridge }) {
 		(data) => pkg.emitEvent({ name: "wsEvent", data }),
 	);
 
-	const getWebSocket = (url: string) => {
+	const getWebSocket = (input: string) => {
+		const url = resolveWsUrl(input, sockets);
 		const ws = sockets.websockets.get(url);
-		if (ws?.state !== "connected") throw new Error();
+		if (!ws) {
+			throw new Error(
+				`No WebSocket client for "${input}". Add the URL in Websocket settings.`,
+			);
+		}
+		if (ws.state === "disconnected") {
+			const detail = ws.lastError ? `: ${ws.lastError}` : "";
+			throw new Error(`WebSocket "${url}" is disconnected${detail}`);
+		}
 		return ws.socket;
 	};
 

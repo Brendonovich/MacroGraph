@@ -43,8 +43,6 @@ async function TextToSpeech(
 		},
 	);
 
-	console.log(response);
-
 	if (response.body && response.status === 200) {
 		await writeBinaryFile(filePath, await streamToArrayBuffer(response.body));
 		state = filePath;
@@ -158,8 +156,6 @@ export function register(pkg: Pkg, state: Ctx) {
 
 			body.model_id = ctx.getInput(io.modelId);
 			body.text = ctx.getInput(io.text);
-
-			console.log(body);
 
 			const response = await TextToSpeech(
 				ctx.getInput(io.voiceId),

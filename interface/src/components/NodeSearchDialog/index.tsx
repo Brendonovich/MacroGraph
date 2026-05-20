@@ -8,15 +8,9 @@ import {
 } from "@macrograph/runtime";
 import clsx from "clsx";
 import { For, batch, createEffect, createMemo, createSignal, on } from "solid-js";
-import { produce } from "solid-js/store";
-
 import { useInterfaceContext } from "../../context";
+import { frameNodeInActiveTab } from "../../frameGraphNode";
 import { filterWithTokenisedSearch, tokeniseString } from "../../util";
-
-/** Keep in sync with `components/Graph/Graph.tsx` zoom clamps. */
-const GRAPH_MAX_ZOOM_IN = 1.6;
-const GRAPH_MAX_ZOOM_OUT = 5;
-const GRAPH_MIN_SCALE = 1 / GRAPH_MAX_ZOOM_OUT;
 
 type Row = {
 	graphKind: GraphKind;
@@ -182,75 +176,6 @@ export function NodeSearchDialog() {
 		}),
 	);
 
-	function frameNodeInActiveTab(graph: Graph, node: Node) {
-		const maxAttempts = 16;
-
-		const tryApply = (attempt: number) => {
-			const { width: vw, height: vh } = ctx.graphBounds;
-			if (vw <= 0 || vh <= 0) {
-				if (attempt < maxAttempts)
-					requestAnimationFrame(() => tryApply(attempt + 1));
-				return;
-			}
-
-			const measured = ctx.itemSizes.get(node);
-			const hasMeasured =
-				measured !== undefined &&
-				measured.width > 0 &&
-				measured.height > 0;
-			if (!hasMeasured && attempt < maxAttempts) {
-				requestAnimationFrame(() => tryApply(attempt + 1));
-				return;
-			}
-
-			const nw = hasMeasured ? measured!.width : 280;
-			const nh = hasMeasured ? measured!.height : 120;
-
-			const nx = node.state.position.x;
-			const ny = node.state.position.y;
-			const cx = nx + nw / 2;
-			const cy = ny + nh / 2;
-
-			const margin = 0.82;
-			const scaleFit = Math.min((vw * margin) / nw, (vh * margin) / nh);
-			const scale = Math.min(
-				GRAPH_MAX_ZOOM_IN,
-				Math.max(GRAPH_MIN_SCALE, scaleFit),
-			);
-
-			const groupIndex = ctx.mosaicState.groups.findIndex(
-				(g) => g.id === ctx.mosaicState.focusedGroupId,
-			);
-			const tabIndex = ctx.mosaicState.groups[groupIndex]?.tabs.findIndex(
-				(t) =>
-					(t.type === "graph" ||
-						t.type === "function" ||
-						t.type === "queue") &&
-					t.graphKind === graph.kind &&
-					t.graphId === graph.id,
-			);
-			if (tabIndex === undefined || tabIndex < 0) return;
-
-			ctx.setMosaicState(
-				"groups",
-				groupIndex,
-				"tabs",
-				tabIndex,
-				produce((tab: any) => {
-					tab.scale = scale;
-					tab.translate = {
-						x: cx - vw / (2 * scale),
-						y: cy - vh / (2 * scale),
-					};
-				}),
-			);
-		};
-
-		requestAnimationFrame(() => {
-			requestAnimationFrame(() => tryApply(0));
-		});
-	}
-
 	function goToRow(row: Row) {
 		const graph = ctx.core.project.getGraphByKind(row.graphKind, row.graphId);
 		if (!graph) return;
@@ -279,7 +204,7 @@ export function NodeSearchDialog() {
 			...graphRefOf(graph),
 			selection: [{ type: "node", id: node.id }],
 		});
-		frameNodeInActiveTab(graph, node);
+		frameNodeInActiveTab(ctx, graph, node);
 		control.hide();
 	}
 

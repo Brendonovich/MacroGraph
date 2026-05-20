@@ -94,7 +94,6 @@ export function register(pkg: Pkg, state: Ctx) {
 				});
 
 			for await (const chunk of stream) {
-				console.log(chunk);
 				if (chunk.choices[0]?.finish_reason === "stop") {
 					const array = [];
 

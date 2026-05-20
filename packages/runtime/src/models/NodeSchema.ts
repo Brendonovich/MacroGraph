@@ -234,6 +234,8 @@ export type RunCtx = {
 	): inferPropertyDef<TProperty>;
 	getVariable(source: "graph" | "project", id: number): Option<Variable>;
 	setVariable(source: "graph" | "project", id: number, value: any): void;
+	/** Set while executing a queue graph item ({@link QueueEntry} id). */
+	queueEntryId?: string;
 };
 
 export type EventsMap<T extends string = string> = Record<T, any>;
@@ -306,6 +308,7 @@ type BaseRunArgs<
 	properties: SchemaProperties<TProperties>;
 	io: TIO;
 	graph: Graph;
+	node: Node;
 };
 
 export type NonEventNodeSchema<
@@ -361,6 +364,8 @@ export type RunProps<TProperties, TIO> = {
 	properties: SchemaProperties<TProperties>;
 	ctx: RunCtx;
 	io: TIO;
+	graph: Graph;
+	node: Node;
 };
 
 export type EventSchema<TProperties, TIO, TFire> = SchemaBase<

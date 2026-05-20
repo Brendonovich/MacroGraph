@@ -68,7 +68,7 @@ import {
 	type GraphViewState,
 	type SelectedItemID,
 } from "./components/Graph/Context";
-import { graphRefsEqual } from "@macrograph/runtime";
+import { graphRefsEqual, normalizeQueueEntries } from "@macrograph/runtime";
 import type { EditorState } from "./context";
 
 export type VariableLocation =
@@ -691,6 +691,28 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				if (!node) return;
 
 				node.state.foldPins = entry.prev;
+			},
+		}),
+		setNodeTrackInvocations: historyAction({
+			prepare(
+				input: GraphRef & { nodeId: number; trackInvocations: boolean },
+			) {
+				const node = getGraph(input)?.nodes.get(input.nodeId);
+				if (!node) return;
+
+				return { ...input, prev: node.state.trackInvocations };
+			},
+			perform(entry) {
+				const node = getGraph(entry)?.nodes.get(entry.nodeId);
+				if (!node) return;
+
+				node.state.trackInvocations = entry.trackInvocations;
+			},
+			rewind(entry) {
+				const node = getGraph(entry)?.nodes.get(entry.nodeId);
+				if (!node) return;
+
+				node.state.trackInvocations = entry.prev;
 			},
 		}),
 		// _createCommentBox: _historyAction({
@@ -3251,7 +3273,7 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				const queue = core.project.queues.get(entry.queueId);
 				if (!queue) return;
 
-				queue.items = entry.value;
+				queue.items = normalizeQueueEntries(entry.value);
 			},
 			rewind(entry) {
 				const queue = core.project.queues.get(entry.queueId);

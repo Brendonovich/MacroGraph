@@ -59,24 +59,42 @@ impl Default for Ctx {
 	}
 }
 
-fn random_client_id<T>(map: &BTreeMap<u8, T>) -> u8 {
+fn random_client_id<T>(map: &BTreeMap<u8, T>) -> Option<u8> {
 	let mut i = 0u8;
 	loop {
 		if !map.contains_key(&i) {
-			break;
+			return Some(i);
 		}
 		if i == u8::MAX {
-			panic!("No more remote client ids available");
+			eprintln!("[remote-host] connection limit reached (256 clients)");
+			return None;
 		}
 		i += 1;
 	}
-	i
 }
 
 enum HandshakeResult {
 	ReadyWithUser(String),
 	/// No password on host; first message was not `auth` — forward to host app.
 	ForwardFirst(String),
+}
+
+/// Remote editor static files: bundled `$RESOURCE/remote-public` in release, or
+/// `src-tauri/remote-public` after `pnpm build:remote` during local dev.
+fn remote_public_root(ctx: &super::Ctx) -> PathBuf {
+	if let Ok(guard) = ctx.app.lock() {
+		if let Some(app) = guard.as_ref() {
+			if let Some(index) = app
+				.path_resolver()
+				.resolve_resource("remote-public/index.html")
+			{
+				if let Some(parent) = index.parent() {
+					return parent.to_path_buf();
+				}
+			}
+		}
+	}
+	PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("remote-public")
 }
 
 async fn remote_handshake(
@@ -152,7 +170,7 @@ pub fn router() -> AlphaRouter<super::Ctx> {
 				let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
 				let (ws_shutdown_tx, ws_shutdown_rx) = broadcast::channel(1);
 
-				let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("remote-public");
+				let root = remote_public_root(&ctx);
 				let index_html: Arc<str> = match std::fs::read_to_string(root.join("index.html")) {
 					Ok(s) => s.into(),
 					Err(_) => "<!doctype html><html><head><meta charset=\"utf-8\"><title>MacroGraph Remote</title></head><body style=\"font-family:system-ui;padding:2rem;background:#111;color:#eee\"><h1>Remote editor assets missing</h1><p>From the repo root run:</p><pre style=\"background:#222;padding:1rem\">pnpm --filter @macrograph/remote-editor build</pre></body></html>".into(),
@@ -199,7 +217,9 @@ pub fn router() -> AlphaRouter<super::Ctx> {
 							let (id, send_rx) = {
 								let mut clients = sender_txs.lock().await;
 								let (send_tx, send_rx) = mpsc::channel(32);
-								let id = random_client_id(&clients);
+								let Some(id) = random_client_id(&clients) else {
+									return axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response();
+								};
 								clients.insert(id, send_tx);
 								(id, send_rx)
 							};

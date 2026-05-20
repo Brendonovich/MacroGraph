@@ -5,6 +5,7 @@
 		"dev": "vinxi dev",
 		"build:remote": "pnpm --filter @macrograph/remote-editor build",
 		"build": "pnpm build:remote && vinxi build",
+		"build:app": "pnpm build && pnpm tauri build",
 		"start": "vinxi start",
 		"tauri": "tauri",
 		"typecheck": "tsc -b"

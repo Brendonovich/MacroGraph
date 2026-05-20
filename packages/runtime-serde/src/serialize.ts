@@ -238,7 +238,10 @@ export function serializeQueue(
 		id: q.id,
 		name: q.name,
 		graphId: q.graphId,
-		items: q.items.map((item) => serializeValue(item, q.itemType)),
+		items: q.items.map((entry) => ({
+			id: entry.id,
+			value: serializeValue(entry.value, q.itemType),
+		})),
 		paused: q.paused,
 		type: q.itemType.serialize(),
 	};
@@ -290,6 +293,7 @@ export function serializeNode(
 			{} as Record<string, any>,
 		),
 		foldPins: node.state.foldPins,
+		trackInvocations: node.state.trackInvocations,
 	};
 }
 

@@ -3,6 +3,7 @@ import type { Node } from "../models/Node";
 
 export * from "./nativeOutbound";
 export * from "./pins";
+export * from "./webviewReload";
 
 export type XY = { x: number; y: number };
 export type Size = { width: number; height: number };
@@ -20,6 +21,8 @@ export interface WsProvider<TServer> {
 		cb: (text: [number, WsMessage]) => void,
 	): Promise<TServer>;
 	stopServer(server: TServer): Promise<void>;
+	/** Drop every client on active listen sockets without stopping the servers. */
+	disconnectAllClients?(): Promise<void>;
 	sendMessage(data: {
 		data: string;
 		port: number;

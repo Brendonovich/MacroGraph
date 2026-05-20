@@ -214,6 +214,7 @@ export const Node = v.object({
 		{},
 	),
 	foldPins: v.optional(v.boolean(), false),
+	trackInvocations: v.optional(v.boolean(), false),
 });
 export type Node = v.InferOutput<typeof Node>;
 

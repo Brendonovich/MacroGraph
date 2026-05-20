@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use axum::routing::{get, post};
 use rspc::{alpha::Rspc, Router};
@@ -28,6 +28,7 @@ macro_rules! tauri_handlers {
 #[tokio::main]
 async fn main() {
     let ctx: Ctx = Default::default();
+    let ctx_for_setup = ctx.clone();
 
     let builder = tauri::Builder::default()
         .plugin(rspc::integrations::tauri::plugin(
@@ -38,8 +39,12 @@ async fn main() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_midi::init())
         .plugin(tauri_plugin_kb_mouse::init())
-        .setup(|app| {
-            app.manage(http::State::new(app.handle()));
+        .setup(move |app| {
+            let handle = app.handle();
+            app.manage(http::State::new(handle.clone()));
+            if let Ok(mut slot) = ctx_for_setup.app.lock() {
+                *slot = Some(handle);
+            }
 
             Ok(())
         })
@@ -60,12 +65,25 @@ async fn main() {
         .expect("error while running tauri application");
 }
 
-#[derive(Default)]
 pub struct CtxInner {
     ws: websocket::Ctx,
     remote_host: remote_host::Ctx,
     obs_native: obs_native::Ctx,
     outbound_ws: outbound_client::Ctx,
+    /// Set during Tauri `setup` so outbound WS can emit logs to the webview console.
+    pub app: Mutex<Option<tauri::AppHandle>>,
+}
+
+impl Default for CtxInner {
+    fn default() -> Self {
+        Self {
+            ws: websocket::Ctx::default(),
+            remote_host: remote_host::Ctx::default(),
+            obs_native: obs_native::Ctx::default(),
+            outbound_ws: outbound_client::Ctx::default(),
+            app: Mutex::new(None),
+        }
+    }
 }
 
 pub type Ctx = Arc<CtxInner>;

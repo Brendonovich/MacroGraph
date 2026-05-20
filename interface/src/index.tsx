@@ -1360,6 +1360,116 @@ function TabDragGhost() {
 	);
 }
 
+function MosaicTabPanel(props: {
+	tab: TabState;
+	tabIndex: number;
+	groupId: string;
+	active: boolean;
+	focused: boolean;
+	canClosePane: boolean;
+	onClose: () => void;
+}) {
+	const ctx = useInterfaceContext();
+	const groupIndex = () => findGroupIndex(ctx.mosaicState.groups, props.groupId);
+
+	if (isGraphEditorTab(props.tab)) {
+		const tab = props.tab;
+		const graph = ctx.core.project.getGraphByKind(
+			graphRefFromTab(tab).graphKind,
+			tab.graphId,
+		);
+		if (!graph) return null;
+
+		const gi = groupIndex();
+		const setGraphTranslate = (t: XY) => {
+			if (gi < 0) return;
+			ctx.setMosaicState("groups", gi, "tabs", props.tabIndex, "translate", t);
+		};
+		const setGraphScale = (s: number) => {
+			if (gi < 0) return;
+			ctx.setMosaicState("groups", gi, "tabs", props.tabIndex, "scale", s);
+		};
+		const tint = tabColorForType(tab.type);
+
+		return (
+			<Graph
+				active={props.active}
+				graph={graph}
+				state={normalizeGraphEditorTab(tab)}
+				mosaicGroupId={props.groupId}
+				style={{
+					"background-color":
+						tabTintBackground(tint, "#262626") ?? undefined,
+				}}
+				onBoundsChange={props.active ? ctx.setGraphBounds : () => {}}
+				onSizeChange={props.active ? ctx.setGraphBounds : () => {}}
+				onScaleChange={setGraphScale}
+				onTranslateChange={setGraphTranslate}
+			/>
+		);
+	}
+
+	if (props.tab.type === "package") {
+		const pkg = ctx.core.packages.find((p) => p.name === props.tab.packageName);
+		return (
+			<div class="flex-1 w-full flex flex-row overflow-auto bg-neutral-900">
+				<div class="flex-1 overflow-y-auto p-4 text-white">
+					<Solid.Suspense fallback="Loading...">
+						<Solid.ErrorBoundary
+							fallback={
+								<span class="text-red-400">Error loading package settings</span>
+							}
+						>
+							{pkg?.SettingsUI ? (
+								<Dynamic {...(pkg as any).ctx} component={pkg.SettingsUI} />
+							) : (
+								<span class="text-neutral-500">Package has no settings</span>
+							)}
+						</Solid.ErrorBoundary>
+					</Solid.Suspense>
+				</div>
+			</div>
+		);
+	}
+
+	if (props.tab.type === "functionQueue") {
+		const queue = ctx.core.project.functionQueues.get(
+			props.tab.functionQueueId,
+		);
+		return (
+			<div class="flex-1 w-full flex flex-row overflow-auto bg-neutral-900">
+				<div class="flex-1 overflow-y-auto p-4 text-white">
+					{queue ? (
+						<FunctionQueuePanel queue={queue} />
+					) : (
+						<span class="text-neutral-500">Function queue not found</span>
+					)}
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<div class="flex-1 flex flex-col items-center justify-center w-full">
+			<Solid.Show when={props.canClosePane}>
+				<button
+					type="button"
+					class={clsx(
+						"absolute top-4 right-4 rounded hover:bg-white/10 transition-colors duration-50",
+						props.focused ? "text-white" : "text-white/50",
+					)}
+					onClick={() => {
+						props.onClose();
+					}}
+				>
+					<IconBiX class="size-5" />
+				</button>
+			</Solid.Show>
+			<span class="text-neutral-400 font-medium">No graph selected</span>
+		</div>
+	);
+}
+
 function GraphTabList(props: {
 	groupId: string;
 	focused: boolean;
@@ -1515,15 +1625,6 @@ function GraphTabList(props: {
 		return g.tabs[g.selectedIndex];
 	};
 
-	const graphContent = () => {
-		const tab = selectedTab();
-		if (!tab || !isGraphEditorTab(tab)) return;
-		const ref = graphRefFromTab(tab);
-		const graph = ctx.core.project.getGraphByKind(ref.graphKind, ref.graphId);
-		if (!graph) return;
-		return { tab, graph };
-	};
-
 	const selectedTabContentTint = () => {
 		const tab = selectedTab();
 		if (!tab || tab.type === "package" || tab.type === "functionQueue") {
@@ -1635,95 +1736,35 @@ function GraphTabList(props: {
 						undefined,
 				}}
 			>
-			{(() => {
-				const tab = selectedTab();
-				const graph =
-					tab && isGraphEditorTab(tab)
-						? ctx.core.project.getGraphByKind(
-								graphRefFromTab(tab).graphKind,
-								tab.graphId,
-							)
-						: undefined;
-
-				if (tab && graph) {
-					const gi = groupIndex();
-					const setGraphTranslate = (t: XY) => {
+				<Solid.Show
+					when={(() => {
 						const g = group();
-						if (g && gi >= 0)
-							ctx.setMosaicState(
-								"groups",
-								gi,
-								"tabs",
-								g.selectedIndex,
-								"translate",
-								t,
-							);
-					};
-					const setGraphScale = (s: number) => {
-						const g = group();
-						if (g && gi >= 0)
-							ctx.setMosaicState(
-								"groups",
-								gi,
-								"tabs",
-								g.selectedIndex,
-								"scale",
-								s,
-							);
-					};
-					const tint = tabColorForType(tab.type);
-					return (
-						<Graph
-							graph={graph}
-							state={normalizeGraphEditorTab(tab)}
-							mosaicGroupId={props.groupId}
-							style={{
-								"background-color":
-									tabTintBackground(tint, "#262626") ?? undefined,
-							}}
-							onBoundsChange={ctx.setGraphBounds}
-							onSizeChange={ctx.setGraphBounds}
-							onScaleChange={setGraphScale}
-							onTranslateChange={setGraphTranslate}
-						/>
-					);
-				}
-
-				if (tab?.type === "package") {
-					const pkg = ctx.core.packages.find((p) => p.name === tab.packageName);
-					return (
-						<div class="flex-1 w-full flex flex-row overflow-auto bg-neutral-900">
-							<div class="flex-1 overflow-y-auto p-4 text-white">
-								<Solid.Suspense fallback="Loading...">
-									<Solid.ErrorBoundary fallback={<span class="text-red-400">Error loading package settings</span>}>
-										{pkg?.SettingsUI ? (
-											<Dynamic {...(pkg as any).ctx} component={pkg.SettingsUI} />
-										) : (
-											<span class="text-neutral-500">Package has no settings</span>
-										)}
-									</Solid.ErrorBoundary>
-								</Solid.Suspense>
-							</div>
+						if (!g?.tabs.length) return undefined;
+						const idx = Math.min(
+							Math.max(0, g.selectedIndex),
+							g.tabs.length - 1,
+						);
+						const tab = g.tabs[idx];
+						if (!tab) return undefined;
+						return { tab, tabIndex: idx, key: tabKey(tab) };
+					})()}
+					keyed
+				>
+					{(entry) => (
+						<div class="absolute inset-0 flex flex-col min-h-0 w-full">
+							<MosaicTabPanel
+								tab={entry.tab}
+								tabIndex={entry.tabIndex}
+								groupId={props.groupId}
+								active
+								focused={props.focused}
+								canClosePane={props.canClosePane}
+								onClose={props.onClose}
+							/>
 						</div>
-					);
-				}
-
-				if (tab?.type === "functionQueue") {
-					const queue = ctx.core.project.functionQueues.get(tab.functionQueueId);
-					return (
-						<div class="flex-1 w-full flex flex-row overflow-auto bg-neutral-900">
-							<div class="flex-1 overflow-y-auto p-4 text-white">
-								{queue ? (
-									<FunctionQueuePanel queue={queue} />
-								) : (
-									<span class="text-neutral-500">Function queue not found</span>
-								)}
-							</div>
-						</div>
-					);
-				}
-
-				return (
+					)}
+				</Solid.Show>
+				<Solid.Show when={(group()?.tabs.length ?? 0) === 0}>
 					<div class="flex-1 flex flex-col items-center justify-center w-full">
 						<Solid.Show when={props.canClosePane}>
 							<button
@@ -1741,8 +1782,7 @@ function GraphTabList(props: {
 						</Solid.Show>
 						<span class="text-neutral-400 font-medium">No graph selected</span>
 					</div>
-				);
-			})()}
+				</Solid.Show>
 			</div>
 		</div>
 	);

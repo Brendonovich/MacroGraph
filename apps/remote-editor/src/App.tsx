@@ -85,6 +85,7 @@ const wsProviderStub = createWsProvider<null>({
 		return null;
 	},
 	stopServer: async () => {},
+	disconnectAllClients: async () => {},
 	async sendMessage() {
 		return null;
 	},
@@ -93,6 +94,10 @@ const wsProviderStub = createWsProvider<null>({
 const outboundWsStub: OutboundWsBridge = {
 	open: async () => {},
 	close: async () => {},
+	closeAll: async () => {},
+	list: async () => [],
+	isConnected: async () => false,
+	pruneExcept: async () => {},
 	send: async () => {},
 	subscribeMessages: () => () => {},
 };

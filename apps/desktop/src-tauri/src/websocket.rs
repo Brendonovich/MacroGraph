@@ -7,7 +7,7 @@ use std::{
 
 use axum::{
     extract::{ws, State, WebSocketUpgrade},
-    response::Response,
+    response::{IntoResponse, Response},
     routing::get,
 };
 use rspc::alpha::AlphaRouter;
@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 use tokio::sync::{broadcast, mpsc, oneshot, Mutex};
 
-use crate::R;
+use crate::{Ctx as AppCtx, R};
 
 struct WebSocketShutdown(broadcast::Receiver<()>);
 
@@ -44,36 +44,51 @@ type WebsocketServerSenders = Arc<Mutex<BTreeMap<u8, mpsc::Sender<String>>>>;
 #[derive(Default)]
 pub struct Ctx {
     senders: Mutex<BTreeMap<u16, WebsocketServerSenders>>,
+    /// Per-port broadcast to drop connected clients without stopping the listener.
+    client_kicks: Mutex<BTreeMap<u16, broadcast::Sender<()>>>,
 }
 
-fn random_id<T>(map: &BTreeMap<u8, T>) -> u8 {
+impl Ctx {
+    /// Close every client socket on active servers; listeners keep running.
+    pub async fn disconnect_all_clients(&self) {
+        let kicks = self.client_kicks.lock().await;
+        for (_, tx) in kicks.iter() {
+            let _ = tx.send(());
+        }
+    }
+}
+
+fn random_id<T>(map: &BTreeMap<u8, T>) -> Option<u8> {
     let mut i = 0;
 
     loop {
         if !map.contains_key(&i) {
-            break;
+            return Some(i);
         }
 
         if i == u8::MAX {
-            panic!("No more ids available");
+            eprintln!("[ws-server] connection limit reached (256 clients)");
+            return None;
         }
 
         i += 1;
     }
-
-    i
 }
 
-pub fn router() -> AlphaRouter<super::Ctx> {
+pub fn router() -> AlphaRouter<AppCtx> {
     R.router()
         .procedure(
             "server",
             R.subscription(|ctx, port: u16| async move {
                 let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
                 let (ws_shutdown_tx, ws_shutdown_rx) = broadcast::channel(1);
+                let (client_kick_tx, _) = broadcast::channel::<()>(64);
+                ctx.ws
+                    .client_kicks
+                    .lock()
+                    .await
+                    .insert(port, client_kick_tx.clone());
 
-                // `0.0.0.0` so other machines on the LAN can connect (e.g. MG client → MG server).
-                // Previously `127.0.0.1` only accepted local connections.
                 let addr = SocketAddr::from((Ipv4Addr::UNSPECIFIED, port));
 
                 let (receiver_tx, mut receiver_rx) = mpsc::channel::<(u8, Message)>(16);
@@ -91,6 +106,7 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                                 receiver_tx,
                                 sender_txs,
                                 shutdown_rx: WebSocketShutdown(ws_shutdown_rx),
+                                client_kick_tx,
                             })
                             .into_make_service(),
                     )
@@ -107,9 +123,16 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                     }
 
                     ctx.ws.senders.lock().await.remove(&port);
+                    ctx.ws.client_kicks.lock().await.remove(&port);
 
                     drop(shutdown_tx);
                 }
+            }),
+        )
+        .procedure(
+            "disconnectAllClients",
+            R.mutation(|ctx, _: ()| async move {
+                ctx.ws.disconnect_all_clients().await;
             }),
         )
         .procedure(
@@ -130,14 +153,28 @@ pub fn router() -> AlphaRouter<super::Ctx> {
                         return;
                     };
 
-                    let clients = clients.lock().await;
-                    match client.and_then(|client| clients.get(&client)) {
-                        Some(client) => {
-                            client.send(data).await.ok();
+                    let mut clients = clients.lock().await;
+                    match client {
+                        Some(client_id) => {
+                            let Some(tx) = clients.get(&client_id) else {
+                                return;
+                            };
+                            if tx.send(data).await.is_err() {
+                                clients.remove(&client_id);
+                            }
                         }
                         None => {
-                            for client in clients.values() {
-                                client.send(data.clone()).await.ok();
+                            let mut dead: Vec<u8> = Vec::new();
+                            let ids: Vec<u8> = clients.keys().copied().collect();
+                            for client_id in ids {
+                                if let Some(tx) = clients.get(&client_id) {
+                                    if tx.send(data.clone()).await.is_err() {
+                                        dead.push(client_id);
+                                    }
+                                }
+                            }
+                            for client_id in dead {
+                                clients.remove(&client_id);
                             }
                         }
                     }
@@ -151,6 +188,7 @@ struct WsState {
     sender_txs: Arc<Mutex<BTreeMap<u8, mpsc::Sender<String>>>>,
     receiver_tx: mpsc::Sender<(u8, Message)>,
     shutdown_rx: WebSocketShutdown,
+    client_kick_tx: broadcast::Sender<()>,
 }
 
 async fn ws_handler(ws: WebSocketUpgrade, State(state): State<WsState>) -> Response {
@@ -159,14 +197,33 @@ async fn ws_handler(ws: WebSocketUpgrade, State(state): State<WsState>) -> Respo
 
         let (send_tx, send_rx) = mpsc::channel(16);
 
-        let id = random_id(&clients);
+        let Some(id) = random_id(&clients) else {
+            return axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response();
+        };
         clients.insert(id, send_tx);
 
         (id, send_rx)
     };
 
+    let WsState {
+        receiver_tx,
+        sender_txs,
+        shutdown_rx,
+        client_kick_tx,
+        ..
+    } = state;
+    let client_kick_rx = client_kick_tx.subscribe();
     ws.on_upgrade(move |socket| async move {
-        handle_socket(socket, state, id, send_rx).await;
+        handle_socket(
+            socket,
+            id,
+            send_rx,
+            receiver_tx,
+            shutdown_rx,
+            client_kick_rx,
+            sender_txs,
+        )
+        .await;
     })
 }
 
@@ -179,31 +236,36 @@ enum Message {
 
 async fn handle_socket(
     mut socket: ws::WebSocket,
-    WsState {
-        receiver_tx,
-        mut shutdown_rx,
-        ..
-    }: WsState,
     id: u8,
     mut sender_rx: mpsc::Receiver<String>,
+    receiver_tx: mpsc::Sender<(u8, Message)>,
+    mut shutdown_rx: WebSocketShutdown,
+    mut client_kick_rx: broadcast::Receiver<()>,
+    sender_txs: WebsocketServerSenders,
 ) {
-    receiver_tx.send((id, Message::Connected)).await.ok();
+    let _ = receiver_tx.send((id, Message::Connected)).await;
 
     loop {
         tokio::select! {
-            _ = shutdown_rx.recv() => return,
+            _ = shutdown_rx.recv() => break,
+            _ = client_kick_rx.recv() => {
+                let _ = socket.send(ws::Message::Close(None)).await;
+                break;
+            }
             Some(msg) = sender_rx.recv() => {
-                socket.send(ws::Message::Text(msg)).await.ok();
+                if socket.send(ws::Message::Text(msg)).await.is_err() {
+                    break;
+                }
             }
             Some(msg) = socket.recv() => {
                 if let Ok(msg) = msg {
                     match msg {
                         ws::Message::Text(t) => {
-                            receiver_tx.send((id, Message::Text(t))).await.ok();
+                            if receiver_tx.send((id, Message::Text(t))).await.is_err() {
+                                break;
+                            }
                         }
-                        ws::Message::Close(_) => {
-                            break;
-                        }
+                        ws::Message::Close(_) => break,
                         _ => {}
                     }
                 } else {
@@ -211,6 +273,11 @@ async fn handle_socket(
                 }
             }
         };
+    }
+
+    {
+        let mut clients = sender_txs.lock().await;
+        clients.remove(&id);
     }
 
     receiver_tx.send((id, Message::Disconnected)).await.ok();

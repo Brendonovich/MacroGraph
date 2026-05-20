@@ -6,6 +6,12 @@ import { randomUUID } from "./randomUUID";
 
 export const MAX_NODE_INVOCATIONS = 20;
 
+/** Global cap on invocation/console log writes during event floods. */
+const MAX_LOG_WRITES_PER_SEC = 40;
+
+/** Cap keys per IDB transaction so slow writes do not pile overlapping clones. */
+const MAX_FLUSH_BATCH = 24;
+
 const DB_NAME = "macrograph-node-invocation-log";
 const DB_VERSION = 2;
 const STORE = "nodes";
@@ -181,10 +187,59 @@ function stripUndefinedSentinels(value: unknown): unknown {
 function idbCloneEntries(
 	entries: StoredNodeInvocation[],
 ): StoredNodeInvocation[] {
-	const plain = cloneJsonCompatible(entries, new WeakMap(), {
-		undefinedAsSentinel: false,
-	}) as StoredNodeInvocation[];
-	return stripUndefinedSentinels(plain) as StoredNodeInvocation[];
+	// Entries are already serialized; JSON round-trip is much cheaper than a second deep walk.
+	try {
+		return stripUndefinedSentinels(
+			JSON.parse(JSON.stringify(entries)) as StoredNodeInvocation[],
+		);
+	} catch {
+		const plain = cloneJsonCompatible(entries, new WeakMap(), {
+			undefinedAsSentinel: false,
+		}) as StoredNodeInvocation[];
+		return stripUndefinedSentinels(plain) as StoredNodeInvocation[];
+	}
+}
+
+const MAX_STORE_DEPTH = 5;
+const MAX_STORE_ARRAY = 32;
+const MAX_STORE_STRING = 4096;
+const MAX_STORE_KEYS = 64;
+
+/** Shrink Twitch-sized event payloads before clone / IDB (chat spam). */
+function truncateForStorage(value: unknown, depth = 0): unknown {
+	if (value === null || value === undefined) return value;
+	const t = typeof value;
+	if (t === "string") {
+		const s = value as string;
+		return s.length > MAX_STORE_STRING
+			? `${s.slice(0, MAX_STORE_STRING)}…`
+			: s;
+	}
+	if (t === "number" || t === "boolean") return value;
+	if (t === "bigint") return (value as bigint).toString();
+	if (depth >= MAX_STORE_DEPTH) return "[truncated]";
+	if (Array.isArray(value)) {
+		const arr = value as unknown[];
+		const out = arr
+			.slice(0, MAX_STORE_ARRAY)
+			.map((v) => truncateForStorage(v, depth + 1));
+		if (arr.length > MAX_STORE_ARRAY)
+			out.push(`[+${arr.length - MAX_STORE_ARRAY} items]`);
+		return out;
+	}
+	if (t === "object") {
+		const out: Record<string, unknown> = {};
+		let n = 0;
+		for (const [k, v] of Object.entries(value as object)) {
+			if (n++ >= MAX_STORE_KEYS) {
+				out["…"] = "truncated";
+				break;
+			}
+			out[k] = truncateForStorage(v, depth + 1);
+		}
+		return out;
+	}
+	return String(value);
 }
 
 function serializeFields(
@@ -194,12 +249,14 @@ function serializeFields(
 ) {
 	const serIn: Record<string, unknown> = {};
 	for (const [k, v] of Object.entries(inputs))
-		serIn[k] = deepCloneForStorage(v);
+		serIn[k] = truncateForStorage(deepCloneForStorage(v));
 	const serOut: Record<string, unknown> = {};
 	for (const [k, v] of Object.entries(outputs))
-		serOut[k] = deepCloneForStorage(v);
+		serOut[k] = truncateForStorage(deepCloneForStorage(v));
 	const ev =
-		eventData === undefined ? undefined : deepCloneForStorage(eventData);
+		eventData === undefined
+			? undefined
+			: truncateForStorage(deepCloneForStorage(eventData));
 	return { inputs: serIn, outputs: serOut, eventData: ev };
 }
 
@@ -349,6 +406,29 @@ export async function migrateInvocationWorkspaceKeys(
 	});
 }
 
+let logWindowStart = 0;
+let logWindowCount = 0;
+let logDropWarnAt = 0;
+
+function acceptLogWrite(): boolean {
+	const now = Date.now();
+	if (now - logWindowStart > 1000) {
+		logWindowStart = now;
+		logWindowCount = 0;
+	}
+	if (logWindowCount >= MAX_LOG_WRITES_PER_SEC) {
+		if (now - logDropWarnAt > 2000) {
+			logDropWarnAt = now;
+			console.warn(
+				`Invocation log rate-limited (${MAX_LOG_WRITES_PER_SEC}/s); disable "Track invocations" on hot nodes`,
+			);
+		}
+		return false;
+	}
+	logWindowCount++;
+	return true;
+}
+
 let dbPromise: Promise<IDBDatabase | null> | null = null;
 
 function openDb(): Promise<IDBDatabase | null> {
@@ -361,11 +441,9 @@ function openDb(): Promise<IDBDatabase | null> {
 				db.createObjectStore(STORE, { keyPath: "key" });
 			}
 		};
-		req.onblocked = () =>
-			console.warn("macrograph invocation IDB upgrade blocked");
+		req.onblocked = () => {};
 		req.onsuccess = () => resolve(req.result);
 		req.onerror = () => {
-			console.warn("IndexedDB open failed", req.error);
 			resolve(null);
 		};
 	}));
@@ -390,8 +468,14 @@ async function idbGet(key: string): Promise<StoredNodeInvocation[] | undefined> 
 const dirtyKeys = new Set<string>();
 let flushTimer: ReturnType<typeof setTimeout> | undefined;
 let latestGetRow: ((key: string) => StoredNodeInvocation[] | undefined) | undefined;
+let flushInFlight = false;
 
 const FLUSH_DEBOUNCE_MS = 250;
+const FLUSH_DEBOUNCE_HEAVY_MS = 1200;
+
+function flushDebounceMs(): number {
+	return dirtyKeys.size > 20 ? FLUSH_DEBOUNCE_HEAVY_MS : FLUSH_DEBOUNCE_MS;
+}
 
 async function flushInvocationsToIdb(
 	keys: readonly string[],
@@ -424,34 +508,46 @@ async function flushInvocationsToIdb(
 	});
 }
 
+async function runFlushLoop() {
+	if (flushInFlight || !latestGetRow) return;
+	flushInFlight = true;
+	const snap = latestGetRow;
+	try {
+		while (dirtyKeys.size > 0) {
+			const keys = [...dirtyKeys];
+			dirtyKeys.clear();
+			for (let i = 0; i < keys.length; i += MAX_FLUSH_BATCH) {
+				const batch = keys.slice(i, i + MAX_FLUSH_BATCH);
+				await flushInvocationsToIdb(batch, snap);
+			}
+		}
+	} catch (e) {
+		console.error("Invocation log flush failed", e);
+	} finally {
+		flushInFlight = false;
+		if (dirtyKeys.size > 0) scheduleFlush(snap);
+	}
+}
+
 function scheduleFlush(getRow: (key: string) => StoredNodeInvocation[] | undefined) {
 	latestGetRow = getRow;
 	if (flushTimer !== undefined) clearTimeout(flushTimer);
 	flushTimer = setTimeout(() => {
 		flushTimer = undefined;
-		const keys = [...dirtyKeys];
-		dirtyKeys.clear();
-		const snap = latestGetRow;
-		if (!snap || keys.length === 0) return;
-		void flushInvocationsToIdb(keys, snap).catch((e) =>
-			console.error("Invocation log flush failed", e),
-		);
-	}, FLUSH_DEBOUNCE_MS);
+		void runFlushLoop();
+	}, flushDebounceMs());
 }
 
 /** Wait for any pending debounced write (e.g. before tab close / reload). */
-export function flushInvocationLogPending(): Promise<void> {
+export async function flushInvocationLogPending(): Promise<void> {
 	if (flushTimer !== undefined) {
 		clearTimeout(flushTimer);
 		flushTimer = undefined;
 	}
-	const keys = [...dirtyKeys];
-	dirtyKeys.clear();
-	const snap = latestGetRow;
-	if (!snap || keys.length === 0) return Promise.resolve();
-	return flushInvocationsToIdb(keys, snap).catch((e) => {
-		console.error("Invocation log flush failed", e);
-	});
+	while (dirtyKeys.size > 0 || flushInFlight) {
+		if (!flushInFlight) await runFlushLoop();
+		else await new Promise((r) => setTimeout(r, 16));
+	}
 }
 
 export function appendInvocationReport(
@@ -460,6 +556,8 @@ export function appendInvocationReport(
 	report: NodeInvocationReport,
 	getRowSnapshot: (key: string) => StoredNodeInvocation[] | undefined,
 ) {
+	if (!acceptLogWrite()) return;
+
 	const wk = getWorkspaceKey();
 	const key = invocationRowKey(
 		wk,
@@ -490,6 +588,8 @@ export function appendConsoleEntry(
 	item: PrintItem,
 	getRowSnapshot: (key: string) => StoredNodeInvocation[] | undefined,
 ) {
+	if (!acceptLogWrite()) return;
+
 	const wk = getWorkspaceKey();
 	const key = invocationRowKey(
 		wk,

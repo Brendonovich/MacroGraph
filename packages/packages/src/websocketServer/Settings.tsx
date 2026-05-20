@@ -12,6 +12,12 @@ export default ({ websockets, startServer, stopServer }: Ctx) => {
 
 	return (
 		<>
+			<p class="text-sm text-neutral-500 mb-4">
+				Listens on <code class="text-xs">ws://</code> (all interfaces, port you choose).
+				Remote clients must use{" "}
+				<code class="text-xs">ws://&lt;this-pc-ip&gt;:&lt;port&gt;</code> — not{" "}
+				<code class="text-xs">wss://</code>.
+			</p>
 			<Switch>
 				<Match when={websockets.size !== 0}>
 					<table class="mb-2 table-auto w-full">

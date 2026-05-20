@@ -6,6 +6,8 @@ export type ObsNativeBridge = {
 		password?: string | null;
 	}): Promise<void>;
 	disconnect(args: { url: string }): Promise<void>;
+	/** Drop every native OBS session (e.g. before webview reload). */
+	disconnectAll?(): Promise<void>;
 	call(args: {
 		url: string;
 		requestType: string;
@@ -30,6 +32,14 @@ export type ObsNativeEventMsg = {
 export type OutboundWsBridge = {
 	open(url: string): Promise<void>;
 	close(url: string): Promise<void>;
+	/** Abort every native outbound session (e.g. before reloading persisted URLs). */
+	closeAll?(): Promise<void>;
+	/** Active session URL keys in the native layer (includes orphans not in UI storage). */
+	list?(): Promise<string[]>;
+	/** Authoritative transport connected flag (use when UI events desync). */
+	isConnected?(url: string): Promise<boolean>;
+	/** Stop native sessions whose URL is not in `keep`. */
+	pruneExcept?(keep: string[]): Promise<void>;
 	send(args: { url: string; data: string }): Promise<void>;
 	subscribeMessages(
 		url: string,
@@ -40,4 +50,5 @@ export type OutboundWsBridge = {
 export type OutboundWsClientMsg =
 	| "Open"
 	| { Text: string }
-	| "Closed";
+	| "Closed"
+	| { Error: string };

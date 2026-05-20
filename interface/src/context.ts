@@ -58,6 +58,7 @@ import {
 	migrateInvocationWorkspaceKeys,
 	type StoredNodeInvocation,
 } from "./nodeInvocationLog";
+import { mark, startGraphLoadSession } from "./graphPerf";
 import { mosaicDebug } from "./mosaicDebug";
 import {
 	collectLeafGroupIds,
@@ -497,6 +498,21 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 		const [mosaicHydrated, setMosaicHydrated] = createSignal(false);
 		let loadedWorkspaceKey: string | null = null;
 
+		const [pinPositionsEpoch, setPinPositionsEpoch] = createSignal(0);
+		let pinPositionsEpochRaf = 0;
+		function bumpPinPositionsEpoch() {
+			if (pinPositionsEpochRaf) return;
+			pinPositionsEpochRaf = requestAnimationFrame(() => {
+				pinPositionsEpochRaf = 0;
+				setPinPositionsEpoch((n) => n + 1);
+			});
+		}
+
+		const [viewTransformEpoch, setViewTransformEpoch] = createSignal(0);
+		function bumpViewTransformEpoch() {
+			setViewTransformEpoch((n) => n + 1);
+		}
+
 		const { mosaicState, setMosaicState } = state;
 
 		createEffect(() => {
@@ -568,7 +584,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			}
 			const payload = buildMosaicPersistPayload();
 			void saveMosaicJson(k, JSON.stringify(payload)).catch((err) => {
-				console.warn("Failed to persist mosaic layout", err);
+				console.error("Failed to persist mosaic layout", err);
 			});
 		}
 
@@ -658,6 +674,14 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 				);
 			};
 			const unsubPrint = props.core.printSubscribe((item) => {
+				if (item.node.id < 0) return;
+				const graph = props.core.project.getGraphByKind(
+					item.graph.kind,
+					item.graph.id,
+				);
+				const node = graph?.nodes.get(item.node.id);
+				if (!node?.state.trackInvocations) return;
+
 				appendConsoleEntry(
 					setNodeInvocationLogByKey,
 					() => workspaceKey(),
@@ -699,6 +723,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 
 		onCleanup(() => {
 			registerRemoteHistoryActions(null);
+			if (pinPositionsEpochRaf) cancelAnimationFrame(pinPositionsEpochRaf);
 		});
 
 		// Follow a user's cursor: focus the pane/tab showing their graph (multi-pane aware).
@@ -822,6 +847,12 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 					}),
 				);
 			}
+
+			mark("openTab.done", {
+				tabKey: key,
+				created: idx === undefined || idx < 0,
+			});
+			queueMicrotask(() => mark("openTab.microtask"));
 		}
 
 		registerOpenTab(openTab);
@@ -847,10 +878,20 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 		}
 
 		function selectGraph(graph: Graph) {
+			startGraphLoadSession(`${graph.kind}:${graph.id} "${graph.name}"`, {
+				nodes: graph.nodes.size,
+				commentBoxes: graph.commentBoxes.size,
+				connections: graph.connections.size,
+			});
 			openGraph(graph);
 		}
 
 		function selectGraphInGroup(groupId: string, graph: Graph) {
+			startGraphLoadSession(`${graph.kind}:${graph.id} "${graph.name}"`, {
+				nodes: graph.nodes.size,
+				commentBoxes: graph.commentBoxes.size,
+				connections: graph.connections.size,
+			});
 			if (graph.kind === "function") {
 				for (const [, fn] of props.core.project.functions) {
 					if (fn.graphId === graph.id) {
@@ -909,6 +950,10 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 			save,
 			itemSizes: new ReactiveWeakMap<Node | CommentBox, Size>(),
 			pinPositions: new ReactiveWeakMap<Pin, XY>(),
+			pinPositionsEpoch,
+			bumpPinPositionsEpoch,
+			viewTransformEpoch,
+			bumpViewTransformEpoch,
 			get environment() {
 				return props.environment;
 			},

@@ -37,6 +37,7 @@ import { Node } from "./Node";
 import { GRID_SIZE } from "./util";
 import { isPointerOverGraphViewport } from "../../mosaicLayout";
 import { isPaneResizing, onPaneResizeEnd } from "../../paneResizeSession";
+import { mark } from "../../graphPerf";
 import { getRemoteCursors, broadcastCursorPosition, getFollowUserId, getRemotePinDrags, getRemoteSelectionBoxes, broadcastPinDrag, broadcastSelectionBox } from "../../remoteHistorySync";
 
 type PanState = "none" | "waiting" | "active";
@@ -50,6 +51,8 @@ interface Props extends Solid.ComponentProps<"div"> {
 	state: GraphViewState;
 	graph: GraphModel;
 	mosaicGroupId?: string;
+	/** When false, skip expensive viewport work (inactive mosaic tab). */
+	active?: boolean;
 	onGraphDrag?(): void;
 	onMouseDown?: Solid.JSX.EventHandler<HTMLDivElement, MouseEvent>;
 	onMouseUp?: Solid.JSX.EventHandler<HTMLDivElement, MouseEvent>;
@@ -70,6 +73,7 @@ export const Graph = (props: Props) => {
 
 	const model = () => props.graph;
 	const graphRef = () => graphRefOf(model());
+	const active = () => props.active !== false;
 
 	const viewState = (): GraphViewState => ({
 		...props.state,
@@ -100,13 +104,15 @@ export const Graph = (props: Props) => {
 
 		const rect = ref()!.getBoundingClientRect()!;
 
+		const sizeValue = { width: rect.width, height: rect.height };
+		setState("size", sizeValue);
+
+		if (!active()) return;
+
 		const boundsValue = { x: rect.left, y: rect.top };
 		props.onBoundsChange(boundsValue);
 		setState("bounds", boundsValue);
-
-		const sizeValue = { width: rect.width, height: rect.height };
 		props.onSizeChange(sizeValue);
-		setState("size", sizeValue);
 	}
 
 	function updateScale(delta: number, screenOrigin: XY) {
@@ -141,8 +147,38 @@ export const Graph = (props: Props) => {
 	}
 
 	const [pan, setPan] = Solid.createSignal<PanState>("none");
+	const [graphLoaded, setGraphLoaded] = Solid.createSignal(false);
+
+	Solid.createEffect(() => {
+		model().kind;
+		model().id;
+		setGraphLoaded(false);
+	});
+
+	Solid.createEffect(() => {
+		if (!active()) return;
+		props.state.translate.x;
+		props.state.translate.y;
+		props.state.scale;
+		interfaceCtx.bumpViewTransformEpoch();
+	});
+
+	Solid.createEffect(() => {
+		if (!active()) return;
+		active();
+		if (ref()) applyResize();
+	});
 
 	Solid.onMount(() => {
+		const g = model();
+		let connectionCount = 0;
+		for (const conns of g.connections.values()) connectionCount += conns.length;
+		mark("graph.mount", {
+			nodes: g.nodes.size,
+			commentBoxes: g.commentBoxes.size,
+			connections: connectionCount,
+		});
+
 		createEventListener(window, "resize", onResize);
 		createResizeObserver(ref, onResize);
 
@@ -877,34 +913,41 @@ export const Graph = (props: Props) => {
 					}, 1);
 				}}
 			>
-				<DotGrid
-					width={() => state.size.width}
-					height={() => state.size.height}
-				/>
-				<ConnectionRenderer
-					graphBounds={{
-						get x() {
-							return state.bounds.x;
-						},
-						get y() {
-							return state.bounds.y;
-						},
-						get width() {
-							return state.size.width;
-						},
-						get height() {
-							return state.size.height;
-						},
-					}}
-				/>
 				<div
-					class="absolute inset-0 text-white origin-top-left overflow-hidden"
-					style={{
-						transform: `scale(${viewState().scale})`,
-						width: `${MAX_ZOOM_OUT * 100}%`,
-						height: `${MAX_ZOOM_OUT * 100}%`,
-					}}
+					class="absolute inset-0"
+					classList={{ invisible: !graphLoaded() }}
 				>
+					<DotGrid
+						active={active()}
+						width={() => state.size.width}
+						height={() => state.size.height}
+					/>
+					<ConnectionRenderer
+						active={active()}
+						graphBounds={{
+							get x() {
+								return state.bounds.x;
+							},
+							get y() {
+								return state.bounds.y;
+							},
+							get width() {
+								return state.size.width;
+							},
+							get height() {
+								return state.size.height;
+							},
+						}}
+						onLoadComplete={() => setGraphLoaded(true)}
+					/>
+					<div
+						class="absolute inset-0 text-white origin-top-left overflow-hidden"
+						style={{
+							transform: `scale(${viewState().scale})`,
+							width: `${MAX_ZOOM_OUT * 100}%`,
+							height: `${MAX_ZOOM_OUT * 100}%`,
+						}}
+					>
 					<div
 						class="origin-[0,0]"
 						style={{
@@ -1005,6 +1048,17 @@ export const Graph = (props: Props) => {
 							))}
 					</div>
 				</div>
+				</div>
+				<Solid.Show when={!graphLoaded()}>
+					<div
+						class="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-mg-graph animate-in fade-in duration-150"
+						aria-busy="true"
+						aria-label="Loading graph"
+					>
+						<div class="size-9 rounded-full border-2 border-white/15 border-t-white/90 animate-spin" />
+						<span class="text-sm text-white/60">Loading graph…</span>
+					</div>
+				</Solid.Show>
 			</div>
 		</GraphContextProvider>
 	);

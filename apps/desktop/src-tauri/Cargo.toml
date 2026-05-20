@@ -58,6 +58,7 @@ tauri-plugin-kb-mouse = { path = "../../../crates/tauri-plugin-kb-mouse" }
 devtools = "0.3.1"
 tokio-websockets = { version = "0.13.2", features = [
 	"client",
+	"native-tls",
 	"fastrand",
 	"sha1_smol",
 ] }

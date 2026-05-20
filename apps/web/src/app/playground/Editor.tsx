@@ -151,6 +151,8 @@ export default () => {
 				} catch {
 					/* handling this case is IMPORTANT!!! */
 				}
+			} else {
+				await core.finalizeProjectSetup();
 			}
 
 			setLoaded(true);

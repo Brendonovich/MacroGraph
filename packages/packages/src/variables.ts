@@ -125,8 +125,6 @@ export function pkg() {
 		run({ ctx, data, io }) {
 			if (!io) return;
 
-			console.log("test");
-
 			ctx.setOutput(io.output, data.value);
 			ctx.setOutput(io.previousOutput, data.previousValue);
 			ctx.exec(io.exec);

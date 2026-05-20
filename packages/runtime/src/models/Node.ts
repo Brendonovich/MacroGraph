@@ -32,6 +32,7 @@ import {
 	type Property,
 	type inferPropertyDef,
 } from "./NodeSchema";
+import { resolveResourceSources } from "./Package";
 
 export interface NodeArgs {
 	id: number;
@@ -41,6 +42,8 @@ export interface NodeArgs {
 	position: XY;
 	properties?: Record<string, string | typeof DEFAULT>;
 	foldPins?: boolean;
+	/** When true, runs are recorded in the node invocation log (off by default). */
+	trackInvocations?: boolean;
 }
 
 export const DEFAULT = Symbol("default");
@@ -55,6 +58,7 @@ export class Node extends Disposable {
 		outputs: (DataOutput<any> | ExecOutput | ScopeOutput)[];
 		properties: Record<string, string | number | typeof DEFAULT>;
 		foldPins: boolean;
+		trackInvocations: boolean;
 	};
 
 	io!: IOBuilder;
@@ -90,6 +94,7 @@ export class Node extends Disposable {
 				{} as Record<string, any>,
 			),
 			foldPins: args.foldPins ?? false,
+			trackInvocations: args.trackInvocations ?? false,
 		});
 
 		const { owner, dispose } = createRoot((dispose) => ({
@@ -227,9 +232,9 @@ export class Node extends Disposable {
 				if (!("sources" in resource)) return None;
 
 				return Maybe(
-					resource
-						.sources(resource.package)
-						.find((s) => s.id === item.sourceId),
+					resolveResourceSources(resource).find(
+						(s) => s.id === item.sourceId,
+					),
 				).map((s) => s.value);
 			}) as inferPropertyDef<typeof property>;
 	}

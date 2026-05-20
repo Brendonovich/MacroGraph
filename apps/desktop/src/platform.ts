@@ -3,6 +3,7 @@ import {
 	exportInvocationLogForGraphs,
 	importInvocationLogFromProject,
 	loadParsedProject,
+	saveProjectToStorage,
 } from "@macrograph/interface";
 import type { Core } from "@macrograph/runtime";
 import {
@@ -57,6 +58,7 @@ export function createPlatform(props: {
 				);
 
 				props.setProjectUrl(url);
+				await saveProjectToStorage(props.core.project, url);
 			},
 			async loadProject() {
 				if (await ask("Would you like to save this project?"))
@@ -69,18 +71,21 @@ export function createPlatform(props: {
 
 				if (typeof url !== "string") return;
 
+				const previousUrl = props.projectUrl();
 				const data = await readTextFile(url);
-
 				const serializedProject = parseJsonWithContext(
 					"apps/desktop platform.loadProject: project file from disk",
 					serde.Project,
 					data,
 				);
 
+				props.setProjectUrl(url);
+
 				const loaded = await loadParsedProject(
 					props.core,
 					serializedProject,
 					{
+						persistWorkspaceKey: url,
 						onAfterLoad: async (data) => {
 							await importInvocationLogFromProject(
 								data.nodeInvocations,
@@ -92,9 +97,10 @@ export function createPlatform(props: {
 					},
 				);
 
-				if (!loaded) return;
-
-				props.setProjectUrl(url);
+				if (!loaded) {
+					props.setProjectUrl(previousUrl);
+					return;
+				}
 			},
 			get url() {
 				return props.projectUrl();

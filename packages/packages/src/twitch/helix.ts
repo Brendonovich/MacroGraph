@@ -813,8 +813,6 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 
 			const response = data.data[0];
 
-			console.log(response);
-
 			ctx.setOutput(
 				io.out,
 				types.Reward.create({
@@ -907,7 +905,6 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			});
 
 			// ctx.setOutput(io.retryAfter, response.data[0].retry_after);
-			console.log(response);
 		},
 	});
 
@@ -936,7 +933,6 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			);
 
 			// ctx.setOutput(io.retryAfter, response.data[0].retry_after);
-			console.log(response);
 		},
 	});
 
@@ -2010,8 +2006,6 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				broadcaster_id: credential.id,
 			};
 
-			console.log("id", ctx.getInput(io.id));
-
 			ctx.getInput(io.id).peek((id) => {
 				params.id = id;
 			});
@@ -2026,7 +2020,6 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				body: new URLSearchParams(params),
 			});
 
-			console.log(data);
 		},
 	});
 

@@ -1,7 +1,7 @@
 {
 	"build": {
-		"beforeDevCommand": "pnpm dev",
-		"beforeBuildCommand": "pnpm build",
+		"beforeDevCommand": "pnpm build:remote && pnpm dev",
+		"beforeBuildCommand": "pnpm build:remote && vinxi build",
 		"devPath": "http://localhost:3000",
 		"distDir": "../.output/public",
 		"withGlobalTauri": false
@@ -43,6 +43,7 @@
 		},
 		"bundle": {
 			"active": true,
+			"resources": ["remote-public/**/*"],
 			"icon": [
 				"icons/32x32.png",
 				"icons/128x128.png",

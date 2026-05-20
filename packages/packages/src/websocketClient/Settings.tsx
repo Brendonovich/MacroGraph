@@ -25,7 +25,7 @@ export default (ctx: Ctx) => {
 		onSubmit: ({ value }) => {
 			const url = value.url.trim();
 			if (!url) return;
-			addWebsocket(url, value.name);
+			void addWebsocket(url, value.name);
 			form.reset();
 		},
 	}));
@@ -57,6 +57,13 @@ export default (ctx: Ctx) => {
 			</Show>
 
 			<Show when={!getRemoteShellMode() || hostMirrorWs().length === 0}>
+			<p class="text-sm text-neutral-500 mb-4">
+				MacroGraph WebSocket <strong>servers</strong> are plain{" "}
+				<code class="text-xs">ws://</code> only (no TLS). To connect to another
+				MG instance on your LAN, use{" "}
+				<code class="text-xs">ws://&lt;host-ip&gt;:&lt;port&gt;</code>, not{" "}
+				<code class="text-xs">wss://</code>.
+			</p>
 			<Switch>
 				<Match when={websockets.size !== 0}>
 					<table class="mb-4 table-auto w-full">
@@ -170,10 +177,9 @@ export default (ctx: Ctx) => {
 														);
 														return;
 													}
-													const ok = changeWebsocketUrl(key, trimmed);
-													if (ok) {
-														setEditing(null);
-													}
+													void changeWebsocketUrl(key, trimmed).then((ok) => {
+														if (ok) setEditing(null);
+													});
 												}}
 												onKeyDown={(e) => {
 													if (e.key === "Enter") {
@@ -199,18 +205,37 @@ export default (ctx: Ctx) => {
 												Connected
 											</Match>
 											<Match when={value.state === "connecting"}>
-												Connecting
+												<div>
+													<div>Connecting</div>
+													<Show when={value.lastError}>
+														<p class="text-xs text-red-400 mt-1 max-w-md break-words">
+															{value.lastError}
+														</p>
+													</Show>
+												</div>
 											</Match>
 											<Match when={value.state === "disconnected"}>
-												<span class="mr-4">Disconnected</span>
-												<Button onClick={() => addWebsocket(key)}>
-													Connect
-												</Button>
+												<div>
+													<span class="mr-4">Disconnected</span>
+													<Show when={value.lastError}>
+														<p class="text-xs text-red-400 mt-1 max-w-md break-words">
+															{value.lastError}
+														</p>
+													</Show>
+													<Button
+														class="mt-1"
+														onClick={() => void addWebsocket(key)}
+													>
+														Connect
+													</Button>
+												</div>
 											</Match>
 										</Switch>
 									</td>
 									<td>
-										<Button onClick={() => removeWebsocket(key)}>Remove</Button>
+										<Button onClick={() => void removeWebsocket(key)}>
+											Remove
+										</Button>
 									</td>
 								</tr>
 							)}

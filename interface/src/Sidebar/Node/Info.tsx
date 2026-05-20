@@ -128,8 +128,11 @@ export function NodeInfo(props: { node: Node }) {
 					ctx.invocationWorkspaceKey(),
 					props.node.graph.id,
 					props.node.id,
+					props.node.state.trackInvocations,
 				] as const,
-			([, , nodeId]) => {
+			([, , nodeId, tracking]) => {
+				if (!tracking) return;
+
 				void ctx.hydrateNodeInvocationLog(graphRefOf(props.node.graph), nodeId);
 
 				if (props.node.graph.project.core.remoteShell) {
@@ -159,12 +162,37 @@ export function NodeInfo(props: { node: Node }) {
 				<Field name="Name">{props.node.state.name}</Field>
 				<Field name="Schema">{props.node.schema.name}</Field>
 				<Field name="Schema Package">{props.node.schema.package.name}</Field>
+				<label class="flex flex-row items-center gap-2 pt-1 cursor-pointer">
+					<input
+						type="checkbox"
+						class="rounded border-neutral-600 bg-neutral-800"
+						checked={props.node.state.trackInvocations}
+						onChange={(e) => {
+							ctx.execute("setNodeTrackInvocations", {
+								...graphRefOf(props.node.graph),
+								nodeId: props.node.id,
+								trackInvocations: e.currentTarget.checked,
+							});
+						}}
+					/>
+					<span class="text-sm text-neutral-300">Track invocations</span>
+				</label>
 			</SidebarSection>
 
 			<SidebarSection
 				title={`Node History (last ${MAX_NODE_INVOCATIONS})`}
 				class="flex min-h-0 flex-col overflow-hidden p-0"
 			>
+				<Show
+					when={props.node.state.trackInvocations}
+					fallback={
+						<p class="p-3 text-sm text-neutral-500">
+							Enable &quot;Track invocations&quot; above to record runs for this
+							node. Tracking is off by default to save memory during high event
+							rates.
+						</p>
+					}
+				>
 				<div class="flex flex-row gap-1 p-1 border-b border-neutral-900">
 					<For each={typeFilterOptions}>
 						{(type) => (
@@ -280,6 +308,7 @@ export function NodeInfo(props: { node: Node }) {
 						</Show>
 					</ul>
 				</div>
+				</Show>
 			</SidebarSection>
 		</>
 	);

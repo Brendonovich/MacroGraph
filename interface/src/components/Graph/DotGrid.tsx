@@ -2,6 +2,7 @@ import type { XY } from "@macrograph/runtime";
 import { createEffect, createSignal, onCleanup, Show } from "solid-js";
 
 import { isPaneResizing, onPaneResizeEnd } from "../../paneResizeSession";
+import { trackDotGridDraw } from "../../graphPerf";
 import { useGraphContext } from "./Context";
 import { GRID_SIZE } from "./util";
 
@@ -24,6 +25,7 @@ export const MAX_ZOOM_DOT_PX = 2;
 export const MAX_ZOOM_SPACING_MULT = 1;
 
 interface Props {
+	active?: boolean;
 	width: () => number;
 	height: () => number;
 }
@@ -97,6 +99,7 @@ function drawDotGrid(
 
 export function DotGrid(props: Props) {
 	const graphCtx = useGraphContext();
+	const active = () => props.active !== false;
 	const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement>();
 	const [paintEpoch, setPaintEpoch] = createSignal(0);
 
@@ -109,7 +112,8 @@ export function DotGrid(props: Props) {
 
 	createEffect(() => {
 		paintEpoch();
-		if (isPaneResizing()) return;
+		active();
+		if (!active() || isPaneResizing()) return;
 
 		const canvas = canvasRef();
 		const width = props.width();
@@ -132,7 +136,9 @@ export function DotGrid(props: Props) {
 			const { dotPx, spacingMult } = dotGridParams(scale);
 
 			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			const drawStart = performance.now();
 			drawDotGrid(ctx, width, height, translate, scale, dotPx, spacingMult);
+			trackDotGridDraw(performance.now() - drawStart);
 		});
 
 		return () => {

@@ -1,10 +1,11 @@
-import type { PrintItem, PrintType } from "@macrograph/runtime";
+import { type PrintItem, type PrintType, graphRefOf } from "@macrograph/runtime";
 import { createMarker, makeSearchRegex } from "@solid-primitives/marker";
 import { For, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton } from "../../components/ui";
 import { useInterfaceContext } from "../../context";
+import { frameNodeInActiveTab } from "../../frameGraphNode";
 import { filterWithTokenisedSearch, tokeniseString } from "../../util";
 import { SearchInput } from "../SearchInput";
 
@@ -22,6 +23,9 @@ const typeLabels: Record<PrintType, string> = {
 	error: "Errors",
 };
 
+/** In-memory console rows; unbounded growth OOMs long-running graphs. */
+const MAX_CONSOLE_ITEMS = 500;
+
 export function Console() {
 	const [items, setItems] = createSignal<PrintItem[]>([]);
 	const [search, setSearch] = createSignal("");
@@ -32,7 +36,7 @@ export function Console() {
 
 	onMount(() => {
 		const unsub = interfaceCtx.core.printSubscribe((value) =>
-			setItems((i) => [value, ...i]),
+			setItems((i) => [value, ...i].slice(0, MAX_CONSOLE_ITEMS)),
 		);
 
 		onCleanup(unsub);
@@ -135,9 +139,10 @@ export function Console() {
 
 												interfaceCtx.selectGraph(g);
 												interfaceCtx.execute("setGraphSelection", {
-													graphId: g.id,
+													...graphRefOf(g),
 													selection: [{ type: "node", id: n.id }],
 												});
+												frameNodeInActiveTab(interfaceCtx, g, n);
 											}}
 											disabled={!node()}
 										>

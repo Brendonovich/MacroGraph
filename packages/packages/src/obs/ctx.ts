@@ -1,4 +1,8 @@
-import { getRemoteShellMode, type ObsNativeBridge } from "@macrograph/runtime";
+import {
+	getRemoteShellMode,
+	registerWebviewReloadCleanup,
+	type ObsNativeBridge,
+} from "@macrograph/runtime";
 
 import { requestHostMirrorSync } from "../hostMirror/sync";
 import { Maybe } from "@macrograph/option";
@@ -26,6 +30,8 @@ const INSTANCE_SCHEMA = v.object({
 export function createCtx(obsNative?: ObsNativeBridge) {
 	const instances = new ReactiveMap<string, InstanceState>();
 	const eventUnsubs = new Map<string, () => void>();
+	const reconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
+	let reloading = false;
 
 	const [hostMirrorRows, setHostMirrorRows] = createSignal<
 		Array<{ url: string; state: string; hasPassword: boolean }>
@@ -59,10 +65,17 @@ export function createCtx(obsNative?: ObsNativeBridge) {
 			});
 			requestHostMirrorSync();
 
-			setTimeout(() => {
-				console.log("disconnect running");
-				connectInstance(ip);
-			}, 10000);
+			if (reloading) return;
+			const prev = reconnectTimers.get(ip);
+			if (prev !== undefined) clearTimeout(prev);
+			reconnectTimers.set(
+				ip,
+				setTimeout(() => {
+					reconnectTimers.delete(ip);
+					if (reloading || !instances.has(ip)) return;
+					void connectInstance(ip);
+				}, 10_000),
+			);
 		}
 
 		if (obsNative) {
@@ -140,20 +153,61 @@ export function createCtx(obsNative?: ObsNativeBridge) {
 		persistInstances();
 	}
 
-	Maybe(localStorage.getItem(OBS_INSTANCES)).mapAsync(async (jstr) => {
+	async function shutdownAll() {
+		reloading = true;
+		for (const t of reconnectTimers.values()) {
+			clearTimeout(t);
+		}
+		reconnectTimers.clear();
+		for (const ip of [...instances.keys()]) {
+			eventUnsubs.get(ip)?.();
+			eventUnsubs.delete(ip);
+			const inst = instances.get(ip);
+			if (inst?.state === "connected") {
+				await inst.obs.disconnect();
+			}
+			if (inst) {
+				instances.set(ip, {
+					state: "disconnected",
+					password: inst.password,
+				});
+			}
+		}
+		if (obsNative?.disconnectAll) {
+			await obsNative.disconnectAll();
+		}
+	}
+
+	async function bootstrapFromStorage() {
 		if (getRemoteShellMode()) return;
-		const instances = parseJsonWithContext(
+		await shutdownAll();
+		const jstr = localStorage.getItem(OBS_INSTANCES);
+		if (!jstr) {
+			reloading = false;
+			return;
+		}
+		const rows = parseJsonWithContext(
 			"packages/obs createCtx: localStorage key obs-instances",
 			v.array(INSTANCE_SCHEMA),
 			jstr,
 		);
-
-		for (const i of instances) {
-			addInstance(i.url, i.password);
+		reloading = false;
+		for (const i of rows) {
+			instances.set(i.url, {
+				state: "disconnected",
+				password: i.password,
+			});
 		}
-	});
+		for (const i of rows) {
+			await addInstance(i.url, i.password);
+		}
+	}
+
+	registerWebviewReloadCleanup(() => shutdownAll());
+	void bootstrapFromStorage();
 
 	function persistInstances() {
+		if (reloading) return;
 		localStorage.setItem(
 			OBS_INSTANCES,
 			JSON.stringify(

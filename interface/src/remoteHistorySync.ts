@@ -98,12 +98,10 @@ export function registerRemoteHistoryActions(actions: HistoryActions | null) {
 export function applyRemoteHistoryItems(items: RemoteHistoryWireItem[]) {
 	const actions = actionsRef;
 	if (!actions) {
-		console.warn("applyRemoteHistoryItems: no editor session registered");
 		return;
 	}
 	if (!Array.isArray(items)) {
 		const msg = "applyRemoteHistoryItems: items is not an array";
-		console.warn(msg, items);
 		syncDebug("warn", msg, { itemsType: typeof items, items });
 		return;
 	}
@@ -129,7 +127,6 @@ export function applyRemoteHistoryItems(items: RemoteHistoryWireItem[]) {
 				}
 			} else {
 				const msg = `Unknown remote history action: ${it.type}`;
-				console.warn(msg);
 				syncDebug("warn", msg, { index: i, entry: it.entry });
 			}
 		}
@@ -151,12 +148,10 @@ export type WireGraphPositionsEphemeral = {
 export function applySetGraphItemPositionsPerform(entry: WireGraphPositionsEphemeral) {
 	const actions = actionsRef;
 	if (!actions) {
-		console.warn("applySetGraphItemPositionsPerform: no editor session registered");
 		return;
 	}
 	if (!entry?.items || !Array.isArray(entry.items)) {
 		const msg = "applySetGraphItemPositionsPerform: invalid items";
-		console.warn(msg, entry);
 		syncDebug("warn", msg, {
 			graphKind: entry?.graphKind,
 			graphId: entry?.graphId,
@@ -246,7 +241,9 @@ export type WireCursorPosition = {
 export type RemoteCursor = WireCursorPosition;
 
 // Module-level cursor state using a Map + version counter for reliable reactivity
-const cursorMap = new Map<string, RemoteCursor>();
+const REMOTE_EPHEMERAL_TTL_MS = 60_000;
+
+const cursorMap = new Map<string, RemoteCursor & { updatedAt: number }>();
 const [cursorVersion, setCursorVersion] = /*@once*/ createRoot(() => createSignal(0));
 
 // Module-level user list and follow state
@@ -271,11 +268,12 @@ export function setFollowUserId(id: string | null) {
 
 export function getRemoteCursors(): RemoteCursor[] {
 	cursorVersion();
-	return [...cursorMap.values()];
+	return [...cursorMap.values()].map(({ updatedAt: _, ...c }) => c);
 }
 
 export function updateRemoteCursor(cursor: RemoteCursor) {
-	cursorMap.set(cursor.id, cursor);
+	pruneStaleRemoteMaps();
+	cursorMap.set(cursor.id, { ...cursor, updatedAt: Date.now() });
 	setCursorVersion((v) => v + 1);
 	onCursorUpdate?.(cursor);
 }
@@ -295,16 +293,17 @@ export type RemotePinDrag = {
 	position: { x: number; y: number };
 };
 
-const pinDragMap = new Map<string, RemotePinDrag>();
+const pinDragMap = new Map<string, RemotePinDrag & { updatedAt: number }>();
 const [pinDragVersion, setPinDragVersion] = /*@once*/ createRoot(() => createSignal(0));
 
 export function getRemotePinDrags(): RemotePinDrag[] {
 	pinDragVersion();
-	return [...pinDragMap.values()];
+	return [...pinDragMap.values()].map(({ updatedAt: _, ...d }) => d);
 }
 
 export function updateRemotePinDrag(drag: RemotePinDrag) {
-	pinDragMap.set(drag.id, drag);
+	pruneStaleRemoteMaps();
+	pinDragMap.set(drag.id, { ...drag, updatedAt: Date.now() });
 	setPinDragVersion((v) => v + 1);
 }
 
@@ -323,16 +322,30 @@ export type RemoteSelectionBox = {
 	height: number;
 };
 
-const selectionBoxMap = new Map<string, RemoteSelectionBox>();
+const selectionBoxMap = new Map<string, RemoteSelectionBox & { updatedAt: number }>();
 const [selectionBoxVersion, setSelectionBoxVersion] = /*@once*/ createRoot(() => createSignal(0));
+
+function pruneStaleRemoteMaps() {
+	const cutoff = Date.now() - REMOTE_EPHEMERAL_TTL_MS;
+	for (const [id, c] of cursorMap) {
+		if (c.updatedAt < cutoff) cursorMap.delete(id);
+	}
+	for (const [id, d] of pinDragMap) {
+		if (d.updatedAt < cutoff) pinDragMap.delete(id);
+	}
+	for (const [id, b] of selectionBoxMap) {
+		if (b.updatedAt < cutoff) selectionBoxMap.delete(id);
+	}
+}
 
 export function getRemoteSelectionBoxes(): RemoteSelectionBox[] {
 	selectionBoxVersion();
-	return [...selectionBoxMap.values()];
+	return [...selectionBoxMap.values()].map(({ updatedAt: _, ...b }) => b);
 }
 
 export function updateRemoteSelectionBox(box: RemoteSelectionBox) {
-	selectionBoxMap.set(box.id, box);
+	pruneStaleRemoteMaps();
+	selectionBoxMap.set(box.id, { ...box, updatedAt: Date.now() });
 	setSelectionBoxVersion((v) => v + 1);
 }
 

@@ -6,6 +6,7 @@ use std::{
         atomic::{AtomicU64, Ordering},
         Arc,
     },
+    time::Duration,
 };
 
 use base64::{engine::general_purpose, Engine};
@@ -60,6 +61,7 @@ pub struct ObsConn {
 }
 
 #[derive(Clone, serde::Serialize, Type)]
+#[serde(rename_all = "camelCase")]
 pub struct ObsEventMsg {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lifecycle: Option<String>,
@@ -389,10 +391,32 @@ impl Ctx {
     pub async fn disconnect(&self, url: String) {
         let maybe = self.conns.lock().await.remove(&url);
         if let Some(conn) = maybe {
-            conn.recv_task.abort();
             if let Ok(mut w) = conn.write.try_lock() {
                 let _ = w.send(Message::close(None, "")).await;
             }
+            const CLOSE_WAIT: Duration = Duration::from_secs(3);
+            match Arc::try_unwrap(conn) {
+                Ok(conn) => {
+                    let abort = conn.recv_task.abort_handle();
+                    match tokio::time::timeout(CLOSE_WAIT, conn.recv_task).await {
+                        Ok(Ok(())) => {}
+                        Ok(Err(e)) => {
+                            eprintln!("[obs-native] recv task join error for {url}: {e}")
+                        }
+                        Err(_) => abort.abort(),
+                    }
+                }
+                Err(conn) => {
+                    conn.recv_task.abort();
+                }
+            }
+        }
+    }
+
+    pub async fn disconnect_all(&self) {
+        let urls: Vec<String> = self.conns.lock().await.keys().cloned().collect();
+        for url in urls {
+            self.disconnect(url).await;
         }
     }
 
@@ -448,6 +472,12 @@ pub fn router() -> AlphaRouter<super::Ctx> {
             "disconnect",
             R.mutation(|ctx, url: String| async move {
                 ctx.obs_native.disconnect(url).await;
+            }),
+        )
+        .procedure(
+            "disconnectAll",
+            R.mutation(|ctx, _: ()| async move {
+                ctx.obs_native.disconnect_all().await;
             }),
         )
         .procedure(

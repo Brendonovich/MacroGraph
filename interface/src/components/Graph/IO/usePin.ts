@@ -24,6 +24,7 @@ import {
 } from "solid-js";
 
 import { type InterfaceContext, useInterfaceContext } from "../../../context";
+import { trackPinLayout } from "../../../graphPerf";
 import { useGraphContext } from "../Context";
 
 export function usePin(pin: Accessor<Pin>) {
@@ -279,6 +280,7 @@ export function usePin(pin: Accessor<Pin>) {
 		const ref = getRef();
 		if (!ref) return;
 
+		const t0 = performance.now();
 		const rect = ref.getBoundingClientRect();
 		if (!rect) return;
 
@@ -289,6 +291,8 @@ export function usePin(pin: Accessor<Pin>) {
 				y: rect.y + rect.height / 2,
 			}),
 		);
+		interfaceCtx.bumpPinPositionsEpoch();
+		trackPinLayout(performance.now() - t0);
 	});
 
 	const dim = createMemo(() => {

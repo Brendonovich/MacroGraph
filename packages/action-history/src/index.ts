@@ -56,6 +56,8 @@ export type ActionHistoryCommitOptions<TActions extends HistoryActions> = {
 	onCommit?: (items: Array<ActionHistoryCommitItem<TActions>>) => void;
 };
 
+const MAX_HISTORY_BATCHES = 150;
+
 export function createActionHistory<TActions extends HistoryActions>(
 	actions: TActions,
 	save: () => void,
@@ -91,16 +93,22 @@ export function createActionHistory<TActions extends HistoryActions>(
 	function addHistoryItem<T extends keyof TActions>(
 		item: HistoryItem<TActions, T> | HistoryItem<TActions, T>[],
 	) {
+		const idx = nextHistoryIndex();
+		let trimmed = 0;
 		setHistory(
 			produce((history) => {
 				history.splice(
-					nextHistoryIndex(),
-					history.length - nextHistoryIndex(),
+					idx,
+					history.length - idx,
 					Array.isArray(item) ? item : [item],
 				);
+				if (history.length > MAX_HISTORY_BATCHES) {
+					trimmed = history.length - MAX_HISTORY_BATCHES;
+					history.splice(0, trimmed);
+				}
 			}),
 		);
-		setNextHistoryIndex((i) => i + 1);
+		setNextHistoryIndex(Math.max(0, idx + 1 - trimmed));
 	}
 
 	function undo() {
@@ -123,7 +131,6 @@ export function createActionHistory<TActions extends HistoryActions>(
 		if (!entry) return;
 
 		Solid.batch(() => {
-			console.log(entry);
 			for (const e of entry) {
 				actions[e.type]!.perform(unwrap(e.entry as any));
 			}

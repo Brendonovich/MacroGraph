@@ -1,4 +1,4 @@
-/** Debug logging for the remote editor WebSocket client. Enable via `localStorage.setItem("macrograph.remoteDebug", "1")` or `?remoteDebug=1` in the URL. */
+/** Remote editor debug logging. `remoteLog`/`remoteWarn` are no-ops; errors always use `console.error`. */
 
 const LS_KEY = "macrograph.remoteDebug";
 
@@ -32,20 +32,12 @@ export function setRemoteClientLogEnabled(on: boolean) {
 	}
 }
 
+export function remoteLog(_message: string, _data?: unknown) {}
+
+export function remoteWarn(_message: string, _data?: unknown) {}
+
 function tag(): string {
 	return `[remote-editor ${new Date().toISOString().slice(11, 23)}]`;
-}
-
-export function remoteLog(message: string, data?: unknown) {
-	if (!enabled) return;
-	if (data !== undefined) console.log(tag(), message, data);
-	else console.log(tag(), message);
-}
-
-export function remoteWarn(message: string, data?: unknown) {
-	if (!enabled) return;
-	if (data !== undefined) console.warn(tag(), message, data);
-	else console.warn(tag(), message);
 }
 
 /** Always logged — inbound handler errors that break sync. */

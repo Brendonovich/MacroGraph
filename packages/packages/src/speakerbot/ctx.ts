@@ -36,9 +36,7 @@ export function createCtx() {
 						setState({ type: "connected", ws });
 					});
 
-					ws.addEventListener("message", (msg) => {
-						console.log(msg);
-					});
+					ws.addEventListener("message", () => {});
 
 					setState({ type: "connecting", ws });
 
