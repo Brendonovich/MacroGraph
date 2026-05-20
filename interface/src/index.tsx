@@ -26,6 +26,7 @@ import {
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
 import { createMousePosition } from "@solid-primitives/mouse";
+import { debounce } from "@solid-primitives/scheduled";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import "@total-typescript/ts-reset";
 import type { Accessor } from "solid-js";
@@ -67,6 +68,7 @@ import {
 	tabKey,
 	useInterfaceContext,
 } from "./context";
+import { beginGraphLoad } from "./graphLoadPerf";
 import "./global.css";
 import {
 	applySplitRatioAtPath,
@@ -331,10 +333,11 @@ function ProjectInterface() {
 		const model = ctx.core.project.getGraphByKind(ref.graphKind, ref.graphId);
 		if (!model) return;
 
-		return {
+		const result = {
 			model,
 			state: normalizeGraphEditorTab(tab),
 		} as unknown as CurrentGraph;
+		return result;
 	});
 
 	const [hoveredGroupId, setHoveredGroupId] = Solid.createSignal<string | null>(
@@ -397,7 +400,9 @@ function ProjectInterface() {
 						<Sidebars.Project
 							currentGraph={currentGraph()?.model}
 							project={ctx.core.project}
-							onGraphClicked={(graph) => ctx.selectGraph(graph)}
+							onGraphClicked={(graph) => {
+								ctx.selectGraph(graph);
+							}}
 							onFunctionClicked={(fn) => ctx.selectFunction(fn)}
 							onQueueClicked={(queue) => ctx.selectQueue(queue)}
 							onFunctionQueueClicked={(queue) => ctx.selectFunctionQueue(queue)}
@@ -1316,8 +1321,18 @@ function MosaicPaneHost(props: { groupId: string }) {
 			onSelectedChanged={(tabIndex) => {
 				const gi = findGroupIndex(ctx.mosaicState.groups, props.groupId);
 				if (gi < 0) return;
-				const tab = ctx.mosaicState.groups[gi]?.tabs[tabIndex];
+				const group = ctx.mosaicState.groups[gi];
+				if (!group || group.selectedIndex === tabIndex) return;
+				const tab = group.tabs[tabIndex];
 				const key = tab ? tabKey(tab) : undefined;
+				if (tab && isGraphEditorTab(tab)) {
+					const ref = graphRefFromTab(tab);
+					const graph = ctx.core.project.getGraphByKind(
+						ref.graphKind,
+						ref.graphId,
+					);
+					if (graph) beginGraphLoad(graph, "tabSwitch");
+				}
 				ctx.setMosaicState("groups", gi, "selectedIndex", tabIndex);
 				ctx.setMosaicState("groups", gi, "selectedTabKey", key);
 				queueMicrotask(() => {
@@ -1381,9 +1396,18 @@ function MosaicTabPanel(props: {
 		if (!graph) return null;
 
 		const gi = groupIndex();
+		const commitGraphTranslate = debounce((next: XY) => {
+			if (gi < 0) return;
+			ctx.setMosaicState("groups", gi, "tabs", props.tabIndex, "translate", next);
+		}, 120);
+		const commitGraphTranslateNow = (next: XY) => {
+			if (gi < 0) return;
+			commitGraphTranslate.clear();
+			ctx.setMosaicState("groups", gi, "tabs", props.tabIndex, "translate", next);
+		};
 		const setGraphTranslate = (t: XY) => {
 			if (gi < 0) return;
-			ctx.setMosaicState("groups", gi, "tabs", props.tabIndex, "translate", t);
+			commitGraphTranslate(t);
 		};
 		const setGraphScale = (s: number) => {
 			if (gi < 0) return;
@@ -1393,6 +1417,7 @@ function MosaicTabPanel(props: {
 
 		return (
 			<Graph
+				key={`${graph.kind}:${graph.id}`}
 				active={props.active}
 				graph={graph}
 				state={normalizeGraphEditorTab(tab)}
@@ -1405,6 +1430,7 @@ function MosaicTabPanel(props: {
 				onSizeChange={props.active ? ctx.setGraphBounds : () => {}}
 				onScaleChange={setGraphScale}
 				onTranslateChange={setGraphTranslate}
+				onTranslateCommit={commitGraphTranslateNow}
 			/>
 		);
 	}

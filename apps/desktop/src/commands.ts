@@ -10,12 +10,18 @@ declare global {
 // Function avoids 'window not defined' in SSR
 const invoke = () => window.__TAURI_INVOKE__;
 
+/**
+ * Append a line from the webview (uncaught errors, unhandled rejections).
+ */
 export function crashLogAppend(kind: string, message: string) {
-    return invoke()<null>("crash_log_append", { kind, message })
+    return invoke()<null>("crash_log_append", { kind,message })
 }
 
+/**
+ * Path to `crash.log` for support / debugging.
+ */
 export function crashLogPath() {
-    return invoke()<string>("crash_log_path", {})
+    return invoke()<string>("crash_log_path")
 }
 
 /**

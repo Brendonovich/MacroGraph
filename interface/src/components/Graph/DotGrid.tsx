@@ -2,7 +2,6 @@ import type { XY } from "@macrograph/runtime";
 import { createEffect, createSignal, onCleanup, Show } from "solid-js";
 
 import { isPaneResizing, onPaneResizeEnd } from "../../paneResizeSession";
-import { trackDotGridDraw } from "../../graphPerf";
 import { useGraphContext } from "./Context";
 import { GRID_SIZE } from "./util";
 
@@ -102,6 +101,9 @@ export function DotGrid(props: Props) {
 	const active = () => props.active !== false;
 	const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement>();
 	const [paintEpoch, setPaintEpoch] = createSignal(0);
+	let lastBitmapW = 0;
+	let lastBitmapH = 0;
+	let lastDpr = 0;
 
 	onCleanup(onPaneResizeEnd(() => setPaintEpoch((n) => n + 1)));
 
@@ -125,10 +127,17 @@ export function DotGrid(props: Props) {
 		let raf = 0;
 		raf = requestAnimationFrame(() => {
 			const dpr = window.devicePixelRatio || 1;
-			canvas.width = Math.round(width * dpr);
-			canvas.height = Math.round(height * dpr);
-			canvas.style.width = `${width}px`;
-			canvas.style.height = `${height}px`;
+			const bw = Math.round(width * dpr);
+			const bh = Math.round(height * dpr);
+			if (bw !== lastBitmapW || bh !== lastBitmapH || dpr !== lastDpr) {
+				lastBitmapW = bw;
+				lastBitmapH = bh;
+				lastDpr = dpr;
+				canvas.width = bw;
+				canvas.height = bh;
+				canvas.style.width = `${width}px`;
+				canvas.style.height = `${height}px`;
+			}
 
 			const ctx = canvas.getContext("2d");
 			if (!ctx) return;
@@ -136,9 +145,7 @@ export function DotGrid(props: Props) {
 			const { dotPx, spacingMult } = dotGridParams(scale);
 
 			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-			const drawStart = performance.now();
 			drawDotGrid(ctx, width, height, translate, scale, dotPx, spacingMult);
-			trackDotGridDraw(performance.now() - drawStart);
 		});
 
 		return () => {

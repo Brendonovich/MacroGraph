@@ -37,7 +37,7 @@ export function CommentBox(props: Props) {
 	const [editing, setEditing] = createSignal(false);
 
 	const isSelected = createMemo(() =>
-		graph.state.selectedItemIds.some(
+		graph.selectedItemIds().some(
 			(item) => item?.type === "commentBox" && item.id === box().id,
 		),
 	);
@@ -48,7 +48,7 @@ export function CommentBox(props: Props) {
 
 			if (e.button !== 0) return;
 
-			const prevSelection = [...graph.state.selectedItemIds];
+			const prevSelection = [...graph.selectedItemIds()];
 
 			props.onSelected(true);
 

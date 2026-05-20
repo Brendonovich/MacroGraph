@@ -2,6 +2,7 @@ import { Maybe } from "@macrograph/option";
 import {
 	DataInput,
 	DataOutput,
+	type Graph,
 	type XY,
 	pinIsOutput,
 	splitIORef,
@@ -13,13 +14,58 @@ import { createEffect, createSignal, onCleanup, untrack } from "solid-js";
 import { config } from "../../../ConfigDialog";
 import type { GraphBounds } from "../../../context";
 import { useInterfaceContext } from "../../../context";
-import { trackConnectionDraw } from "../../../graphPerf";
 import { getRemotePinDrags } from "../../../remoteHistorySync";
 import { isPaneResizing, onPaneResizeEnd } from "../../../paneResizeSession";
 import { useGraphContext } from "../Context";
 import { colour } from "../util";
+import { markGraphLoadDetail, markGraphLoadPhase } from "../../../graphLoadPerf";
 
 const LOAD_SETTLE_MS = 80;
+
+type CompiledEdge = {
+	outNodeId: number;
+	inNodeId: number;
+	output: unknown;
+	input: unknown;
+	inputType: t.Any | null;
+};
+
+let lastGraphKey = "";
+const parsedRefCache = new Map<string, ReturnType<typeof splitIORef>>();
+let compiledEdges: CompiledEdge[] = [];
+let compiledEdgesKey = "";
+
+function parseIORefCached(ref: string) {
+	const cached = parsedRefCache.get(ref);
+	if (cached) return cached;
+	const parsed = splitIORef(ref);
+	parsedRefCache.set(ref, parsed);
+	return parsed;
+}
+
+function rebuildCompiledEdges(graph: Graph) {
+	compiledEdges = [];
+	for (const [refStr, conns] of graph.connections) {
+		const outRef = parseIORefCached(refStr);
+		if (outRef.type === "i") continue;
+		const output = graph.nodes.get(outRef.nodeId)?.output(outRef.ioId);
+		if (!output) continue;
+
+		for (const conn of conns) {
+			const inRef = parseIORefCached(conn);
+			const input = graph.nodes.get(inRef.nodeId)?.input(inRef.ioId);
+			if (!input) continue;
+
+			compiledEdges.push({
+				outNodeId: outRef.nodeId,
+				inNodeId: inRef.nodeId,
+				output,
+				input,
+				inputType: input instanceof DataInput ? input.type : null,
+			});
+		}
+	}
+}
 
 export const ConnectionRenderer = (props: {
 	graphBounds: GraphBounds;
@@ -60,8 +106,9 @@ export const ConnectionRenderer = (props: {
 		interfaceCtx.pinPositionsEpoch();
 		interfaceCtx.viewTransformEpoch();
 		active();
-		ctx.model();
-		ctx.state.selectedItemIds;
+		ctx.model().kind;
+		ctx.model().id;
+		ctx.selectedItemIds();
 		props.graphBounds.width;
 		props.graphBounds.height;
 
@@ -93,40 +140,52 @@ export const ConnectionRenderer = (props: {
 			const drawStart = performance.now();
 
 			untrack(() => {
-				function fromGraphSpace(pos: XY) {
-					return {
-						x: (pos.x - ctx.state.translate.x) * ctx.state.scale,
-						y: (pos.y - ctx.state.translate.y) * ctx.state.scale,
-					};
-				}
+				type PathBatch = {
+					colour: string;
+					alpha: number;
+					path: Path2D;
+				};
+				const pathBatches = new Map<string, PathBatch>();
+				let pathSegmentCount = 0;
 
 				function drawConnection(
-					canvas: CanvasRenderingContext2D,
 					type: t.Any | null,
 					_from: XY,
 					_to: XY,
 					alpha = 0.75,
 				) {
-					const from = fromGraphSpace(_from);
-					const to = fromGraphSpace(_to);
-
-					const xDiff = from.x - to.x;
+					const fromX = (_from.x - screenTx) * screenScale;
+					const fromY = (_from.y - screenTy) * screenScale;
+					const toX = (_to.x - screenTx) * screenScale;
+					const toY = (_to.y - screenTy) * screenScale;
+					const xDiff = fromX - toX;
 					const cpMagnitude = Math.abs(Math.min(200, xDiff / 2));
-
-					canvas.lineWidth = 3 * ctx.state.scale;
-					canvas.beginPath();
-					canvas.moveTo(from.x, from.y);
-					canvas.bezierCurveTo(
-						from.x + cpMagnitude,
-						from.y,
-						to.x - cpMagnitude,
-						to.y,
-						to.x,
-						to.y,
+					const c = type ? colour(type) : "white";
+					const key = alpha < 0.5 ? `${c}|d` : `${c}|n`;
+					let batch = pathBatches.get(key);
+					if (!batch) {
+						batch = { colour: c, alpha, path: new Path2D() };
+						pathBatches.set(key, batch);
+					}
+					batch.path.moveTo(fromX, fromY);
+					batch.path.bezierCurveTo(
+						fromX + cpMagnitude,
+						fromY,
+						toX - cpMagnitude,
+						toY,
+						toX,
+						toY,
 					);
-					canvas.strokeStyle = type ? colour(type) : "white";
-					canvas.globalAlpha = alpha;
-					canvas.stroke();
+					pathSegmentCount++;
+				}
+
+				function flushConnectionBatches() {
+					canvas.lineWidth = 3 * ctx.state.scale;
+					for (const batch of pathBatches.values()) {
+						canvas.strokeStyle = batch.colour;
+						canvas.globalAlpha = batch.alpha;
+						canvas.stroke(batch.path);
+					}
 				}
 
 				canvas.clearRect(
@@ -138,54 +197,74 @@ export const ConnectionRenderer = (props: {
 				canvas.globalAlpha = 0.75;
 
 				const graph = ctx.model();
+				const graphKey = `${graph.kind}:${graph.id}`;
+				if (graphKey !== lastGraphKey) {
+					lastGraphKey = graphKey;
+					loadComplete = false;
+					parsedRefCache.clear();
+					compiledEdges = [];
+					compiledEdgesKey = "";
+				}
+
 				let connectionCount = 0;
+				let totalConnectionCandidates = 0;
+				const selectedItems = ctx.selectedItemIds();
+				const selectedIds =
+					selectedItems.length > 0
+						? new Set(
+								selectedItems
+									.filter((item) => item.type === "node")
+									.map((item) => item.id),
+							)
+						: null;
+				const useSelectionDimming =
+					selectedIds !== null && config.nodes.dimUnselectedConnections;
+				const hasSelection = selectedIds !== null;
 
-				for (const [refStr, conns] of graph.connections) {
-					const outRef = splitIORef(refStr);
-					if (outRef.type === "i") continue;
+				const padG = 280;
+				const tx = ctx.state.translate.x;
+				const ty = ctx.state.translate.y;
+				const s = ctx.state.scale;
+				const vw = props.graphBounds.width;
+				const vh = props.graphBounds.height;
+				const visL = tx - padG;
+				const visT = ty - padG;
+				const visR = tx + vw / s + padG;
+				const visB = ty + vh / s + padG;
+				const screenScale = s;
+				const screenTx = tx;
+				const screenTy = ty;
+				const segMayBeVisible = (a: XY, b: XY) => {
+					const minX = Math.min(a.x, b.x);
+					const maxX = Math.max(a.x, b.x);
+					const minY = Math.min(a.y, b.y);
+					const maxY = Math.max(a.y, b.y);
+					return !(maxX < visL || minX > visR || maxY < visT || minY > visB);
+				};
 
-					const output = graph.nodes.get(outRef.nodeId)?.output(outRef.ioId);
-					if (!output) continue;
+				const compiledKey = `${graph.kind}:${graph.id}:${graph.connections.size}`;
+				if (compiledKey !== compiledEdgesKey) {
+					rebuildCompiledEdges(graph);
+					compiledEdgesKey = compiledKey;
+				}
 
-					for (const conn of conns) {
-						connectionCount++;
-						const inRef = splitIORef(conn);
-
-						const isNodeSelected = ctx.state.selectedItemIds.find(
-							(item) =>
-								item.type === "node" &&
-								(item.id === outRef.nodeId || item.id === inRef.nodeId),
-						);
-
-						const input = graph.nodes.get(inRef.nodeId)?.input(inRef.ioId);
-
-						if (!input || !output) continue;
-
-						const inputPosition = Maybe(
-							interfaceCtx.pinPositions.get(input),
-						);
-						const outputPosition = Maybe(
-							interfaceCtx.pinPositions.get(output),
-						);
-
-						inputPosition
-							.zip(outputPosition)
-							.map(([input, output]) => ({ input, output }))
-							.peek((data) => {
-								drawConnection(
-									canvas,
-									input instanceof DataInput ? input.type : null,
-									data.output,
-									data.input,
-									ctx.state.selectedItemIds.length > 0
-										? isNodeSelected ||
-											!config.nodes.dimUnselectedConnections
-											? 0.75
-											: 0.15
-										: 0.75,
-								);
-							});
-					}
+				for (const edge of compiledEdges) {
+					const outputPos = interfaceCtx.pinPositions.get(edge.output as any);
+					if (!outputPos) continue;
+					const inputPos = interfaceCtx.pinPositions.get(edge.input as any);
+					if (!inputPos) continue;
+					totalConnectionCandidates++;
+					if (!segMayBeVisible(outputPos, inputPos)) continue;
+					connectionCount++;
+					let alpha = 0.75;
+					if (
+						hasSelection &&
+						useSelectionDimming &&
+						!selectedIds!.has(edge.outNodeId) &&
+						!selectedIds!.has(edge.inNodeId)
+					)
+						alpha = 0.15;
+					drawConnection(edge.inputType, outputPos, inputPos, alpha);
 				}
 
 				const dragState = (() => {
@@ -244,7 +323,6 @@ export const ConnectionRenderer = (props: {
 										if (AUTOCOMPLETE_MODE === "snap") {
 											if (pinIsOutput(autoconnectIO)) {
 												drawConnection(
-													canvas,
 													dragState.pin instanceof DataInput
 														? dragState.pin.type
 														: null,
@@ -253,7 +331,6 @@ export const ConnectionRenderer = (props: {
 												);
 											} else {
 												drawConnection(
-													canvas,
 													dragState.pin instanceof DataOutput
 														? dragState.pin.type
 														: null,
@@ -264,7 +341,6 @@ export const ConnectionRenderer = (props: {
 										} else {
 											if (pinIsOutput(autoconnectIO)) {
 												drawConnection(
-													canvas,
 													dragState.pin instanceof DataInput
 														? dragState.pin.type
 														: null,
@@ -274,7 +350,6 @@ export const ConnectionRenderer = (props: {
 												);
 											} else {
 												drawConnection(
-													canvas,
 													dragState.pin instanceof DataOutput
 														? dragState.pin.type
 														: null,
@@ -292,7 +367,6 @@ export const ConnectionRenderer = (props: {
 							pinPos.peek((pinPos) => {
 								if (pinIsOutput(dragState.pin))
 									drawConnection(
-										canvas,
 										dragState.pin instanceof DataOutput
 											? dragState.pin.type
 											: null,
@@ -301,7 +375,6 @@ export const ConnectionRenderer = (props: {
 									);
 								else
 									drawConnection(
-										canvas,
 										dragState.pin instanceof DataInput
 											? dragState.pin.type
 											: null,
@@ -326,15 +399,32 @@ export const ConnectionRenderer = (props: {
 					);
 					pinPos.peek((pos) => {
 						if (drag.isOutput)
-							drawConnection(canvas, null, pos, drag.position, 0.35);
-						else drawConnection(canvas, null, drag.position, pos, 0.35);
+							drawConnection(null, pos, drag.position, 0.35);
+						else drawConnection(null, drag.position, pos, 0.35);
 					});
 				}
 
-				trackConnectionDraw(
-					performance.now() - drawStart,
-					connectionCount,
+				flushConnectionBatches();
+
+				markGraphLoadDetail(
+					"connectionDrawMs",
+					Math.round(performance.now() - drawStart),
+					{ kind: graph.kind, id: graph.id },
 				);
+				markGraphLoadDetail("connectionsDrawnCount", connectionCount, {
+					kind: graph.kind,
+					id: graph.id,
+				});
+				markGraphLoadDetail(
+					"connectionCandidates",
+					totalConnectionCandidates,
+					{ kind: graph.kind, id: graph.id },
+				);
+				markGraphLoadPhase("connectionsDrawn", {
+					kind: graph.kind,
+					id: graph.id,
+				});
+
 				scheduleLoadComplete();
 			});
 		});

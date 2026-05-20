@@ -21,15 +21,71 @@ import {
 	createMemo,
 	createRoot,
 	createSignal,
+	onCleanup,
+	untrack,
 } from "solid-js";
 
 import { type InterfaceContext, useInterfaceContext } from "../../../context";
-import { trackPinLayout } from "../../../graphPerf";
 import { useGraphContext } from "../Context";
+
+const pendingPinPositionMeasures = new Set<() => boolean>();
+let pinPositionMeasureRaf: number | undefined;
+let pinMeasureFlushBump: (() => void) | undefined;
+const pinMeasureRectKey = new WeakMap<Pin, string>();
+let pinMeasureGeneration = 0;
+
+const PIN_MEASURE_BATCH = 500;
+
+export function resetPinMeasureCache() {
+	pinMeasureGeneration++;
+}
+
+function flushPinPositionMeasures() {
+	const jobs = [...pendingPinPositionMeasures];
+	pendingPinPositionMeasures.clear();
+	let changed = false;
+	const batch = jobs.slice(0, PIN_MEASURE_BATCH);
+	for (const job of batch) changed = job() || changed;
+	for (const job of jobs.slice(PIN_MEASURE_BATCH)) {
+		pendingPinPositionMeasures.add(job);
+	}
+	if (pendingPinPositionMeasures.size > 0) {
+		pinPositionMeasureRaf = requestAnimationFrame(() => {
+			pinPositionMeasureRaf = undefined;
+			flushPinPositionMeasures();
+		});
+	}
+	if (changed) pinMeasureFlushBump?.();
+}
+
+function schedulePinPositionMeasure(run: () => boolean) {
+	pendingPinPositionMeasures.add(run);
+	if (pinPositionMeasureRaf !== undefined) return;
+	pinPositionMeasureRaf = requestAnimationFrame(() => {
+		pinPositionMeasureRaf = undefined;
+		flushPinPositionMeasures();
+	});
+}
+
+export function flushAllPinPositionMeasuresSync() {
+	if (pinPositionMeasureRaf !== undefined) {
+		cancelAnimationFrame(pinPositionMeasureRaf);
+		pinPositionMeasureRaf = undefined;
+	}
+	const jobs = [...pendingPinPositionMeasures];
+	pendingPinPositionMeasures.clear();
+	let changed = false;
+	for (const job of jobs) changed = job() || changed;
+	if (changed) pinMeasureFlushBump?.();
+}
 
 export function usePin(pin: Accessor<Pin>) {
 	const interfaceCtx = useInterfaceContext();
 	const graph = useGraphContext();
+	pinMeasureFlushBump = () => interfaceCtx.bumpPinPositionsEpoch();
+	onCleanup(() => {
+		if (pinMeasureFlushBump) pinMeasureFlushBump = undefined;
+	});
 
 	const [getRef, ref] = createSignal<HTMLDivElement | null>(null!);
 
@@ -43,6 +99,7 @@ export function usePin(pin: Accessor<Pin>) {
 	let justMouseUpped = false;
 
 	createEffect(() => {
+		if (!graph.loadComplete()) return;
 		const thisPin = pin();
 
 		const ref = getRef();
@@ -268,35 +325,48 @@ export function usePin(pin: Accessor<Pin>) {
 		});
 	});
 
-	createEffect(() => {
-		pin().node.state.foldPins;
-		pin().node.state.position.x;
-		pin().node.state.position.y;
-		pin().node.state.name;
-		for (const i of pin().node.state.inputs) i.name ?? i.id;
-		for (const o of pin().node.state.outputs) o.name ?? o.id;
-		interfaceCtx.itemSizes.get(pin().node);
+	const measurePinPosition = (p: Pin): boolean => {
+		const el = getRef();
+		if (!el || !el.isConnected) return false;
 
-		const ref = getRef();
-		if (!ref) return;
+		const offset = graph.offset;
+		if (!graph.viewportReady()) return false;
 
-		const t0 = performance.now();
-		const rect = ref.getBoundingClientRect();
-		if (!rect) return;
+		const rect = el.getBoundingClientRect();
+		if (!rect) return false;
+
+		const rectKey = `${pinMeasureGeneration}|${offset.x}|${offset.y}|${rect.x}|${rect.y}|${rect.width}|${rect.height}`;
+		if (pinMeasureRectKey.get(p) === rectKey) return false;
+		pinMeasureRectKey.set(p, rectKey);
 
 		interfaceCtx.pinPositions.set(
-			pin(),
-			graph.toGraphSpace({
-				x: rect.x + rect.width / 2,
-				y: rect.y + rect.height / 2,
-			}),
+			p,
+			untrack(() =>
+				graph.toGraphSpace({
+					x: rect.x + rect.width / 2,
+					y: rect.y + rect.height / 2,
+				}),
+			),
 		);
-		interfaceCtx.bumpPinPositionsEpoch();
-		trackPinLayout(performance.now() - t0);
+		return true;
+	};
+
+	createEffect(() => {
+		if (!graph.pinsLayoutEnabled()) return;
+		const p = pin();
+		p.node.state.foldPins;
+		p.node.state.position.x;
+		p.node.state.position.y;
+		graph.offset.x;
+		graph.offset.y;
+		graph.viewportReady();
+		interfaceCtx.itemSizes.get(p.node);
+		schedulePinPositionMeasure(() => measurePinPosition(p));
 	});
 
 	const dim = createMemo(() => {
 		const p = pin();
+		if (!graph.loadComplete()) return false;
 
 		if (
 			(interfaceCtx.state.status !== "pinDragMode" ||

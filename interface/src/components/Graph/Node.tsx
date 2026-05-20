@@ -29,6 +29,7 @@ import { config } from "../../ConfigDialog";
 import { useInterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
 import { useGraphContext } from "./Context";
+import { estimateNodeBodyHeight } from "../../graphFastLoad";
 import { ContextMenuContent, ContextMenuItem } from "./ContextMenu";
 import {
 	DataInput,
@@ -40,12 +41,63 @@ import {
 } from "./IO";
 import "./Node.css";
 import { GRID_SIZE, handleSelectableItemPointerDown } from "./util";
-import { trackNodeMount } from "../../graphPerf";
 import { isPaneResizing } from "../../paneResizeSession";
 import { usePlatform } from "../../platform";
 
+type NodeResizeBinding = {
+	node: NodeModel;
+	interfaceCtx: ReturnType<typeof useInterfaceContext>;
+	onMeasured?: (width: number) => void;
+};
+
+const NODE_ESTIMATED_WIDTH = 220;
+const NODE_ESTIMATED_HEIGHT = 140;
+
+const nodeResizeBindings = new WeakMap<Element, NodeResizeBinding>();
+let sharedNodeResizeObserver: ResizeObserver | undefined;
+let nodeResizeFlushRaf: number | undefined;
+const nodeResizePending = new Map<Element, DOMRectReadOnly>();
+
+function scheduleNodeMinWidth(
+	el: HTMLElement,
+	setMinWidth: Solid.Setter<number | undefined>,
+) {
+	// Defer layout writes so ResizeObserver does not loop in the same frame.
+	queueMicrotask(() => {
+		if (!el.isConnected) return;
+		const desired = Math.ceil(el.clientWidth / GRID_SIZE) * GRID_SIZE;
+		setMinWidth((prev) => (prev === desired ? prev : desired));
+	});
+}
+
+function getSharedNodeResizeObserver() {
+	if (sharedNodeResizeObserver) return sharedNodeResizeObserver;
+	sharedNodeResizeObserver = new ResizeObserver((entries) => {
+		if (isPaneResizing()) return;
+			for (const entry of entries) {
+			nodeResizePending.set(entry.target, entry.contentRect);
+		}
+		if (nodeResizeFlushRaf !== undefined) return;
+		nodeResizeFlushRaf = requestAnimationFrame(() => {
+			nodeResizeFlushRaf = undefined;
+			for (const [target, contentRect] of nodeResizePending) {
+				nodeResizePending.delete(target);
+				const binding = nodeResizeBindings.get(target);
+				if (!binding) continue;
+				binding.interfaceCtx.itemSizes.set(binding.node, {
+					width: contentRect.width,
+					height: contentRect.height,
+				});
+				binding.onMeasured?.(contentRect.width);
+			}
+		});
+	});
+	return sharedNodeResizeObserver;
+}
+
 interface Props {
 	node: NodeModel;
+	renderIndex: number;
 	onSelected(ephemeral?: boolean): void;
 }
 
@@ -77,126 +129,112 @@ export const Node = (props: Props) => {
 	const interfaceCtx = useInterfaceContext();
 
 	const [active, setActive] = Solid.createSignal(0);
-	const [running, setRunning] = Solid.createSignal(NODE_RUNNING.isRunning(node()));
+	const [running, setRunning] = Solid.createSignal(false);
+	const [editingName, setEditingName] = Solid.createSignal(false);
+	const [menuOpen, setMenuOpen] = Solid.createSignal(false);
+
+	let ref: HTMLDivElement | undefined;
 
 	Solid.onMount(() => {
-		trackNodeMount();
+		if (!ref) return;
+		interfaceCtx.itemSizes.set(node(), {
+			width: NODE_ESTIMATED_WIDTH,
+			height: NODE_ESTIMATED_HEIGHT,
+		});
+	});
 
+	Solid.createEffect(() => {
+		if (!graph.loadComplete() || !ref) return;
+
+		setRunning(NODE_RUNNING.isRunning(node()));
 		const unsubEmit = NODE_EMIT.subscribe(node(), (data) => {
 			if (node().id === data.id && data.schema === node().schema) {
 				setActive(1);
 				setTimeout(() => setActive(0), 200);
 			}
 		});
-
-		setRunning(NODE_RUNNING.isRunning(node()));
 		const unsubRunning = NODE_RUNNING.subscribe(node(), () => {
 			setRunning(NODE_RUNNING.isRunning(node()));
 		});
 
-		Solid.onCleanup(() => {
-			unsubEmit();
-			unsubRunning();
+		const obs = getSharedNodeResizeObserver();
+		nodeResizeBindings.set(ref, {
+			node: node(),
+			interfaceCtx,
+			onMeasured: () => scheduleNodeMinWidth(ref, setMinWidth),
 		});
-	});
-
-	const [editingName, setEditingName] = Solid.createSignal(false);
-
-	let ref: HTMLDivElement | undefined;
-
-	Solid.onMount(() => {
-		if (!ref) return;
-
-		const rect = ref.getBoundingClientRect();
-
-		interfaceCtx.itemSizes.set(node(), {
-			width: rect.width,
-			height: rect.height,
-		});
-
-		const obs = new ResizeObserver((resize) => {
-			if (isPaneResizing()) return;
-
-			const contentRect = resize[resize.length - 1]?.contentRect;
-
-			if (!contentRect) return;
-
-			interfaceCtx.itemSizes.set(node(), {
-				width: contentRect.width,
-				height: contentRect.height,
-			});
-		});
-
 		obs.observe(ref);
 
 		Solid.onCleanup(() => {
-			obs.disconnect();
-			interfaceCtx.itemSizes.delete(node());
+			unsubEmit();
+			unsubRunning();
+			obs.unobserve(ref);
+			nodeResizeBindings.delete(ref);
 		});
 	});
 
 	const isSelected = Solid.createMemo(() =>
-		graph.state.selectedItemIds.some(
+		graph.selectedItemIds().some(
 			(item) => item?.type === "node" && item.id === node().id,
 		),
 	);
 
-	const connectionHighlight = Solid.createMemo(() => {
-		const indicateConnectedNodes = config.nodes.indicateConnectedNodes;
-		if (
-			!indicateConnectedNodes ||
-			indicateConnectedNodes === "off" ||
-			isSelected()
-		)
-			return;
+	const connectionHighlight =
+		config.nodes.indicateConnectedNodes === "off"
+			? () => undefined
+			: Solid.createMemo(() => {
+					let result: string | undefined;
+					const mode = config.nodes.indicateConnectedNodes;
+					if (!mode || mode === "off" || isSelected()) return result;
 
-		const selectedNodes = graph.state.selectedItemIds.filter(
-			(item) => item.type === "node",
-		);
-		if (selectedNodes.length < 1) return;
-		if (selectedNodes.find((n) => n.id === node().id)) return;
+					const selectedNodes = graph.selectedItemIds().filter(
+						(item) => item.type === "node",
+					);
+					if (selectedNodes.length < 1) return result;
+					if (selectedNodes.find((n) => n.id === node().id)) return result;
 
-		let connectionSelected = false;
+					let connectionSelected = false;
 
-		if (!connectionSelected)
-			exit: for (const output of node().state.outputs) {
-				const outputConnections = graph
-					.model()
-					.connections.get(`${node().id}:o:${output.id}`);
-				if (!outputConnections) continue;
+					if (!connectionSelected)
+						exit: for (const output of node().state.outputs) {
+							const outputConnections = graph
+								.model()
+								.connections.get(`${node().id}:o:${output.id}`);
+							if (!outputConnections) continue;
 
-				for (const outputConnection of outputConnections) {
-					const { nodeId } = splitIORef(outputConnection);
-					if (selectedNodes.find((n) => n.id === nodeId) !== undefined) {
-						connectionSelected = true;
-						break exit;
+							for (const outputConnection of outputConnections) {
+								const { nodeId } = splitIORef(outputConnection);
+								if (selectedNodes.find((n) => n.id === nodeId) !== undefined) {
+									connectionSelected = true;
+									break exit;
+								}
+							}
+						}
+
+					if (!connectionSelected)
+						exit: for (const input of node().state.inputs) {
+							const conns: OutputPin[] = [];
+
+							if (input instanceof ExecInputModel) conns.push(...input.connections);
+							else (input.connection as Option<any>).peek((i) => conns.push(i));
+
+							for (const output of conns) {
+								if (
+									selectedNodes.find((n) => n.id === output.node.id) !== undefined
+								) {
+									connectionSelected = true;
+									break exit;
+								}
+							}
+						}
+
+					if (mode === "highlightConnected") {
+						if (connectionSelected && !isSelected()) result = "ring-2 ring-white";
+					} else if (mode === "dimUnconnected") {
+						if (!connectionSelected && !isSelected()) result = "opacity-50";
 					}
-				}
-			}
-
-		if (!connectionSelected)
-			exit: for (const input of node().state.inputs) {
-				const conns: OutputPin[] = [];
-
-				if (input instanceof ExecInputModel) conns.push(...input.connections);
-				else (input.connection as Option<any>).peek((i) => conns.push(i));
-
-				for (const output of conns) {
-					if (
-						selectedNodes.find((n) => n.id === output.node.id) !== undefined
-					) {
-						connectionSelected = true;
-						break exit;
-					}
-				}
-			}
-
-		if (indicateConnectedNodes === "highlightConnected") {
-			if (connectionSelected && !isSelected()) return "ring-2 ring-white";
-		} else if (indicateConnectedNodes === "dimUnconnected") {
-			if (!connectionSelected && !isSelected()) return "opacity-50";
-		}
-	});
+					return result;
+				});
 
 	const filteredInputs = Solid.createMemo(() =>
 		node().state.inputs.filter(
@@ -210,36 +248,21 @@ export const Node = (props: Props) => {
 	);
 
 	const [minWidth, setMinWidth] = Solid.createSignal<number>();
-
-	Solid.onMount(() => {
-		calculateMinWidth();
-	});
-
-	function calculateMinWidth() {
-		setMinWidth(undefined);
-
-		// clientWidth doesn't update immediately and setTimeout causes flicker
-		queueMicrotask(() => {
-			if (ref) {
-				const desired = Math.ceil(ref.clientWidth / GRID_SIZE) * GRID_SIZE;
-
-				setMinWidth(desired);
-			}
-		});
-	}
+	const pinsVisible = () => graph.pinsVisibleForIndex(props.renderIndex);
 
 	Solid.createEffect(
 		Solid.on(() => {
+			if (!graph.loadComplete()) return;
 			node().state.name;
-
 			for (const i of node().state.inputs) {
 				i.name ?? i.id;
 			}
-
 			for (const o of node().state.outputs) {
 				o.name ?? o.id;
 			}
-		}, calculateMinWidth),
+		}, () => {
+			if (ref) scheduleNodeMinWidth(ref, setMinWidth);
+		}),
 	);
 
 	return (
@@ -289,8 +312,38 @@ export const Node = (props: Props) => {
 					<Solid.Show
 						when={editingName()}
 						fallback={
+							<Solid.Show
+								when={graph.loadComplete()}
+								fallback={
+									<button
+										type="button"
+										class="px-2 pt-1 cursor-pointer outline-none h-full text-left w-full"
+										onDblClick={(e) => !isCtrlEvent(e) && setEditingName(true)}
+										onClick={(e) => e.stopPropagation()}
+										onPointerUp={(e) => {
+											if (e.button === 2) e.stopPropagation();
+										}}
+										onPointerDown={(e) =>
+											handleSelectableItemPointerDown(e, graph, interfaceCtx, {
+												type: "node",
+												id: node().id,
+											})
+										}
+									>
+										<span class="flex min-w-0 items-center gap-1.5">
+											<span class="truncate">{node().state.name}</span>
+											<Solid.Show when={running()}>
+												<span class="shrink-0 text-[10px] font-normal opacity-80">
+													Running…
+												</span>
+											</Solid.Show>
+										</span>
+									</button>
+								}
+							>
 							<ContextMenu.Root
 								onOpenChange={(o) => {
+									setMenuOpen(o);
 									if (o) props.onSelected();
 								}}
 							>
@@ -319,88 +372,79 @@ export const Node = (props: Props) => {
 										</Solid.Show>
 									</span>
 								</ContextMenu.Trigger>
-								<ContextMenuContent>
-									<ContextMenuItem onSelect={() => setEditingName(true)}>
-										Rename
-									</ContextMenuItem>
-									{((node().schema.package.name === "Functions" &&
-										node().schema.name === "Execute Function") ||
-										(node().schema.package.name === "Function Queue" &&
-											node().schema.name === "Add to Function Queue")) && (
+								<Solid.Show when={menuOpen()}>
+									<ContextMenuContent>
+										<ContextMenuItem onSelect={() => setEditingName(true)}>
+											Rename
+										</ContextMenuItem>
+										{((node().schema.package.name === "Functions" &&
+											node().schema.name === "Execute Function") ||
+											(node().schema.package.name === "Function Queue" &&
+												node().schema.name === "Add to Function Queue")) && (
+											<ContextMenuItem
+												onSelect={() => {
+													const fnId = node().state.properties.function;
+													if (fnId !== undefined) {
+														const id =
+															typeof fnId === "number" ? fnId : Number(fnId);
+														const fn = node().graph.project.functions.get(id);
+														if (fn) interfaceCtx.selectFunction(fn);
+													}
+												}}
+											>
+												Open Function
+											</ContextMenuItem>
+										)}
 										<ContextMenuItem
 											onSelect={() => {
-												const fnId = node().state.properties.function;
-												if (fnId !== undefined) {
-													const id =
-														typeof fnId === "number" ? fnId : Number(fnId);
-													const fn = node().graph.project.functions.get(id);
-													if (fn) interfaceCtx.selectFunction(fn);
-												}
+												interfaceCtx.execute("setNodeTrackInvocations", {
+													...graphRefOf(graph.model()),
+													nodeId: node().id,
+													trackInvocations: !node().state.trackInvocations,
+												});
 											}}
 										>
-											Open Function
+											{node().state.trackInvocations
+												? "Stop tracking invocations"
+												: "Track invocations"}
 										</ContextMenuItem>
-									)}
-									<ContextMenuItem
-										onSelect={() => {
-											interfaceCtx.execute("setNodeTrackInvocations", {
-												...graphRefOf(graph.model()),
-												nodeId: node().id,
-												trackInvocations: !node().state.trackInvocations,
-											});
-										}}
-									>
-										{node().state.trackInvocations
-											? "Stop tracking invocations"
-											: "Track invocations"}
-									</ContextMenuItem>
-									<ContextMenuItem
-										onSelect={() => {
-											interfaceCtx.execute("setNodeFoldPins", {
-												...graphRefOf(graph.model()),
-												nodeId: node().id,
-												foldPins: !node().state.foldPins,
-											});
-										}}
-										class="flex flex-row gap-4 items-center justify-between"
-									>
-										{node().state.foldPins ? "Expand" : "Collapse"}
-										{/* <span class="flex flex-row gap-0.5 text-xs text-neutral-300 font-sans items-base">
-												<kbd class="font-sans">⌘</kbd>
-												<kbd class="font-sans">Ctrl</kbd>
-												{node().state.foldPins ? (
-													<kbd class="font-sans">]</kbd>
-												) : (
-													<kbd class="font-sans">]</kbd>
-												)}
-											</span> */}
-									</ContextMenuItem>
-									<ContextMenuItem
-										onSelect={() => {
-											platform.clipboard.writeText(
-												serializeClipboardItem(nodeToClipboardItem(node())),
-											);
-											toast("Node copied to clipboard");
-										}}
-									>
-										Copy
-									</ContextMenuItem>
-									<ContextMenuItem
-										onSelect={() => {
-											interfaceCtx.execute("deleteGraphItems", {
-												...graphRefOf(graph.model()),
-												items: [{ type: "node", id: node().id }],
-											});
-										}}
-										class="text-red-500 flex flex-row gap-2 items-center justify-between"
-									>
-										Delete
-										{/* <span class="flex flex-row gap-0.5 text-xs text-neutral-300">
-												<kbd class="font-sans">⌫</kbd>
-											</span> */}
-									</ContextMenuItem>
-								</ContextMenuContent>
+										<ContextMenuItem
+											onSelect={() => {
+												interfaceCtx.execute("setNodeFoldPins", {
+													...graphRefOf(graph.model()),
+													nodeId: node().id,
+													foldPins: !node().state.foldPins,
+												});
+											}}
+											class="flex flex-row gap-4 items-center justify-between"
+										>
+											{node().state.foldPins ? "Expand" : "Collapse"}
+										</ContextMenuItem>
+										<ContextMenuItem
+											onSelect={() => {
+												platform.clipboard.writeText(
+													serializeClipboardItem(nodeToClipboardItem(node())),
+												);
+												toast("Node copied to clipboard");
+											}}
+										>
+											Copy
+										</ContextMenuItem>
+										<ContextMenuItem
+											onSelect={() => {
+												interfaceCtx.execute("deleteGraphItems", {
+													...graphRefOf(graph.model()),
+													items: [{ type: "node", id: node().id }],
+												});
+											}}
+											class="text-red-500 flex flex-row gap-2 items-center justify-between"
+										>
+											Delete
+										</ContextMenuItem>
+									</ContextMenuContent>
+								</Solid.Show>
 							</ContextMenu.Root>
+							</Solid.Show>
 						}
 					>
 						{(_) => {
@@ -449,70 +493,81 @@ export const Node = (props: Props) => {
 						}}
 					</Solid.Show>
 				</div>
-				<div class="flex flex-row gap-2">
-					<div class="p-2 flex flex-col space-y-2.5">
-						<Solid.For each={filteredInputs()}>
-							{(input) => (
-								<Solid.Switch>
-									<Solid.Match when={input instanceof DataInputModel && input}>
-										{(i) => <DataInput input={i()} />}
-									</Solid.Match>
-									<Solid.Match when={input instanceof ExecInputModel && input}>
-										{(i) => <ExecInput input={i()} />}
-									</Solid.Match>
-									<Solid.Match when={input instanceof ScopeInputModel && input}>
-										{(i) => <ScopeInput input={i()} />}
-									</Solid.Match>
-								</Solid.Switch>
-							)}
-						</Solid.For>
+				<Solid.Show when={graph.shellMode()}>
+					<div
+						class="shrink-0 opacity-40"
+						style={{
+							width: `${NODE_ESTIMATED_WIDTH}px`,
+							height: `${estimateNodeBodyHeight(node())}px`,
+						}}
+					/>
+				</Solid.Show>
+				<Solid.Show when={pinsVisible() && !graph.shellMode()}>
+					<div class="flex flex-row gap-2">
+						<div class="p-2 flex flex-col space-y-2.5">
+							<Solid.For each={filteredInputs()}>
+								{(input) => (
+									<Solid.Switch>
+										<Solid.Match when={input instanceof DataInputModel && input}>
+											{(i) => <DataInput input={i()} />}
+										</Solid.Match>
+										<Solid.Match when={input instanceof ExecInputModel && input}>
+											{(i) => <ExecInput input={i()} />}
+										</Solid.Match>
+										<Solid.Match when={input instanceof ScopeInputModel && input}>
+											{(i) => <ScopeInput input={i()} />}
+										</Solid.Match>
+									</Solid.Switch>
+								)}
+							</Solid.For>
+						</div>
+						<div class="p-2 ml-auto flex flex-col space-y-2.5 items-end">
+							<Solid.For each={filteredOutputs()}>
+								{(output) => (
+									<Solid.Switch>
+										<Solid.Match
+											when={output instanceof DataOutputModel && output}
+										>
+											{(o) => <DataOutput output={o()} />}
+										</Solid.Match>
+										<Solid.Match
+											when={output instanceof ExecOutputModel && output}
+										>
+											{(o) => <ExecOutput output={o()} />}
+										</Solid.Match>
+										<Solid.Match
+											when={output instanceof ScopeOutputModel && output}
+										>
+											{(o) => <ScopeOutput output={o()} />}
+										</Solid.Match>
+									</Solid.Switch>
+								)}
+							</Solid.For>
+						</div>
 					</div>
-					<div class="p-2 ml-auto flex flex-col space-y-2.5 items-end">
-						<Solid.For each={filteredOutputs()}>
-							{(output) => (
-								<Solid.Switch>
-									<Solid.Match
-										when={output instanceof DataOutputModel && output}
-									>
-										{(o) => <DataOutput output={o()} />}
-									</Solid.Match>
-									<Solid.Match
-										when={output instanceof ExecOutputModel && output}
-									>
-										{(o) => <ExecOutput output={o()} />}
-									</Solid.Match>
-									<Solid.Match
-										when={output instanceof ScopeOutputModel && output}
-									>
-										{(o) => <ScopeOutput output={o()} />}
-									</Solid.Match>
-								</Solid.Switch>
-							)}
-						</Solid.For>
-					</div>
-				</div>
-				<Solid.Show
-					when={
-						filteredInputs().length !== node().state.inputs.length ||
-						filteredOutputs().length !== node().state.outputs.length
-					}
-				>
-					<div class="text-center w-full h-4 flex flex-row items-center justify-center -mt-1">
-						<button
-							type="button"
-							title="Expand node IO"
-							class="hover:bg-white/30 transition-color duration-100 px-1 rounded -py-1 h-3 flex flex-row items-center justify-center"
-							onClick={() => {
-								interfaceCtx.execute("setNodeFoldPins", {
-									...graphRefOf(graph.model()),
-									nodeId: node().id,
-									foldPins: false,
-								});
-							}}
-						>
-							<IconMdiDotsHorizontal class="size-4" />
-						</button>
-					</div>
+					<Solid.Show
+						when={
+							filteredInputs().length !== node().state.inputs.length ||
+							filteredOutputs().length !== node().state.outputs.length
+						}
+					>
+						<div class="text-center w-full h-4 flex flex-row items-center justify-center -mt-1">
+							<button
+								type="button"
+								title="Expand node IO"
+								class="hover:bg-white/30 transition-color duration-100 px-1 rounded -py-1 h-3 flex flex-row items-center justify-center"
+								onClick={() => {
+									interfaceCtx.execute("setNodeFoldPins", {
+										...graphRefOf(graph.model()),
+										nodeId: node().id,
+										foldPins: false,
+									});
+								}}
+							>
+								<IconMdiDotsHorizontal class="size-4" />
+							</button>
+						</div>
+					</Solid.Show>
 				</Solid.Show>
 			</div>
 		</NodeContext.Provider>

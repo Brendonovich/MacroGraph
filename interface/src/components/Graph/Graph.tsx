@@ -22,7 +22,7 @@ import clsx from "clsx";
 
 import { type SchemaMenuOpenState, useInterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
-import { ConnectionRenderer } from "../Graph";
+import { ConnectionRenderer } from "./Connection";
 import { CommentBox } from "./CommentBox";
 import {
 	type GraphContext,
@@ -37,15 +37,28 @@ import { Node } from "./Node";
 import { GRID_SIZE } from "./util";
 import { isPointerOverGraphViewport } from "../../mosaicLayout";
 import { isPaneResizing, onPaneResizeEnd } from "../../paneResizeSession";
-import { mark } from "../../graphPerf";
 import { getRemoteCursors, broadcastCursorPosition, getFollowUserId, getRemotePinDrags, getRemoteSelectionBoxes, broadcastPinDrag, broadcastSelectionBox } from "../../remoteHistorySync";
+import {
+	completeGraphLoad,
+	markGraphLoadDetail,
+	markGraphLoadPhase,
+} from "../../graphLoadPerf";
+import {
+	isFastLoadEnabled,
+	seedEstimatedPinPositions,
+} from "../../graphFastLoad";
+import { flushAllPinPositionMeasuresSync, resetPinMeasureCache } from "./IO/usePin";
 
-type PanState = "none" | "waiting" | "active";
+type PanState = "none" | "waiting" | "active" | "settling";
 
 /** 0.2 → 1.6 (×2 each step: 0.2, 0.4, 0.8, 1.6) */
 const MAX_ZOOM_IN = 1.6;
 const MAX_ZOOM_OUT = 5;
 const ZOOM_STEP = 1.05;
+const NODE_ESTIMATED_WIDTH = 220;
+const NODE_ESTIMATED_HEIGHT = 140;
+/** Mount node shells + pins together each frame. */
+const LOAD_BATCH = 200;
 
 interface Props extends Solid.ComponentProps<"div"> {
 	state: GraphViewState;
@@ -58,6 +71,7 @@ interface Props extends Solid.ComponentProps<"div"> {
 	onMouseUp?: Solid.JSX.EventHandler<HTMLDivElement, MouseEvent>;
 	onScaleChange(scale: number): void;
 	onTranslateChange(translate: XY): void;
+	onTranslateCommit?(translate: XY): void;
 	onSizeChange(size: { width: number; height: number }): void;
 	onBoundsChange(bounds: XY): void;
 }
@@ -72,11 +86,20 @@ export const Graph = (props: Props) => {
 	const interfaceCtx = useInterfaceContext();
 
 	const model = () => props.graph;
+	const allNodes = Solid.createMemo(() => [...model().nodes.values()]);
 	const graphRef = () => graphRefOf(model());
 	const active = () => props.active !== false;
+	const [transientTranslate, setTransientTranslate] = Solid.createSignal<XY>({
+		x: props.state.translate.x,
+		y: props.state.translate.y,
+	});
+	let panReleaseTs = 0;
+	const currentTranslate = () =>
+		pan() === "none" ? props.state.translate : transientTranslate();
 
 	const viewState = (): GraphViewState => ({
 		...props.state,
+		translate: currentTranslate(),
 		scale: coerceGraphScale(props.state.scale),
 	});
 
@@ -116,74 +139,331 @@ export const Graph = (props: Props) => {
 	}
 
 	function updateScale(delta: number, screenOrigin: XY) {
-		const startGraphOrigin = toGraphSpace(
-			screenOrigin,
-			state.bounds,
-			props.state,
+		const activeTranslate = currentTranslate();
+		const oldScale = props.state.scale;
+		const newScale = Math.min(
+			Math.max(1 / MAX_ZOOM_OUT, oldScale * Math.pow(ZOOM_STEP, delta)),
+			MAX_ZOOM_IN,
 		);
-
-		props.onScaleChange(
-			Math.min(
-				Math.max(
-					1 / MAX_ZOOM_OUT,
-					viewState().scale * Math.pow(ZOOM_STEP, delta),
-				),
-				MAX_ZOOM_IN,
-			),
-		);
-
-		const endGraphOrigin = toScreenSpace(
-			startGraphOrigin,
-			state.bounds,
-			props.state,
-		);
-
-		const { translate, scale } = props.state;
-
-		props.onTranslateChange({
-			x: translate.x + (endGraphOrigin.x - screenOrigin.x) / scale,
-			y: translate.y + (endGraphOrigin.y - screenOrigin.y) / scale,
-		});
+		const graphAtCursorX =
+			(screenOrigin.x - state.bounds.x) / oldScale + activeTranslate.x;
+		const graphAtCursorY =
+			(screenOrigin.y - state.bounds.y) / oldScale + activeTranslate.y;
+		const nextTranslate = {
+			x: graphAtCursorX - (screenOrigin.x - state.bounds.x) / newScale,
+			y: graphAtCursorY - (screenOrigin.y - state.bounds.y) / newScale,
+		};
+		props.onScaleChange(newScale);
+		setTransientTranslate(nextTranslate);
+		if (pan() === "none") {
+			panReleaseTs = performance.now();
+			Solid.batch(() => {
+				setPan("settling");
+				setTransientTranslate(nextTranslate);
+			});
+		}
+		props.onTranslateChange(nextTranslate);
 	}
 
 	const [pan, setPan] = Solid.createSignal<PanState>("none");
 	const [graphLoaded, setGraphLoaded] = Solid.createSignal(false);
+	const [pinsLayoutEnabled, setPinsLayoutEnabled] = Solid.createSignal(false);
+	const [mountedNodeCount, setMountedNodeCount] = Solid.createSignal(0);
+	const [pinsMountedNodeCount, setPinsMountedNodeCount] = Solid.createSignal(0);
+	const [pinsMountComplete, setPinsMountComplete] = Solid.createSignal(false);
+	const [loadComplete, setLoadComplete] = Solid.createSignal(false);
+	const [shellMode, setShellMode] = Solid.createSignal(false);
+
+	let mountRaf: number | undefined;
+	let pinUpgradeRaf: number | undefined;
+	let loadCompleteRaf: number | undefined;
+	let connectionsPainted = false;
+	let fastLoadFinished = false;
+
+	function tryCompleteGraphLoad() {
+		if (!pinsMountComplete() || !connectionsPainted || loadComplete()) return;
+		if (fastLoadFinished) return;
+
+		if (shellMode()) {
+			fastLoadFinished = true;
+			markGraphLoadPhase("listenersEnabled", model());
+			markGraphLoadDetail("fastLoadShell", 1, model());
+
+			if (loadCompleteRaf !== undefined) cancelAnimationFrame(loadCompleteRaf);
+			loadCompleteRaf = requestAnimationFrame(() => {
+				loadCompleteRaf = undefined;
+				const graph = model();
+				completeGraphLoad(graph, {
+					visibleNodes: allNodes().length,
+					connections: graph.connections.size,
+				});
+				startPinUpgrade();
+			});
+			return;
+		}
+
+		setLoadComplete(true);
+		markGraphLoadPhase("listenersEnabled", model());
+
+		if (loadCompleteRaf !== undefined) cancelAnimationFrame(loadCompleteRaf);
+		loadCompleteRaf = requestAnimationFrame(() => {
+			loadCompleteRaf = undefined;
+			const graph = model();
+			completeGraphLoad(graph, {
+				visibleNodes: allNodes().length,
+				connections: graph.connections.size,
+			});
+		});
+	}
+
+	function maybeMarkMountProgress(mounted: number, total: number) {
+		if (total <= 0) return;
+		const ratio = mounted / total;
+		if (ratio >= 0.25) markGraphLoadPhase("mount25pct", model());
+		if (ratio >= 0.5) markGraphLoadPhase("mount50pct", model());
+		if (ratio >= 0.75) markGraphLoadPhase("mount75pct", model());
+	}
+
+	function cancelMountRafs() {
+		if (mountRaf !== undefined) {
+			cancelAnimationFrame(mountRaf);
+			mountRaf = undefined;
+		}
+		if (pinUpgradeRaf !== undefined) {
+			cancelAnimationFrame(pinUpgradeRaf);
+			pinUpgradeRaf = undefined;
+		}
+		if (loadCompleteRaf !== undefined) {
+			cancelAnimationFrame(loadCompleteRaf);
+			loadCompleteRaf = undefined;
+		}
+	}
+
+	function resetLoadState() {
+		cancelMountRafs();
+		connectionsPainted = false;
+		fastLoadFinished = false;
+		resetPinMeasureCache();
+		setGraphLoaded(false);
+		setPinsLayoutEnabled(false);
+		setMountedNodeCount(0);
+		setPinsMountedNodeCount(0);
+		setPinsMountComplete(false);
+		setLoadComplete(false);
+		setShellMode(false);
+	}
+
+	function flushMeasuresAfterBatch() {
+		requestAnimationFrame(() => {
+			flushAllPinPositionMeasuresSync();
+		});
+	}
+
+	function finishPinMountPhase() {
+		markGraphLoadPhase("allNodesMounted", model());
+		markGraphLoadPhase("allPinsMounted", model());
+		markGraphLoadDetail("mountedNodes", allNodes().length, model());
+		// Two frames so the final batch can layout before measuring pin positions.
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				if (ref()) applyResize();
+				resetPinMeasureCache();
+				flushAllPinPositionMeasuresSync();
+				markGraphLoadPhase("pinMeasureFlushed", model());
+				interfaceCtx.bumpPinPositionsEpoch();
+				setPinsMountComplete(true);
+			});
+		});
+	}
+
+	function markFirstNodesInteractive(count: number) {
+		if (!active() || count === 0 || graphLoaded()) return;
+		setGraphLoaded(true);
+		markGraphLoadPhase("nodesInteractive", model());
+	}
+
+	function startFastShellLoad() {
+		const total = allNodes().length;
+		seedEstimatedPinPositions(model(), interfaceCtx.pinPositions);
+		interfaceCtx.bumpPinPositionsEpoch();
+		markGraphLoadDetail("fastLoad", 1, model());
+
+		Solid.batch(() => {
+			setMountedNodeCount(total);
+			setPinsMountedNodeCount(0);
+			setPinsLayoutEnabled(true);
+			setShellMode(true);
+		});
+		markFirstNodesInteractive(total);
+		markGraphLoadPhase("pinsEnabled", model());
+		markGraphLoadPhase("mount25pct", model());
+		markGraphLoadPhase("mount50pct", model());
+		markGraphLoadPhase("mount75pct", model());
+		markGraphLoadPhase("allNodesMounted", model());
+		markGraphLoadDetail("mountedNodes", total, model());
+		markGraphLoadPhase("connectionsMount", model());
+
+		queueMicrotask(() => {
+			setPinsMountComplete(true);
+		});
+	}
+
+	function startPinUpgrade() {
+		const total = allNodes().length;
+		if (total === 0) {
+			setLoadComplete(true);
+			return;
+		}
+
+		setShellMode(false);
+		markGraphLoadPhase("allPinsMounted", model());
+
+		let upgraded = Math.min(LOAD_BATCH, total);
+		setPinsMountedNodeCount(upgraded);
+		flushMeasuresAfterBatch();
+
+		if (upgraded >= total) {
+			finishPinUpgrade();
+			return;
+		}
+
+		const step = () => {
+			upgraded = Math.min(upgraded + LOAD_BATCH, total);
+			setPinsMountedNodeCount(upgraded);
+			flushMeasuresAfterBatch();
+			if (upgraded >= total) {
+				pinUpgradeRaf = undefined;
+				finishPinUpgrade();
+				return;
+			}
+			pinUpgradeRaf = requestAnimationFrame(step);
+		};
+		pinUpgradeRaf = requestAnimationFrame(step);
+	}
+
+	function finishPinUpgrade() {
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				if (ref()) applyResize();
+				resetPinMeasureCache();
+				flushAllPinPositionMeasuresSync();
+				markGraphLoadPhase("pinMeasureFlushed", model());
+				interfaceCtx.bumpPinPositionsEpoch();
+				setLoadComplete(true);
+			});
+		});
+	}
+
+	function startProgressiveLoad() {
+		if (isFastLoadEnabled()) {
+			startFastShellLoad();
+			return;
+		}
+
+		const total = allNodes().length;
+		if (total === 0) {
+			finishPinMountPhase();
+			return;
+		}
+
+		let mounted = Math.min(LOAD_BATCH, total);
+		Solid.batch(() => {
+			setMountedNodeCount(mounted);
+			setPinsMountedNodeCount(mounted);
+			setPinsLayoutEnabled(true);
+		});
+		markFirstNodesInteractive(mounted);
+		markGraphLoadPhase("pinsEnabled", model());
+		markGraphLoadPhase("connectionsMount", model());
+		maybeMarkMountProgress(mounted, total);
+		flushMeasuresAfterBatch();
+
+		if (mounted >= total) {
+			finishPinMountPhase();
+			return;
+		}
+
+		const step = () => {
+			mounted = Math.min(mounted + LOAD_BATCH, total);
+			Solid.batch(() => {
+				setMountedNodeCount(mounted);
+				setPinsMountedNodeCount(mounted);
+			});
+			maybeMarkMountProgress(mounted, total);
+			flushMeasuresAfterBatch();
+			if (mounted >= total) {
+				mountRaf = undefined;
+				finishPinMountPhase();
+				return;
+			}
+			mountRaf = requestAnimationFrame(step);
+		};
+		mountRaf = requestAnimationFrame(step);
+	}
+
+	function ensureProgressiveLoadRunning() {
+		if (pinsMountComplete()) {
+			const total = allNodes().length;
+			setMountedNodeCount(total);
+			if (pinsLayoutEnabled()) setPinsMountedNodeCount(total);
+			return;
+		}
+		if (mountRaf === undefined) {
+			startProgressiveLoad();
+		}
+	}
 
 	Solid.createEffect(() => {
 		model().kind;
 		model().id;
-		setGraphLoaded(false);
+		resetLoadState();
+	});
+
+	Solid.createEffect(() => {
+		const next = props.state.translate;
+		if (pan() === "none") {
+			const prev = transientTranslate();
+			if (prev.x !== next.x || prev.y !== next.y) {
+				setTransientTranslate({ x: next.x, y: next.y });
+			}
+		}
+	});
+
+	Solid.createEffect(() => {
+		if (pan() !== "settling") return;
+		const next = props.state.translate;
+		const prev = transientTranslate();
+		if (prev.x !== next.x || prev.y !== next.y) return;
+		setPan("none");
 	});
 
 	Solid.createEffect(() => {
 		if (!active()) return;
-		props.state.translate.x;
-		props.state.translate.y;
+		viewState().translate.x;
+		viewState().translate.y;
 		props.state.scale;
 		interfaceCtx.bumpViewTransformEpoch();
 	});
 
 	Solid.createEffect(() => {
 		if (!active()) return;
-		active();
 		if (ref()) applyResize();
 	});
 
-	Solid.onMount(() => {
-		const g = model();
-		let connectionCount = 0;
-		for (const conns of g.connections.values()) connectionCount += conns.length;
-		mark("graph.mount", {
-			nodes: g.nodes.size,
-			commentBoxes: g.commentBoxes.size,
-			connections: connectionCount,
-		});
+	const nodesForRender = Solid.createMemo(() => {
+		if (!active()) return [];
+		const nodes = allNodes();
+		if (pinsMountComplete()) return nodes;
+		return nodes.slice(0, mountedNodeCount());
+	});
 
+	Solid.onMount(() => {
 		createEventListener(window, "resize", onResize);
 		createResizeObserver(ref, onResize);
 
 		Solid.onCleanup(() => {
 			if (resizeRaf !== undefined) cancelAnimationFrame(resizeRaf);
+			cancelMountRafs();
 		});
 
 		onPaneResizeEnd(() => {
@@ -243,11 +523,22 @@ export const Graph = (props: Props) => {
 					x: e.clientX,
 					y: e.clientY,
 				});
-			} else
-				props.onTranslateChange({
-					x: props.state.translate.x + deltaX,
-					y: props.state.translate.y + deltaY,
-				});
+			} else {
+				const t = transientTranslate();
+				const nextTranslate = {
+					x: t.x + deltaX,
+					y: t.y + deltaY,
+				};
+				setTransientTranslate(nextTranslate);
+				if (pan() === "none") {
+					panReleaseTs = performance.now();
+					Solid.batch(() => {
+						setPan("settling");
+						setTransientTranslate(nextTranslate);
+					});
+				}
+				props.onTranslateChange(nextTranslate);
+			}
 		});
 
 	createEventListener(window, "keydown", (e) => {
@@ -310,15 +601,41 @@ export const Graph = (props: Props) => {
 	});
 
 	const [dragArea, setDragArea] = Solid.createSignal<DOMRect | null>(null);
+	const commentBoxesForRender = Solid.createMemo(() => {
+		const boxes = [...model().commentBoxes.values()];
+		return boxes;
+	});
+
+	Solid.createEffect(() => {
+		if (!active()) return;
+		if (state.size.width <= 0 || state.size.height <= 0) return;
+		const g = model();
+		g.kind;
+		g.id;
+		ensureProgressiveLoadRunning();
+	});
+
+	const pinsVisibleForIndex = (index: number) => {
+		if (shellMode()) return false;
+		if (!pinsLayoutEnabled()) return false;
+		if (pinsMountComplete()) return true;
+		return index < pinsMountedNodeCount();
+	};
 
 	const ctx: GraphContext = {
 		model,
 		get state() {
 			return viewState();
 		},
+		selectedItemIds: () => props.state.selectedItemIds,
 		offset: state.bounds,
 		toGraphSpace: (xy) => toGraphSpace(xy, state.bounds, viewState()),
 		toScreenSpace: (xy) => toScreenSpace(xy, state.bounds, viewState()),
+		pinsLayoutEnabled,
+		pinsVisibleForIndex,
+		loadComplete,
+		shellMode,
+		viewportReady: () => state.size.width > 0 && state.size.height > 0,
 	};
 
 	const gesture = {
@@ -340,11 +657,14 @@ export const Graph = (props: Props) => {
 	}
 
 	function createTranslateSession(initialClientXY: XY) {
-		const oldTranslate = { ...props.state.translate };
+		const oldTranslate = { ...currentTranslate() };
 
 		return {
 			stop: () => {
-				setPan("none");
+				panReleaseTs = performance.now();
+				setPan("settling");
+				const releaseTranslate = transientTranslate();
+				props.onTranslateCommit?.(releaseTranslate);
 			},
 			updateControlPoint: (clientXY: XY) => {
 				const MOVE_BUFFER = 3;
@@ -357,14 +677,15 @@ export const Graph = (props: Props) => {
 				if (Math.abs(diff.x) < MOVE_BUFFER && Math.abs(diff.y) < MOVE_BUFFER)
 					return;
 
-				setPan("active");
+				if (pan() !== "active") setPan("active");
 
 				const { scale } = props.state;
-
-				props.onTranslateChange({
+				const nextTranslate = {
 					x: (diff.x + oldTranslate.x * scale) / scale,
 					y: (diff.y + oldTranslate.y * scale) / scale,
-				});
+				};
+				setTransientTranslate(nextTranslate);
+				props.onTranslateChange(nextTranslate);
 			},
 		};
 	}
@@ -520,14 +841,14 @@ export const Graph = (props: Props) => {
 				const centerY = state.size.height / 2;
 
 				const targetTranslateX =
-					props.state.translate.x + (screenPos.x - centerX) / props.state.scale;
+					viewState().translate.x + (screenPos.x - centerX) / props.state.scale;
 				const targetTranslateY =
-					props.state.translate.y + (screenPos.y - centerY) / props.state.scale;
+					viewState().translate.y + (screenPos.y - centerY) / props.state.scale;
 
 				const lerpFactor = 0.08;
 				props.onTranslateChange({
-					x: props.state.translate.x + (targetTranslateX - props.state.translate.x) * lerpFactor,
-					y: props.state.translate.y + (targetTranslateY - props.state.translate.y) * lerpFactor,
+					x: viewState().translate.x + (targetTranslateX - viewState().translate.x) * lerpFactor,
+					y: viewState().translate.y + (targetTranslateY - viewState().translate.y) * lerpFactor,
 				});
 			} else {
 				const other = cursors.find(
@@ -634,8 +955,8 @@ export const Graph = (props: Props) => {
 						...graphRef(),
 						position: graphSpace,
 						viewportCenter: {
-							x: (state.size.width / 2) / props.state.scale + props.state.translate.x,
-							y: (state.size.height / 2) / props.state.scale + props.state.translate.y,
+							x: (state.size.width / 2) / props.state.scale + viewState().translate.x,
+							y: (state.size.height / 2) / props.state.scale + viewState().translate.y,
 						},
 					});
 				}}
@@ -851,8 +1172,9 @@ export const Graph = (props: Props) => {
 																	newCenterGraphPosition,
 																);
 
-																const { translate, scale } = props.state;
-																props.onTranslateChange({
+																const { scale } = props.state;
+																const translate = currentTranslate();
+																const nextTranslate = {
 																	x:
 																		translate.x +
 																		(lastCenter.x - newCenterAfterScaling.x) /
@@ -861,7 +1183,9 @@ export const Graph = (props: Props) => {
 																		translate.y +
 																		(lastCenter.y - newCenterAfterScaling.y) /
 																			scale,
-																});
+																};
+																setTransientTranslate(nextTranslate);
+																props.onTranslateChange(nextTranslate);
 															},
 														});
 													});
@@ -913,33 +1237,36 @@ export const Graph = (props: Props) => {
 					}, 1);
 				}}
 			>
-				<div
-					class="absolute inset-0"
-					classList={{ invisible: !graphLoaded() }}
-				>
+				<div class="absolute inset-0">
 					<DotGrid
 						active={active()}
 						width={() => state.size.width}
 						height={() => state.size.height}
 					/>
-					<ConnectionRenderer
-						active={active()}
-						graphBounds={{
-							get x() {
-								return state.bounds.x;
-							},
-							get y() {
-								return state.bounds.y;
-							},
-							get width() {
-								return state.size.width;
-							},
-							get height() {
-								return state.size.height;
-							},
-						}}
-						onLoadComplete={() => setGraphLoaded(true)}
-					/>
+					<Solid.Show when={pinsMountComplete()}>
+						<ConnectionRenderer
+							active={active()}
+							graphBounds={{
+								get x() {
+									return state.bounds.x;
+								},
+								get y() {
+									return state.bounds.y;
+								},
+								get width() {
+									return state.size.width;
+								},
+								get height() {
+									return state.size.height;
+								},
+							}}
+							onLoadComplete={() => {
+								markGraphLoadPhase("connectionsSettled", model());
+								connectionsPainted = true;
+								tryCompleteGraphLoad();
+							}}
+						/>
+					</Solid.Show>
 					<div
 						class="absolute inset-0 text-white origin-top-left overflow-hidden"
 						style={{
@@ -951,12 +1278,12 @@ export const Graph = (props: Props) => {
 					<div
 						class="origin-[0,0]"
 						style={{
-							transform: `translate(${props.state.translate.x * -1}px, ${
-								props.state.translate.y * -1
+							transform: `translate(${viewState().translate.x * -1}px, ${
+								viewState().translate.y * -1
 							}px)`,
 						}}
 					>
-						<Solid.For each={[...model().commentBoxes.values()]}>
+						<Solid.For each={commentBoxesForRender()}>
 							{(box) => (
 								<CommentBox
 									box={box}
@@ -973,10 +1300,11 @@ export const Graph = (props: Props) => {
 								/>
 							)}
 						</Solid.For>
-						<Solid.For each={[...model().nodes.values()]}>
-							{(node) => (
+						<Solid.For each={nodesForRender()}>
+							{(node, index) => (
 								<Node
 									node={node}
+									renderIndex={index()}
 									onSelected={(ephemeral) =>
 										interfaceCtx.execute(
 											"setGraphSelection",
@@ -1049,16 +1377,6 @@ export const Graph = (props: Props) => {
 					</div>
 				</div>
 				</div>
-				<Solid.Show when={!graphLoaded()}>
-					<div
-						class="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-mg-graph animate-in fade-in duration-150"
-						aria-busy="true"
-						aria-label="Loading graph"
-					>
-						<div class="size-9 rounded-full border-2 border-white/15 border-t-white/90 animate-spin" />
-						<span class="text-sm text-white/60">Loading graph…</span>
-					</div>
-				</Solid.Show>
 			</div>
 		</GraphContextProvider>
 	);

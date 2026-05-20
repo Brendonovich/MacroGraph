@@ -147,9 +147,20 @@ export function makeFunctionQueueTab(queue: { id: number }): FunctionQueueTab {
 export type GraphContext = {
 	model: Solid.Accessor<GraphModel>;
 	state: GraphViewState;
+	selectedItemIds: Solid.Accessor<SelectedItemID[]>;
 	offset: XY;
 	toGraphSpace(pos: XY): XY;
 	toScreenSpace(pos: XY): XY;
+	/** False during initial mount so pin layout does not force sync geometry. */
+	pinsLayoutEnabled: () => boolean;
+	/** Progressive pin mount: only nodes up to this index show IO. */
+	pinsVisibleForIndex: (index: number) => boolean;
+	/** True once graph load has finished. */
+	loadComplete: () => boolean;
+	/** Shell-only nodes (no IO DOM) during fast load. */
+	shellMode: () => boolean;
+	/** True once the graph viewport has valid size/bounds. */
+	viewportReady: () => boolean;
 };
 
 export const [GraphContextProvider, useGraphContext] = createContextProvider(

@@ -12,7 +12,7 @@ import type {
 } from "@macrograph/runtime";
 import { createContextProvider } from "@solid-primitives/context";
 import { ReactiveWeakMap } from "@solid-primitives/map";
-import { leading, throttle } from "@solid-primitives/scheduled";
+import { debounce, leading, throttle } from "@solid-primitives/scheduled";
 import { makePersisted } from "@solid-primitives/storage";
 import {
 	createEffect,
@@ -58,8 +58,8 @@ import {
 	migrateInvocationWorkspaceKeys,
 	type StoredNodeInvocation,
 } from "./nodeInvocationLog";
-import { mark, startGraphLoadSession } from "./graphPerf";
 import { mosaicDebug } from "./mosaicDebug";
+import { markGraphLoadPhase } from "./graphLoadPerf";
 import {
 	collectLeafGroupIds,
 	createLeafGroup,
@@ -583,14 +583,15 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 				return;
 			}
 			const payload = buildMosaicPersistPayload();
-			void saveMosaicJson(k, JSON.stringify(payload)).catch((err) => {
+			const payloadJson = JSON.stringify(payload);
+			void saveMosaicJson(k, payloadJson).catch((err) => {
 				console.error("Failed to persist mosaic layout", err);
 			});
 		}
 
-		const persistMosaicLayoutThrottled = throttle(
-			() => persistMosaicLayoutNow("layout-throttled"),
-			100,
+		const persistMosaicLayoutDebounced = debounce(
+			() => persistMosaicLayoutNow("layout-debounced"),
+			120,
 		);
 
 		const mosaicSelectionSig = createMemo(() =>
@@ -610,9 +611,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 		createEffect(() => {
 			if (!mosaicHydrated()) return;
 			if (workspaceKey() !== loadedWorkspaceKey) return;
-			const _groups = JSON.stringify(mosaicState.groups);
-			void _groups;
-			persistMosaicLayoutThrottled();
+			persistMosaicLayoutDebounced();
 		});
 
 		const save = leading(
@@ -848,11 +847,6 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 				);
 			}
 
-			mark("openTab.done", {
-				tabKey: key,
-				created: idx === undefined || idx < 0,
-			});
-			queueMicrotask(() => mark("openTab.microtask"));
 		}
 
 		registerOpenTab(openTab);
@@ -862,6 +856,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 				for (const [, fn] of props.core.project.functions) {
 					if (fn.graphId === graph.id) {
 						openTab(makeFunctionTab(fn));
+						markGraphLoadPhase("tabOpened", graph);
 						return;
 					}
 				}
@@ -870,28 +865,20 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 				for (const [, queue] of props.core.project.queues) {
 					if (queue.graphId === graph.id) {
 						openTab(makeQueueTab(queue));
+						markGraphLoadPhase("tabOpened", graph);
 						return;
 					}
 				}
 			}
 			openTab(makeGraphState(graph));
+			markGraphLoadPhase("tabOpened", graph);
 		}
 
 		function selectGraph(graph: Graph) {
-			startGraphLoadSession(`${graph.kind}:${graph.id} "${graph.name}"`, {
-				nodes: graph.nodes.size,
-				commentBoxes: graph.commentBoxes.size,
-				connections: graph.connections.size,
-			});
 			openGraph(graph);
 		}
 
 		function selectGraphInGroup(groupId: string, graph: Graph) {
-			startGraphLoadSession(`${graph.kind}:${graph.id} "${graph.name}"`, {
-				nodes: graph.nodes.size,
-				commentBoxes: graph.commentBoxes.size,
-				connections: graph.connections.size,
-			});
 			if (graph.kind === "function") {
 				for (const [, fn] of props.core.project.functions) {
 					if (fn.graphId === graph.id) {

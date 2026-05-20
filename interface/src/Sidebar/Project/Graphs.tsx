@@ -23,6 +23,7 @@ import {
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton } from "../../components/ui";
 import { useInterfaceContext } from "../../context";
+import { beginGraphLoad } from "../../graphLoadPerf";
 import { Button } from "../../settings/ui";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor, InlineTextEditorContext } from "../InlineTextEditor";
@@ -116,7 +117,10 @@ export function Graphs(props: Props) {
 															{...asProps}
 															as="button"
 															type="button"
-															onClick={() => props.onGraphClicked(graph)}
+															onClick={() => {
+																beginGraphLoad(graph, "sidebarClick");
+																props.onGraphClicked(graph);
+															}}
 														/>
 													)}
 													selected={props.currentGraph === graph}

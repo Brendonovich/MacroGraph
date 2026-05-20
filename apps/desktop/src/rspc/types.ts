@@ -38,6 +38,8 @@ export type ObsConnectArgs = { url: string; password: string | null }
 
 export type Message = { Text: string } | "Connected" | "Disconnected"
 
+export type RemoteServerMessage = { Text: string } | "Connected" | { ConnectedWithUser: { username: string } } | "Disconnected"
+
 export type OutboundSendArgs = { url: string; data: string }
 
 export type ObsCallArgs = { url: string; requestType: string; requestData: any | null }
@@ -45,5 +47,3 @@ export type ObsCallArgs = { url: string; requestType: string; requestData: any |
 export type Entry = { Dir: string } | { File: string }
 
 export type ObsEventMsg = { lifecycle?: string | null; eventType?: string | null; eventData?: any | null }
-
-export type RemoteServerMessage = { Text: string } | "Connected" | { ConnectedWithUser: { username: string } } | "Disconnected"
