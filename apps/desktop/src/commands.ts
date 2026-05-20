@@ -10,6 +10,14 @@ declare global {
 // Function avoids 'window not defined' in SSR
 const invoke = () => window.__TAURI_INVOKE__;
 
+export function crashLogAppend(kind: string, message: string) {
+    return invoke()<null>("crash_log_append", { kind, message })
+}
+
+export function crashLogPath() {
+    return invoke()<string>("crash_log_path", {})
+}
+
 /**
  * File size in bytes (Tauri 1.x JS fs API has no metadata helper).
  */

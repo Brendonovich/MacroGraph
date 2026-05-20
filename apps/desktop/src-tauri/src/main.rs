@@ -7,6 +7,7 @@ use axum::routing::{get, post};
 use rspc::{alpha::Rspc, Router};
 use tauri::Manager;
 
+mod crash_log;
 mod fs;
 mod http;
 mod oauth;
@@ -41,6 +42,7 @@ async fn main() {
         .plugin(tauri_plugin_kb_mouse::init())
         .setup(move |app| {
             let handle = app.handle();
+            crash_log::init(&handle);
             app.manage(http::State::new(handle.clone()));
             if let Ok(mut slot) = ctx_for_setup.app.lock() {
                 *slot = Some(handle);
@@ -49,6 +51,8 @@ async fn main() {
             Ok(())
         })
         .invoke_handler(tauri_handlers![
+            crash_log::crash_log_append,
+            crash_log::crash_log_path,
             fs::file_size,
             http::fetch,
             http::fetch_multipart,
@@ -61,8 +65,9 @@ async fn main() {
     let builder = builder.plugin(devtools::init());
 
     builder
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_, event| crash_log::on_run_event(&event));
 }
 
 pub struct CtxInner {
