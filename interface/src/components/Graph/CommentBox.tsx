@@ -127,7 +127,8 @@ export function CommentBox(props: Props) {
 		<div
 			class={clsx(
 				"rounded border-black/75 border absolute top-0 left-0",
-				isSelected() && "ring-2 ring-mg-focus",
+				graph.webglGraph() && "webgl-graph-comment",
+				isSelected() && !graph.webglGraph() && "ring-2 ring-mg-focus",
 			)}
 			style={{
 				transform: `translate(${position().x}px, ${position().y}px)`,

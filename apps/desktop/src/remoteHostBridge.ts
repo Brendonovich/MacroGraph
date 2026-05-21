@@ -249,12 +249,23 @@ function broadcastUserList(port: number) {
 	]);
 }
 
-// Batches incoming viewer cursor relays and flushes them together each rAF frame
-const pendingCursorRelays = new Map<number, string>();
-let cursorRelayRaf: number | null = null;
+/** Must match `REMOTE_HOST_MESSAGE_EVENT` in `remote_host.rs`. */
+const REMOTE_HOST_MESSAGE_EVENT = "remote-host://message";
 
-function flushCursorRelays() {
-	cursorRelayRaf = null;
+// Batches high-frequency viewer relays and flushes them together each rAF frame.
+const pendingCursorRelays = new Map<number, string>();
+const pendingPinDragRelays = new Map<number, string>();
+const pendingSelectionBoxRelays = new Map<number, string>();
+const pendingGraphPositionsRelays = new Map<number, string>();
+let remoteRelayRaf: number | null = null;
+
+function scheduleRemoteRelayFlush() {
+	if (remoteRelayRaf !== null) return;
+	remoteRelayRaf = requestAnimationFrame(flushRemoteRelays);
+}
+
+function flushRemoteRelays() {
+	remoteRelayRaf = null;
 	const port = remoteHostSettings.port;
 	for (const [exceptClient, data] of pendingCursorRelays) {
 		void client.mutation([
@@ -263,6 +274,27 @@ function flushCursorRelays() {
 		]);
 	}
 	pendingCursorRelays.clear();
+	for (const [exceptClient, data] of pendingPinDragRelays) {
+		void client.mutation([
+			"remoteHost.send",
+			{ port, client: null, except_client: exceptClient, data },
+		]);
+	}
+	pendingPinDragRelays.clear();
+	for (const [exceptClient, data] of pendingSelectionBoxRelays) {
+		void client.mutation([
+			"remoteHost.send",
+			{ port, client: null, except_client: exceptClient, data },
+		]);
+	}
+	pendingSelectionBoxRelays.clear();
+	for (const [exceptClient, data] of pendingGraphPositionsRelays) {
+		void client.mutation([
+			"remoteHost.send",
+			{ port, client: null, except_client: exceptClient, data },
+		]);
+	}
+	pendingGraphPositionsRelays.clear();
 }
 
 /** Broadcast host cursor position to all remote clients. */
@@ -330,6 +362,8 @@ export function installRemoteHostBridge(opts: {
 	_setHostGraphLivePointerSession = setHostGraphLiveFromLocal;
 
 	let subscription: (() => void) | undefined;
+	let unlistenRemoteMessages: (() => void) | undefined;
+	let listenGeneration = 0;
 	let prevEnabled = false;
 	let prevPort = 37564;
 
@@ -338,9 +372,14 @@ export function installRemoteHostBridge(opts: {
 		const port = remoteHostSettings.port;
 
 		if (subscription && prevEnabled === enabled && prevPort === port) return;
+		listenGeneration += 1;
 		if (subscription) {
 			subscription();
 			subscription = undefined;
+		}
+		if (unlistenRemoteMessages) {
+			unlistenRemoteMessages();
+			unlistenRemoteMessages = undefined;
 		}
 		prevEnabled = enabled;
 		prevPort = port;
@@ -395,55 +434,58 @@ export function installRemoteHostBridge(opts: {
 
 		broadcastUserList(port);
 
-		const u = client.addSubscription(["remoteHost.server", port], {
-			onData([clientId, msg]: [number, RemoteServerMessage]) {
-				if (msg === "Connected") {
-					sendSnapshot(clientId);
-					return;
+		const handleRemoteServerMessage = ([clientId, msg]: [
+			number,
+			RemoteServerMessage,
+		]) => {
+			if (msg === "Connected") {
+				sendSnapshot(clientId);
+				return;
+			}
+			if (typeof msg === "object" && msg !== null && "ConnectedWithUser" in msg) {
+				const username = (msg as { ConnectedWithUser: { username: string } })
+					.ConnectedWithUser.username;
+				userNames.set(clientId, username);
+				sendSnapshot(clientId);
+				broadcastUserList(port);
+				return;
+			}
+			if (msg === "Disconnected") {
+				const name = userNames.get(clientId);
+				userNames.delete(clientId);
+				if (name) {
+					removeRemoteCursor(name);
+					removeRemotePinDrag(name);
+					removeRemoteSelectionBox(name);
 				}
-				if (typeof msg === "object" && msg !== null && "ConnectedWithUser" in msg) {
-					const username = (msg as { ConnectedWithUser: { username: string } }).ConnectedWithUser.username;
-					userNames.set(clientId, username);
-					sendSnapshot(clientId);
-					broadcastUserList(port);
-					return;
-				}
-				if (msg === "Disconnected") {
-					const name = userNames.get(clientId);
-					userNames.delete(clientId);
-					if (name) {
-						removeRemoteCursor(name);
-						removeRemotePinDrag(name);
-						removeRemoteSelectionBox(name);
-					}
-					broadcastUserList(port);
-					return;
-				}
-				if (!isTextMessage(msg)) return;
+				broadcastUserList(port);
+				return;
+			}
+			if (!isTextMessage(msg)) return;
 
-				let parsed: unknown;
-				try {
-					parsed = JSON.parse(msg.Text);
-				} catch {
-					return;
-				}
-				if (typeof parsed !== "object" || parsed === null || !("type" in parsed)) {
-					return;
-				}
-				const wireType = (parsed as { type: string }).type;
+			let parsed: unknown;
+			try {
+				parsed = JSON.parse(msg.Text);
+			} catch {
+				return;
+			}
+			if (typeof parsed !== "object" || parsed === null || !("type" in parsed)) {
+				return;
+			}
+			const wireType = (parsed as { type: string }).type;
 
-				if (wireType === "rpcRequest") {
-					const body = parsed as {
-						type: string;
-						id?: unknown;
-						method?: unknown;
-						params?: unknown;
-					};
-					if (
-						typeof body.id === "string" &&
-						typeof body.method === "string" &&
-						"params" in body
-					) {
+			if (wireType === "rpcRequest") {
+				const body = parsed as {
+					type: string;
+					id?: unknown;
+					method?: unknown;
+					params?: unknown;
+				};
+				if (
+					typeof body.id === "string" &&
+					typeof body.method === "string" &&
+					"params" in body
+				) {
 					void handleRemoteRpcRequest({
 						core: opts.core,
 						clientId,
@@ -452,110 +494,114 @@ export function installRemoteHostBridge(opts: {
 						params: body.params,
 						workspaceKey: opts.projectUrl() ?? "default",
 					});
-					}
-					return;
 				}
+				return;
+			}
 
-				if (wireType === "actions") {
-					const body = parsed as { items?: unknown };
-					if (!Array.isArray(body.items)) return;
-					const items = body.items as RemoteHistoryWireItem[];
-					runAsRemoteHistoryInbound(() => applyRemoteHistoryItems(items));
-					const relayPort = port;
-					const relayData = stringifyRemoteHistoryWirePayload({
-						type: "actions",
-						items,
-					});
-					void client.mutation([
-						"remoteHost.send",
-						{
-							port: relayPort,
-							client: null,
-							except_client: clientId,
-							data: relayData,
-						},
-					]);
-					return;
-				}
+			if (wireType === "actions") {
+				const body = parsed as { items?: unknown };
+				if (!Array.isArray(body.items)) return;
+				const items = body.items as RemoteHistoryWireItem[];
+				runAsRemoteHistoryInbound(() => applyRemoteHistoryItems(items));
+				const relayData = stringifyRemoteHistoryWirePayload({
+					type: "actions",
+					items,
+				});
+				void client.mutation([
+					"remoteHost.send",
+					{
+						port,
+						client: null,
+						except_client: clientId,
+						data: relayData,
+					},
+				]);
+				return;
+			}
 
-				if (wireType === "graphPositionsEphemeral") {
-					const body = parsed as Record<string, unknown>;
-					const live = parseGraphPositionsEphemeralMessage(body);
-					if (!live) return;
-					if (hostGraphLiveFromLocal()) return;
-					runAsRemoteHistoryInbound(() => applySetGraphItemPositionsPerform(live));
-					const relayPort = port;
-					const relayData = stringifyGraphPositionsEphemeralWire(live, live.items);
-					void client.mutation([
-						"remoteHost.send",
-						{
-							port: relayPort,
-							client: null,
-							except_client: clientId,
-							data: relayData,
-						},
-					]);
-					return;
-				}
+			if (wireType === "graphPositionsEphemeral") {
+				const body = parsed as Record<string, unknown>;
+				const live = parseGraphPositionsEphemeralMessage(body);
+				if (!live) return;
+				if (hostGraphLiveFromLocal()) return;
+				runAsRemoteHistoryInbound(() => applySetGraphItemPositionsPerform(live));
+				pendingGraphPositionsRelays.set(
+					clientId,
+					stringifyGraphPositionsEphemeralWire(live, live.items),
+				);
+				scheduleRemoteRelayFlush();
+				return;
+			}
 
-				if (wireType === "cursor") {
-					const body = parsed as Record<string, unknown>;
-					const cursor = parseCursorMessage(body);
-					if (!cursor) {
-						return;
-					}
-					const name = userNames.get(clientId) ?? `client-${clientId}`;
-					const relayCursor = { ...cursor, id: name };
-					if (relayCursor.position.x <= -9999) removeRemoteCursor(relayCursor.id);
-					else updateRemoteCursor(relayCursor);
-					pendingCursorRelays.set(clientId, JSON.stringify({ ...body, id: name }));
-					if (cursorRelayRaf === null) {
-						cursorRelayRaf = requestAnimationFrame(flushCursorRelays);
-					}
-					return;
-				}
+			if (wireType === "cursor") {
+				const body = parsed as Record<string, unknown>;
+				const cursor = parseCursorMessage(body);
+				if (!cursor) return;
+				const name = userNames.get(clientId) ?? `client-${clientId}`;
+				const relayCursor = { ...cursor, id: name };
+				if (relayCursor.position.x <= -9999) removeRemoteCursor(relayCursor.id);
+				else updateRemoteCursor(relayCursor);
+				pendingCursorRelays.set(
+					clientId,
+					JSON.stringify({ ...body, id: name }),
+				);
+				scheduleRemoteRelayFlush();
+				return;
+			}
 
-				if (wireType === "pinDrag") {
-					const body = parsed as Record<string, unknown>;
-					const drag = parsePinDragMessage(body);
-					if (!drag) return;
-					const name = userNames.get(clientId) ?? `client-${clientId}`;
-					const relayDrag = { ...drag, id: name };
-					if (relayDrag.position.x <= -99999) removeRemotePinDrag(relayDrag.id);
-					else updateRemotePinDrag(relayDrag);
-					void client.mutation([
-						"remoteHost.send",
-						{
-							port,
-							client: null,
-							except_client: clientId,
-							data: JSON.stringify({ type: "pinDrag", ...relayDrag }),
-						},
-					]);
-					return;
-				}
+			if (wireType === "pinDrag") {
+				const body = parsed as Record<string, unknown>;
+				const drag = parsePinDragMessage(body);
+				if (!drag) return;
+				const name = userNames.get(clientId) ?? `client-${clientId}`;
+				const relayDrag = { ...drag, id: name };
+				if (relayDrag.position.x <= -99999) removeRemotePinDrag(relayDrag.id);
+				else updateRemotePinDrag(relayDrag);
+				pendingPinDragRelays.set(
+					clientId,
+					JSON.stringify({ type: "pinDrag", ...relayDrag }),
+				);
+				scheduleRemoteRelayFlush();
+				return;
+			}
 
-				if (wireType === "selectionBox") {
-					const body = parsed as Record<string, unknown>;
-					const box = parseSelectionBoxMessage(body);
-					if (!box) return;
-					const name = userNames.get(clientId) ?? `client-${clientId}`;
-					const relayBox = { ...box, id: name };
-					if (relayBox.width <= 0 && relayBox.height <= 0) removeRemoteSelectionBox(relayBox.id);
-					else updateRemoteSelectionBox(relayBox);
-					void client.mutation([
-						"remoteHost.send",
-						{
-							port,
-							client: null,
-							except_client: clientId,
-							data: JSON.stringify({ type: "selectionBox", ...relayBox }),
-						},
-					]);
-					return;
-				}
+			if (wireType === "selectionBox") {
+				const body = parsed as Record<string, unknown>;
+				const box = parseSelectionBoxMessage(body);
+				if (!box) return;
+				const name = userNames.get(clientId) ?? `client-${clientId}`;
+				const relayBox = { ...box, id: name };
+				if (relayBox.width <= 0 && relayBox.height <= 0)
+					removeRemoteSelectionBox(relayBox.id);
+				else updateRemoteSelectionBox(relayBox);
+				pendingSelectionBoxRelays.set(
+					clientId,
+					JSON.stringify({ type: "selectionBox", ...relayBox }),
+				);
+				scheduleRemoteRelayFlush();
+				return;
+			}
+		};
 
-			},
+		const listenGen = listenGeneration;
+		void (async () => {
+			const { listen } = await import("@tauri-apps/api/event");
+			const unlisten = await listen<[number, RemoteServerMessage]>(
+				REMOTE_HOST_MESSAGE_EVENT,
+				(event) => {
+					handleRemoteServerMessage(event.payload);
+				},
+			);
+			if (listenGen !== listenGeneration) {
+				unlisten();
+				return;
+			}
+			unlistenRemoteMessages = unlisten;
+		})();
+
+		// Keeps the axum remote server alive; messages use REMOTE_HOST_MESSAGE_EVENT on the main thread.
+		const u = client.addSubscription(["remoteHost.server", port], {
+			onData() {},
 		});
 
 		subscription = u;
@@ -584,7 +630,7 @@ export function installRemoteHostBridge(opts: {
 				nodeExecWindowStart = now;
 				nodeExecWindowCount = 0;
 			}
-			if (nodeExecWindowCount >= 30) return;
+			if (nodeExecWindowCount >= 10) return;
 			nodeExecWindowCount++;
 			const port = remoteHostSettings.port;
 			const data = stringifyNodeExecuteWire(graphRefOf(node.graph), node.id);
@@ -598,6 +644,11 @@ export function installRemoteHostBridge(opts: {
 
 	onCleanup(() => {
 		subscription?.();
+		unlistenRemoteMessages?.();
+		if (remoteRelayRaf !== null) {
+			cancelAnimationFrame(remoteRelayRaf);
+			remoteRelayRaf = null;
+		}
 		cleanupNodeEmit?.();
 	});
 }

@@ -17,9 +17,62 @@ use serde::Deserialize;
 use serde_json::Value;
 use specta::Type;
 use tokio::sync::{broadcast, mpsc, oneshot, Mutex};
+use tauri::Manager;
 use tower_http::services::ServeDir;
 
 use crate::R;
+
+/// Delivered on the main thread so we avoid rspc `Window::emit` from Tokio workers (heap crashes).
+pub const REMOTE_HOST_MESSAGE_EVENT: &str = "remote-host://message";
+
+/// Ensures axum shuts down and the port map entry is removed when the rspc subscription ends.
+struct RemoteHostSubscriptionGuard {
+	port: u16,
+	ctx: super::Ctx,
+	shutdown_tx: Option<oneshot::Sender<()>>,
+}
+
+impl Drop for RemoteHostSubscriptionGuard {
+	fn drop(&mut self) {
+		if self.shutdown_tx.take().is_some() {
+			// Completes graceful_shutdown's oneshot wait.
+		}
+		let ctx = self.ctx.clone();
+		let port = self.port;
+		tauri::async_runtime::spawn(async move {
+			ctx.remote_host.senders.lock().await.remove(&port);
+		});
+	}
+}
+
+fn spawn_remote_host_relay(
+	ctx: &super::Ctx,
+	mut receiver_rx: mpsc::Receiver<(u8, RemoteServerMessage)>,
+) {
+	let app = ctx
+		.app
+		.lock()
+		.ok()
+		.and_then(|guard| guard.as_ref().cloned());
+	let Some(app) = app else {
+		return;
+	};
+
+	tauri::async_runtime::spawn(async move {
+		while let Some((client, message)) = receiver_rx.recv().await {
+			let payload = (client, message);
+			let emit_app = app.clone();
+			if app
+				.run_on_main_thread(move || {
+					let _ = emit_app.emit_all(REMOTE_HOST_MESSAGE_EVENT, payload);
+				})
+				.is_err()
+			{
+				break;
+			}
+		}
+	});
+}
 
 struct RemoteWsShutdown(broadcast::Receiver<()>);
 
@@ -168,6 +221,11 @@ pub fn router() -> AlphaRouter<super::Ctx> {
 			"server",
 			R.subscription(|ctx, port: u16| async move {
 				let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+				let _subscription_guard = RemoteHostSubscriptionGuard {
+					port,
+					ctx: ctx.clone(),
+					shutdown_tx: Some(shutdown_tx),
+				};
 				let (ws_shutdown_tx, ws_shutdown_rx) = broadcast::channel(1);
 
 				let root = remote_public_root(&ctx);
@@ -181,10 +239,13 @@ pub fn router() -> AlphaRouter<super::Ctx> {
 
 				let addr = SocketAddr::from((Ipv4Addr::UNSPECIFIED, port));
 
-				let (receiver_tx, mut receiver_rx) = mpsc::channel::<(u8, RemoteServerMessage)>(32);
+				let (receiver_tx, receiver_rx) = mpsc::channel::<(u8, RemoteServerMessage)>(32);
+				spawn_remote_host_relay(&ctx, receiver_rx);
 
 				let sender_txs = {
 					let mut senders = ctx.remote_host.senders.lock().await;
+					// Drop stale entry if a prior subscription was cancelled without cleanup.
+					senders.remove(&port);
 					senders.entry(port).or_default().clone()
 				};
 
@@ -288,14 +349,9 @@ pub fn router() -> AlphaRouter<super::Ctx> {
 
 				tokio::spawn(server);
 
+				// Hold the subscription open without rspc `Window::emit` per message.
 				async_stream::stream! {
-					while let Some(msg) = receiver_rx.recv().await {
-						yield msg;
-					}
-
-					ctx.remote_host.senders.lock().await.remove(&port);
-
-					drop(shutdown_tx);
+					std::future::pending::<()>().await;
 				}
 			}),
 		)
@@ -338,7 +394,7 @@ pub fn router() -> AlphaRouter<super::Ctx> {
 		)
 }
 
-#[derive(serde::Serialize, Type)]
+#[derive(Clone, serde::Serialize, Type)]
 pub enum RemoteServerMessage {
 	Text(String),
 	Connected,

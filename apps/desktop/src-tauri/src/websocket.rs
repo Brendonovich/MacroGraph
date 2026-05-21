@@ -17,6 +17,25 @@ use tokio::sync::{broadcast, mpsc, oneshot, Mutex};
 
 use crate::{Ctx as AppCtx, R};
 
+struct WsSubscriptionGuard {
+    port: u16,
+    ctx: AppCtx,
+    shutdown_tx: Option<oneshot::Sender<()>>,
+}
+
+impl Drop for WsSubscriptionGuard {
+    fn drop(&mut self) {
+        self.shutdown_tx.take();
+        let ctx = self.ctx.clone();
+        let port = self.port;
+        tauri::async_runtime::spawn(async move {
+            let mut senders = ctx.ws.senders.lock().await;
+            senders.remove(&port);
+            ctx.ws.client_kicks.lock().await.remove(&port);
+        });
+    }
+}
+
 struct WebSocketShutdown(broadcast::Receiver<()>);
 
 impl Clone for WebSocketShutdown {
@@ -81,6 +100,11 @@ pub fn router() -> AlphaRouter<AppCtx> {
             "server",
             R.subscription(|ctx, port: u16| async move {
                 let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+                let _subscription_guard = WsSubscriptionGuard {
+                    port,
+                    ctx: ctx.clone(),
+                    shutdown_tx: Some(shutdown_tx),
+                };
                 let (ws_shutdown_tx, ws_shutdown_rx) = broadcast::channel(1);
                 let (client_kick_tx, _) = broadcast::channel::<()>(64);
                 ctx.ws
@@ -95,6 +119,8 @@ pub fn router() -> AlphaRouter<AppCtx> {
 
                 let sender_txs = {
                     let mut senders = ctx.ws.senders.lock().await;
+                    senders.remove(&port);
+                    ctx.ws.client_kicks.lock().await.remove(&port);
                     senders.entry(port).or_default().clone()
                 };
 
@@ -121,11 +147,6 @@ pub fn router() -> AlphaRouter<AppCtx> {
                     while let Some(msg) = receiver_rx.recv().await {
                         yield msg
                     }
-
-                    ctx.ws.senders.lock().await.remove(&port);
-                    ctx.ws.client_kicks.lock().await.remove(&port);
-
-                    drop(shutdown_tx);
                 }
             }),
         )

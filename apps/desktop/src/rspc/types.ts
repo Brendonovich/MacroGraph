@@ -26,7 +26,7 @@ export type Procedures = {
         { key: "oauth.authorize", input: string, result: any | null } | 
         { key: "obsNative.events", input: string, result: ObsEventMsg } | 
         { key: "outboundWs.messages", input: string, result: OutboundClientMsg } | 
-        { key: "remoteHost.server", input: number, result: [number, RemoteServerMessage] } | 
+        { key: "remoteHost.server", input: number, result: null } | 
         { key: "websocket.server", input: number, result: [number, Message] }
 };
 
@@ -36,11 +36,9 @@ export type ObsBatchArgs = { url: string; requests: any[] }
 
 export type ObsConnectArgs = { url: string; password: string | null }
 
-export type Message = { Text: string } | "Connected" | "Disconnected"
-
-export type RemoteServerMessage = { Text: string } | "Connected" | { ConnectedWithUser: { username: string } } | "Disconnected"
-
 export type OutboundSendArgs = { url: string; data: string }
+
+export type Message = { Text: string } | "Connected" | "Disconnected"
 
 export type ObsCallArgs = { url: string; requestType: string; requestData: any | null }
 

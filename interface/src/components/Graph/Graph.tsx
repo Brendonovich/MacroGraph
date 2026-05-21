@@ -23,6 +23,8 @@ import clsx from "clsx";
 import { type SchemaMenuOpenState, useInterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
 import { ConnectionRenderer } from "./Connection";
+import { GraphWebGLRenderer } from "./WebGL/GraphWebGLRenderer";
+import { isWebGLGraphEnabled } from "../../graphWebGL";
 import { CommentBox } from "./CommentBox";
 import {
 	type GraphContext,
@@ -64,7 +66,7 @@ const ZOOM_STEP = 1.05;
 const NODE_ESTIMATED_WIDTH = 220;
 const NODE_ESTIMATED_HEIGHT = 140;
 /** Mount node shells + pins together each frame. */
-const LOAD_BATCH = 200;
+const LOAD_BATCH = 2000;
 
 interface Props extends Solid.ComponentProps<"div"> {
 	state: GraphViewState;
@@ -179,6 +181,7 @@ export const Graph = (props: Props) => {
 	const [pinsMountComplete, setPinsMountComplete] = Solid.createSignal(false);
 	const [loadComplete, setLoadComplete] = Solid.createSignal(false);
 	const [shellMode, setShellMode] = Solid.createSignal(false);
+	const webglGraph = () => isWebGLGraphEnabled();
 
 	let mountRaf: number | undefined;
 	let pinUpgradeRaf: number | undefined;
@@ -641,6 +644,7 @@ export const Graph = (props: Props) => {
 		pinsVisibleForIndex,
 		loadComplete,
 		shellMode,
+		webglGraph,
 		viewportReady: () => state.size.width > 0 && state.size.height > 0,
 	};
 
@@ -1279,14 +1283,67 @@ export const Graph = (props: Props) => {
 				}}
 			>
 				<div class="absolute inset-0">
-					<DotGrid
-						active={active()}
-						width={() => state.size.width}
-						height={() => state.size.height}
-					/>
-					<Solid.Show when={pinsMountComplete()}>
-						<ConnectionRenderer
+					<Solid.Show
+						when={webglGraph()}
+						fallback={
+							<>
+								<DotGrid
+									active={active()}
+									width={() => state.size.width}
+									height={() => state.size.height}
+								/>
+								<Solid.Show when={pinsMountComplete()}>
+									<ConnectionRenderer
+										active={active()}
+										graphBounds={{
+											get x() {
+												return state.bounds.x;
+											},
+											get y() {
+												return state.bounds.y;
+											},
+											get width() {
+												return state.size.width;
+											},
+											get height() {
+												return state.size.height;
+											},
+										}}
+										onLoadComplete={() => {
+											markGraphLoadPhase("connectionsSettled", model());
+											connectionsPainted = true;
+											tryCompleteGraphLoad();
+										}}
+									/>
+								</Solid.Show>
+							</>
+						}
+					>
+						<GraphWebGLRenderer
 							active={active()}
+							nodes={allNodes}
+							commentBoxes={() => model().commentBoxes.values()}
+							dragArea={() => {
+								const r = dragArea();
+								if (!r) return null;
+								return { x: r.x, y: r.y, width: r.width, height: r.height };
+							}}
+							remoteSelectionBoxes={() =>
+								remoteSelectionBoxList()
+									.filter(
+										(b) =>
+											b.graphKind === model().kind &&
+											b.graphId === model().id &&
+											b.width > 0 &&
+											b.height > 0,
+									)
+									.map((b) => ({
+										x: b.x,
+										y: b.y,
+										width: b.width,
+										height: b.height,
+									}))
+							}
 							graphBounds={{
 								get x() {
 									return state.bounds.x;
@@ -1301,11 +1358,15 @@ export const Graph = (props: Props) => {
 									return state.size.height;
 								},
 							}}
-							onLoadComplete={() => {
-								markGraphLoadPhase("connectionsSettled", model());
-								connectionsPainted = true;
-								tryCompleteGraphLoad();
-							}}
+							onLoadComplete={
+								pinsMountComplete()
+									? () => {
+											markGraphLoadPhase("connectionsSettled", model());
+											connectionsPainted = true;
+											tryCompleteGraphLoad();
+										}
+									: undefined
+							}
 						/>
 					</Solid.Show>
 					<div
@@ -1359,7 +1420,7 @@ export const Graph = (props: Props) => {
 								/>
 							)}
 						</Solid.For>
-						<Solid.Show when={dragArea()}>
+						<Solid.Show when={!webglGraph() && dragArea()}>
 							{(dragArea) => (
 								<div
 									class="absolute bg-yellow-500/10 border-yellow-500 border rounded"
@@ -1373,24 +1434,26 @@ export const Graph = (props: Props) => {
 								/>
 							)}
 						</Solid.Show>
-						{remoteSelectionBoxList()
-							.filter(
-								(b) =>
-									b.graphKind === model().kind &&
-									b.graphId === model().id &&
-									b.width > 0 &&
-									b.height > 0,
-							)
-							.map((box) => (
-								<div
-									class="absolute pointer-events-none z-40 bg-blue-500/10 border-blue-400 border border-dashed rounded"
-									style={{
-										transform: `translate(${box.x}px, ${box.y}px)`,
-										width: `${box.width}px`,
-										height: `${box.height}px`,
-									}}
-								/>
-							))}
+						<Solid.Show when={!webglGraph()}>
+							{remoteSelectionBoxList()
+								.filter(
+									(b) =>
+										b.graphKind === model().kind &&
+										b.graphId === model().id &&
+										b.width > 0 &&
+										b.height > 0,
+								)
+								.map((box) => (
+									<div
+										class="absolute pointer-events-none z-40 bg-blue-500/10 border-blue-400 border border-dashed rounded"
+										style={{
+											transform: `translate(${box.x}px, ${box.y}px)`,
+											width: `${box.width}px`,
+											height: `${box.height}px`,
+										}}
+									/>
+								))}
+						</Solid.Show>
 						{cursorList()
 							.filter(
 								(c) =>

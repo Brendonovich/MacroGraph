@@ -15,3 +15,18 @@
 .node-running {
     animation: node-running-pulse 1.2s ease-in-out infinite;
 }
+
+/* WebGL canvas draws node chrome; DOM layer is pins + labels only. */
+.webgl-graph-node {
+    background: transparent !important;
+    border-color: transparent !important;
+}
+
+.webgl-graph-node > div:first-child {
+    background: transparent !important;
+}
+
+.webgl-graph-comment {
+    background: transparent !important;
+    border-color: transparent !important;
+}

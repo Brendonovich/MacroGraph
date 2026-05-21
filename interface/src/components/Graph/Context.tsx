@@ -159,6 +159,8 @@ export type GraphContext = {
 	loadComplete: () => boolean;
 	/** Shell-only nodes (no IO DOM) during fast load. */
 	shellMode: () => boolean;
+	/** Unified WebGL canvas for grid, nodes, connections, comment boxes. */
+	webglGraph: () => boolean;
 	/** True once the graph viewport has valid size/bounds. */
 	viewportReady: () => boolean;
 };
