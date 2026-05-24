@@ -24,24 +24,18 @@ export type Procedures = {
     subscriptions: 
         { key: "loginListen", input: never, result: string | null } | 
         { key: "oauth.authorize", input: string, result: any | null } | 
-        { key: "obsNative.events", input: string, result: ObsEventMsg } | 
-        { key: "outboundWs.messages", input: string, result: OutboundClientMsg } | 
+        { key: "obsNative.events", input: string, result: null } | 
+        { key: "outboundWs.messages", input: string, result: null } | 
         { key: "remoteHost.server", input: number, result: null } | 
-        { key: "websocket.server", input: number, result: [number, Message] }
+        { key: "websocket.server", input: number, result: null }
 };
-
-export type OutboundClientMsg = "Open" | { Text: string } | "Closed" | { Error: string }
-
-export type ObsBatchArgs = { url: string; requests: any[] }
-
-export type ObsConnectArgs = { url: string; password: string | null }
-
-export type OutboundSendArgs = { url: string; data: string }
-
-export type Message = { Text: string } | "Connected" | "Disconnected"
 
 export type ObsCallArgs = { url: string; requestType: string; requestData: any | null }
 
+export type OutboundSendArgs = { url: string; data: string }
+
+export type ObsBatchArgs = { url: string; requests: any[] }
+
 export type Entry = { Dir: string } | { File: string }
 
-export type ObsEventMsg = { lifecycle?: string | null; eventType?: string | null; eventData?: any | null }
+export type ObsConnectArgs = { url: string; password: string | null }

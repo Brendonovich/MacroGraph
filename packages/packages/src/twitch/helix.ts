@@ -74,7 +74,7 @@ export function createHelix(core: Core) {
 
 export type Helix = ReturnType<typeof createHelix>;
 
-export function register(pkg: Package, helix: Helix, types: Types) {
+export function register(pkg: Package, helix: Helix, types: Types, sentMessageIds: Map<string, number>) {
 	function createHelixExecSchema<
 		TProperties extends Record<string, PropertyDef> = Record<string, never>,
 		TIO = void,
@@ -141,6 +141,19 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 			},
 		});
 	}
+	async function resolveChannelId(
+		channel: string,
+		credential: Credential,
+	): Promise<string> {
+		if (/^\d+$/.test(channel)) return channel;
+
+		const data = await helix.call("GET /users", credential, {
+			body: new URLSearchParams({ login: channel }),
+		});
+		const user = Maybe(data.data[0]).expect("User not found");
+		return user.id;
+	}
+
 	createHelixExecSchema({
 		name: "Warn User",
 		createIO: ({ io }) => ({
@@ -1770,7 +1783,7 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				resource: TwitchAccount,
 			},
 			chat: {
-				name: "Chat to send to",
+				name: "Channel (username or ID)",
 				resource: TwitchChannel,
 			},
 		},
@@ -1796,14 +1809,27 @@ export function register(pkg: Package, helix: Helix, types: Types) {
 				.credential();
 
 			try {
-				await helix.call("POST /chat/messages", chatter, {
+				const broadcasterId = await resolveChannelId(chat, chatter);
+				const messageText = ctx.getInput(io.message);
+
+				const textKey = `${chatter.id}:${broadcasterId}:${messageText}`;
+				sentMessageIds.set(textKey, Date.now());
+
+				const response: any = await helix.call("POST /chat/messages", chatter, {
 					body: JSON.stringify({
-						broadcaster_id: chat,
+						broadcaster_id: broadcasterId,
 						sender_id: chatter.id,
-						message: ctx.getInput(io.message),
+						message: messageText,
 						reply_parent_message_id: ctx.getInput(io.parentId),
 					}),
 				});
+
+				sentMessageIds.delete(textKey);
+
+				const messageId = response?.data?.[0]?.message_id;
+				if (messageId) {
+					sentMessageIds.set(messageId, Date.now());
+				}
 			} catch (e) {
 				const msg = e instanceof Error ? e.message : "Unknown Twitch API error";
 				const node = (io as any)?.node ?? graph;

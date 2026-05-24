@@ -9,7 +9,11 @@ use specta::Type;
 use tokio::sync::{broadcast, mpsc, watch, Mutex};
 use tokio_websockets::{ClientBuilder, Message};
 
+use tauri::Manager;
+
 use crate::{Ctx as AppCtx, R};
+
+pub const OUTBOUND_WS_MESSAGE_EVENT: &str = "outbound-ws://message";
 
 #[derive(Deserialize, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
@@ -362,6 +366,83 @@ impl Ctx {
     }
 }
 
+fn spawn_outbound_relay(ctx: &AppCtx, url: String) {
+    let ctx = ctx.clone();
+    let app = ctx
+        .app
+        .lock()
+        .ok()
+        .and_then(|guard| guard.as_ref().cloned());
+    let Some(app) = app else {
+        return;
+    };
+    tauri::async_runtime::spawn(async move {
+        let (mut connected_rx, mut text_rx, mut error_rx) = loop {
+            let m = ctx.outbound_ws.clients.lock().await;
+            if let Some(s) = session_for_url(&m, &url) {
+                break (
+                    s.connected_tx.subscribe(),
+                    s.text_tx.subscribe(),
+                    s.error_tx.subscribe(),
+                );
+            }
+            drop(m);
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        };
+
+        macro_rules! emit_outbound {
+            ($msg:expr) => {{
+                let a = app.clone();
+                let a_emit = a.clone();
+                let payload = (url.clone(), $msg);
+                let _ = a.run_on_main_thread(move || {
+                    let _ = a_emit.emit_all(OUTBOUND_WS_MESSAGE_EVENT, payload);
+                });
+            }};
+        }
+
+        if *connected_rx.borrow_and_update() {
+            emit_outbound!(OutboundClientMsg::Open);
+        }
+
+        loop {
+            tokio::select! {
+                biased;
+                changed = connected_rx.changed() => {
+                    if changed.is_err() {
+                        break;
+                    }
+                    let msg = if *connected_rx.borrow_and_update() {
+                        OutboundClientMsg::Open
+                    } else {
+                        OutboundClientMsg::Closed
+                    };
+                    emit_outbound!(msg);
+                }
+                text = text_rx.recv() => {
+                    match text {
+                        Ok(t) => emit_outbound!(OutboundClientMsg::Text(t)),
+                        Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
+                        Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                    }
+                }
+                err = error_rx.recv() => {
+                    match err {
+                        Ok(message) => {
+                            if *connected_rx.borrow() {
+                                continue;
+                            }
+                            emit_outbound!(OutboundClientMsg::Error(message));
+                        }
+                        Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
+                        Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                    }
+                }
+            }
+        }
+    });
+}
+
 pub fn router() -> AlphaRouter<AppCtx> {
     R.router()
         .procedure(
@@ -411,58 +492,9 @@ pub fn router() -> AlphaRouter<AppCtx> {
         .procedure(
             "messages",
             R.subscription(|ctx, url: String| async move {
+                spawn_outbound_relay(&ctx, url);
                 async_stream::stream! {
-                    let (mut connected_rx, mut text_rx, mut error_rx) = loop {
-                        let m = ctx.outbound_ws.clients.lock().await;
-                        if let Some(s) = session_for_url(&m, &url) {
-                            break (
-                                s.connected_tx.subscribe(),
-                                s.text_tx.subscribe(),
-                                s.error_tx.subscribe(),
-                            );
-                        }
-                        drop(m);
-                        tokio::time::sleep(Duration::from_millis(50)).await;
-                    };
-
-                    if *connected_rx.borrow_and_update() {
-                        yield OutboundClientMsg::Open;
-                    }
-
-                    loop {
-                        tokio::select! {
-                            biased;
-                            changed = connected_rx.changed() => {
-                                if changed.is_err() {
-                                    break;
-                                }
-                                if *connected_rx.borrow_and_update() {
-                                    yield OutboundClientMsg::Open;
-                                } else {
-                                    yield OutboundClientMsg::Closed;
-                                }
-                            }
-                            text = text_rx.recv() => {
-                                match text {
-                                    Ok(t) => yield OutboundClientMsg::Text(t),
-                                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
-                                    Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
-                                }
-                            }
-                            err = error_rx.recv() => {
-                                match err {
-                                    Ok(message) => {
-                                        if *connected_rx.borrow() {
-                                            continue;
-                                        }
-                                        yield OutboundClientMsg::Error(message);
-                                    }
-                                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
-                                    Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
-                                }
-                            }
-                        }
-                    }
+                    std::future::pending::<()>().await;
                 }
             }),
         )

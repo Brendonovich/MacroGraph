@@ -67,7 +67,7 @@ function Header() {
 					>
 						{(user) => (
 							<UserDropdown user={user()}>
-								<DropdownMenuTrigger class="w-8 h-8 bg-neutral-600 rounded-full flex items-center justify-center">
+								<DropdownMenuTrigger class="w-8 h-8 bg-neutral-600 rounded-full flex items-center justify-center" data-onboarding="user-menu">
 									{user().email[0].toUpperCase()}
 								</DropdownMenuTrigger>
 							</UserDropdown>
@@ -152,7 +152,7 @@ function LogInDialog(props: ParentProps) {
 
 	return (
 		<Dialog open={open()} onOpenChange={setOpen}>
-			<DialogTrigger as={Button}>Log In</DialogTrigger>
+			<DialogTrigger as={Button} data-onboarding="login">Log In</DialogTrigger>
 			<DialogContent class="p-6">
 				<DialogTitle class="text-xl">Browser Log In</DialogTitle>
 				<DialogDescription class="max-w-sm mt-1">

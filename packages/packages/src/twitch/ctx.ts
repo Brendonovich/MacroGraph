@@ -56,8 +56,11 @@ export function createCtx(core: Core) {
 		await Promise.allSettled(Object.keys(persisted[0]).map(auth.enableAccount));
 	});
 
+	const sentMessageIds = new Map<string, number>();
+
 	return {
 		core,
+		sentMessageIds,
 		auth,
 		persisted,
 		helixClient,

@@ -1,6 +1,9 @@
-import type { ObsNativeBridge, OutboundWsBridge } from "@macrograph/runtime";
+import type { ObsNativeBridge, ObsNativeEventMsg, OutboundWsBridge, OutboundWsClientMsg } from "@macrograph/runtime";
 
 import { client } from "./rspc";
+
+const OBS_NATIVE_EVENT = "obs-native://event";
+const OUTBOUND_WS_EVENT = "outbound-ws://message";
 
 export const obsNativeBridge: ObsNativeBridge = {
 	connect: (args) =>
@@ -27,9 +30,18 @@ export const obsNativeBridge: ObsNativeBridge = {
 			{ url: args.url, requests: args.requests as unknown[] },
 		]) as Promise<unknown[]>,
 	subscribeEvents(url, handler) {
-		return client.addSubscription(["obsNative.events", url], {
-			onData: handler,
+		const sub = client.addSubscription(["obsNative.events", url], { onData() {} });
+		let unlisten: () => void;
+		import("@tauri-apps/api/event").then(({ listen }) => {
+			listen<[string, ObsNativeEventMsg]>(OBS_NATIVE_EVENT, (event) => {
+				const [eventUrl, msg] = event.payload;
+				if (eventUrl === url) handler(msg);
+			}).then((u) => { unlisten = u; });
 		});
+		return () => {
+			unlisten?.();
+			sub();
+		};
 	},
 };
 
@@ -49,8 +61,17 @@ export const outboundWsBridge: OutboundWsBridge = {
 	send: (args) =>
 		client.mutation(["outboundWs.send", args]) as unknown as Promise<void>,
 	subscribeMessages(url, handler) {
-		return client.addSubscription(["outboundWs.messages", url], {
-			onData: handler,
+		const sub = client.addSubscription(["outboundWs.messages", url], { onData() {} });
+		let unlisten: () => void;
+		import("@tauri-apps/api/event").then(({ listen }) => {
+			listen<[string, OutboundWsClientMsg]>(OUTBOUND_WS_EVENT, (event) => {
+				const [eventUrl, msg] = event.payload;
+				if (eventUrl === url) handler(msg);
+			}).then((u) => { unlisten = u; });
 		});
+		return () => {
+			unlisten?.();
+			sub();
+		};
 	},
 };

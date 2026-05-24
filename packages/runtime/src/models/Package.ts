@@ -12,7 +12,7 @@ import {
 } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 import { createLazyMemo } from "@solid-primitives/memo";
-import { type Component, lazy } from "solid-js";
+import { type Component, createRoot, lazy } from "solid-js";
 import type { Simplify } from "type-fest";
 
 import type { Core } from "./Core";
@@ -315,7 +315,9 @@ export function createResourceType<
 	if ("sources" in type) {
 		const oldSources = type.sources;
 		type.sourcesNow = oldSources;
-		type.sources = createLazyMemo(() => oldSources(type.package));
+		createRoot(() => {
+			type.sources = createLazyMemo(() => oldSources(type.package));
+		});
 	}
 
 	return type;

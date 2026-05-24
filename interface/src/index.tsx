@@ -109,6 +109,7 @@ import {
 import { PlatformContext, usePlatform } from "./platform";
 
 export * from "./platform";
+export { Onboarding } from "./Onboarding";
 export {
 	LoadCheckerDialog,
 	loadParsedProject,
@@ -170,6 +171,7 @@ export {
 } from "./remoteHistorySync";
 
 import type { RemoteHistoryWireItem, WireGraphPositionsEphemeral } from "./remoteHistorySync";
+import { Onboarding } from "./Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -530,6 +532,7 @@ function ProjectInterface() {
 											width={Math.max(rightSidebar.state.width, MIN_WIDTH)}
 											name="Node"
 											initialValue={["Node Info"]}
+											data-onboarding="node-properties"
 										>
 											<Sidebars.Node node={node()} />
 										</Sidebar>
@@ -752,6 +755,8 @@ function ProjectInterface() {
 					);
 				}}
 			</Solid.Show>
+
+			<Onboarding />
 		</div>
 	);
 }
@@ -1439,7 +1444,7 @@ function MosaicTabPanel(props: {
 		const pkg = ctx.core.packages.find((p) => p.name === props.tab.packageName);
 		return (
 			<div class="flex-1 w-full flex flex-row overflow-auto bg-neutral-900">
-				<div class="flex-1 overflow-y-auto p-4 text-white">
+				<div class="flex-1 overflow-y-auto p-4 text-white" data-onboarding="package-settings">
 					<Solid.Suspense fallback="Loading...">
 						<Solid.ErrorBoundary
 							fallback={

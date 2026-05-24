@@ -99,7 +99,7 @@ export function usePin(pin: Accessor<Pin>) {
 	let justMouseUpped = false;
 
 	createEffect(() => {
-		if (!graph.loadComplete()) return;
+		if (!graph.pinsLayoutEnabled() || graph.shellMode()) return;
 		const thisPin = pin();
 
 		const ref = getRef();
@@ -162,7 +162,9 @@ export function usePin(pin: Accessor<Pin>) {
 				});
 			},
 			pointerdown: (e) => {
+				if (e.button !== 0) return;
 				e.stopPropagation();
+				if (e.detail > 1) return;
 
 				const mouseDown = interfaceCtx.state;
 
@@ -199,6 +201,8 @@ export function usePin(pin: Accessor<Pin>) {
 							});
 						});
 					} else {
+						measurePinPosition(thisPin);
+
 						interfaceCtx.setState({
 							status: "pinDragMode",
 							pin: thisPin,
@@ -209,27 +213,39 @@ export function usePin(pin: Accessor<Pin>) {
 						ref.releasePointerCapture(e.pointerId);
 
 						createRoot((dispose) => {
-							let hasLeft = false;
+							const updateDragging = (moveEvent: PointerEvent) => {
+								const autoconnectIO = getNearCompatibleIO(
+									graph.model(),
+									interfaceCtx,
+									pin(),
+									graph.toGraphSpace({
+										x: moveEvent.clientX,
+										y: moveEvent.clientY,
+									}),
+								);
+
+								interfaceCtx.setState({
+									status: "pinDragMode",
+									pin: thisPin,
+									state: {
+										status: "draggingPin",
+										autoconnectIO: autoconnectIO
+											? makeIORef(autoconnectIO)
+											: undefined,
+									},
+								});
+							};
 
 							createEventListenerMap(ref, {
-								pointerenter: () => {
-									hasLeft = false;
-									interfaceCtx.setState({
-										status: "pinDragMode",
-										pin: thisPin,
-										state: { status: "awaitingDragConfirmation" },
-									});
-								},
-								pointerleave: () => {
-									hasLeft = true;
-									interfaceCtx.setState({
-										status: "pinDragMode",
-										pin: thisPin,
-										state: { status: "draggingPin" },
-									});
-								},
+								pointerleave: (e) => updateDragging(e),
 								pointerup: () => {
-									interfaceCtx.setState({ status: "idle" });
+									if (
+										interfaceCtx.state.status === "pinDragMode" &&
+										interfaceCtx.state.state.status ===
+											"awaitingDragConfirmation"
+									) {
+										interfaceCtx.setState({ status: "idle" });
+									}
 								},
 							});
 							createEventListenerMap(window, {
@@ -288,35 +304,30 @@ export function usePin(pin: Accessor<Pin>) {
 								},
 								pointerup: () => dispose(),
 								pointermove: (e) => {
-									if (!hasLeft) return;
+									if (
+										interfaceCtx.state.status !== "pinDragMode" ||
+										interfaceCtx.state.pin !== thisPin
+									)
+										return;
 
-									const autoconnectIO = getNearCompatibleIO(
-										graph.model(),
-										interfaceCtx,
-										pin(),
-										graph.toGraphSpace({
-											x: e.clientX,
-											y: e.clientY,
-										}),
-									);
+									const sub = interfaceCtx.state.state;
+									if (
+										sub.status !== "awaitingDragConfirmation" &&
+										sub.status !== "draggingPin"
+									)
+										return;
 
-									interfaceCtx.setState({
-										status: "pinDragMode",
-										pin: thisPin,
-										state: {
-											status: "draggingPin",
-											autoconnectIO: autoconnectIO
-												? makeIORef(autoconnectIO)
-												: undefined,
-										},
-									});
+									updateDragging(e);
 								},
 							});
 						});
 					}
 				}
 			},
-			dblclick: () => {
+			dblclick: (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				interfaceCtx.setState({ status: "idle" });
 				interfaceCtx.execute("disconnectIO", {
 					...graphRefOf(graph.model()),
 					ioRef: makeIORef(thisPin),
@@ -366,7 +377,7 @@ export function usePin(pin: Accessor<Pin>) {
 
 	const dim = createMemo(() => {
 		const p = pin();
-		if (!graph.loadComplete()) return false;
+		if (!graph.pinsLayoutEnabled() || graph.shellMode()) return false;
 
 		if (
 			(interfaceCtx.state.status !== "pinDragMode" ||

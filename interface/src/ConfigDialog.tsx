@@ -6,7 +6,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@macrograph/ui";
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { CheckBox, SelectInput } from "./components/ui";
 import {
@@ -25,6 +25,9 @@ export type Config = {
 		queue: string;
 		functionQueue: string;
 		package: string;
+	};
+	audio: {
+		outputDeviceLabel: string | null;
 	};
 };
 
@@ -48,6 +51,9 @@ const DEFAULT_CONFIG: Config = {
 		queue: "#fca5a5",
 		functionQueue: "#fdba74",
 		package: "#86efac",
+	},
+	audio: {
+		outputDeviceLabel: null,
 	},
 };
 
@@ -121,7 +127,9 @@ function ColorSelect(props: {
 	);
 }
 
-export function ConfigContent() {
+export function ConfigContent(props: {
+	audioDevices?: Array<{ deviceId: string; label: string }>;
+}) {
 	return (
 		<div class="flex-1 overflow-y-auto p-4 text-white">
 			<div class="flex flex-col gap-3 max-w-lg">
@@ -180,12 +188,53 @@ export function ConfigContent() {
 					value={config.tabColors.package}
 					onChange={(v) => setConfig("tabColors", "package", v)}
 				/>
+				<Show when={props.audioDevices?.length}>
+					{() => {
+						const options: Array<{
+							deviceId: string | null;
+							label: string;
+						}> = [
+							{ deviceId: null, label: "System Default" },
+							...props.audioDevices!,
+						];
+						return (
+							<>
+								<hr class="border-neutral-600 my-2" />
+								<div class="flex items-center gap-4">
+									<span>Audio Output Device</span>
+									<SelectInput
+										class="!w-fit ml-auto !text-right"
+										placement="bottom-end"
+										options={options}
+										optionValue="label"
+										optionTextValue="label"
+										getLabel={(o) => o?.label ?? "System Default"}
+										value={options.find(
+											(d) =>
+												d.label ===
+												config.audio.outputDeviceLabel,
+										)}
+										onChange={(v) =>
+											setConfig(
+												"audio",
+												"outputDeviceLabel",
+												v.label === "System Default" ? null : v.label,
+											)
+										}
+									/>
+								</div>
+							</>
+						);
+					}}
+				</Show>
 			</div>
 		</div>
 	);
 }
 
-export function ConfigDialog() {
+export function ConfigDialog(props: {
+	audioDevices?: Array<{ deviceId: string; label: string }>;
+}) {
 	const [open, setOpen] = createSignal(false);
 
 	return (
@@ -202,7 +251,7 @@ export function ConfigDialog() {
 					<DialogTitle class="font-bold text=2x1">Settings</DialogTitle>
 					<DialogCloseButton />
 				</div>
-				<ConfigContent />
+				<ConfigContent audioDevices={props.audioDevices} />
 			</DialogContent>
 		</Dialog>
 	);

@@ -3,7 +3,12 @@ import { t } from "@macrograph/typesystem";
 import { type EventBus, createEventBus } from "@solid-primitives/event-bus";
 import { events, type Key, commands } from "tauri-plugin-kb-mouse";
 
+let unlistenFns: Array<() => void> = [];
+
 export function pkg() {
+	unlistenFns.forEach((fn) => fn());
+	unlistenFns = [];
+
 	const pkg = new Package({
 		name: "Global Mouse & Keyboard",
 	});
@@ -103,7 +108,7 @@ export function pkg() {
 
 		pressedKeys.add(key);
 		busses.get(key)?.emit("pressed");
-	});
+	}).then((fn) => unlistenFns.push(fn));
 
 	events.keyUp.listen((e) => {
 		const { key, appFocused } = e.payload;
@@ -113,7 +118,7 @@ export function pkg() {
 		if (appFocused) return;
 
 		busses.get(key)?.emit("released");
-	});
+	}).then((fn) => unlistenFns.push(fn));
 
 	for (const a of alphabet) {
 		if (typeof a !== "string") continue;

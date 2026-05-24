@@ -404,7 +404,7 @@ export function createEventSub(
 	};
 }
 
-export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
+export function register(pkg: Package, { eventSub, sentMessageIds }: Ctx, types: Types) {
 	function createEventSubEventSchema<
 		TEvent extends keyof Events,
 		TProperties extends Record<string, PropertyDef> = never,
@@ -463,6 +463,20 @@ export function register(pkg: Package, { eventSub }: Ctx, types: Types) {
 							if (metaVersion === undefined) {
 								if (subscriptionVersion !== "1") return;
 							} else if (metaVersion !== subscriptionVersion) return;
+						}
+
+						if (
+							data.metadata.subscription_type === "channel.chat.message" &&
+							data.payload.event?.message_id
+						) {
+							const event = data.payload.event;
+							const textKey = `${event.chatter_user_id}:${event.broadcaster_user_id}:${event.message.text}`;
+							if (
+								sentMessageIds.delete(event.message_id) ||
+								sentMessageIds.delete(textKey)
+							) {
+								return;
+							}
 						}
 
 						bus.emit(data.payload.event);

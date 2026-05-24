@@ -13,7 +13,7 @@ export function Packages(props?: { onPackageClicked?: (pkg: { name: string }) =>
 	);
 
 	return (
-		<SidebarSection title="Packages" class="overflow-y-hidden flex flex-col">
+		<SidebarSection title="Packages" sectionKey="Packages" class="overflow-y-hidden flex flex-col">
 			<div class="flex-1 overflow-y-auto">
 				<div class="flex flex-col p-1 space-y-0.5">
 					{packages().length === 0 && (

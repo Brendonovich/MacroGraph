@@ -57,7 +57,7 @@ export function Graphs(props: Props) {
 	const isSearching = () => search() !== "";
 
 	return (
-		<SidebarSection title="Graphs" class="overflow-y-hidden flex flex-col">
+		<SidebarSection title="Graphs" sectionKey="Graphs" class="overflow-y-hidden flex flex-col">
 			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
 				<SearchInput
 					value={search()}
@@ -91,6 +91,7 @@ export function Graphs(props: Props) {
 				<IconButton
 					type="button"
 					title="Create graph"
+					data-onboarding="create-graph"
 					onClick={(e) => {
 						e.stopPropagation();
 						const graph = interfaceCtx.execute("createGraph");

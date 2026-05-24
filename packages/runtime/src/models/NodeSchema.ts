@@ -256,7 +256,7 @@ export type inferPropertySourceFn<TFn extends PropertySourceFn> =
 
 export type PropertyDef = { name: string } & (
 	| { source: PropertySourceFn }
-	| { type: PrimitiveType; default?: any }
+	| { type: PrimitiveType; default?: any; filePicker?: () => Promise<string | undefined | null> }
 	| { resource: ResourceType<any, any> }
 );
 

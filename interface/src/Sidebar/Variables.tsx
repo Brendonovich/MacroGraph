@@ -55,7 +55,7 @@ export function Variables(props: {
 	);
 
 	return (
-		<SidebarSection title={`${props.titlePrefix} Variables`}>
+		<SidebarSection title={`${props.titlePrefix} Variables`} sectionKey={`${props.titlePrefix} Variables`}>
 			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
 				<SearchInput
 					value={search()}
@@ -66,6 +66,7 @@ export function Variables(props: {
 				/>
 				<IconButton
 					type="button"
+					data-onboarding="create-variable"
 					onClick={(e) => {
 						e.stopPropagation();
 

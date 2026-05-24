@@ -31,6 +31,26 @@ export function fileSize(path: string) {
     return invoke()<number>("file_size", { path })
 }
 
+export function enumerateAudioOutputs() {
+    return invoke()<AudioOutputDevice[]>("enumerate_audio_outputs")
+}
+
+export function playAudio(path: string, deviceName: string | null) {
+    return invoke()<PlayResult>("play_audio", { path,deviceName })
+}
+
+export function stopAudio(id: string) {
+    return invoke()<null>("stop_audio", { id })
+}
+
+export function setAudioVolume(id: string, volume: number) {
+    return invoke()<null>("set_audio_volume", { id,volume })
+}
+
+export function stopAllAudio() {
+    return invoke()<null>("stop_all_audio")
+}
+
 export function fetch(method: string, url: string, headers: ([string, string])[], data: number[] | null, connectTimeout: number | null, maxRedirections: number | null) {
     return invoke()<number>("fetch", { method,url,headers,data,connectTimeout,maxRedirections })
 }
@@ -55,4 +75,6 @@ export function fetchReadBody(rid: number) {
     return invoke()<number[]>("fetch_read_body", { rid })
 }
 
+export type AudioOutputDevice = { device_id: string; label: string }
 export type FetchResponse = { status: number; statusText: string; headers: ([string, string])[]; url: string }
+export type PlayResult = { id: string }

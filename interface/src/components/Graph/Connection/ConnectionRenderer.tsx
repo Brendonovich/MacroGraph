@@ -1,12 +1,5 @@
 import { Maybe } from "@macrograph/option";
-import {
-	DataInput,
-	DataOutput,
-	type Graph,
-	type XY,
-	pinIsOutput,
-	splitIORef,
-} from "@macrograph/runtime";
+import { DataInput, DataOutput, type XY, pinIsOutput } from "@macrograph/runtime";
 import type { t } from "@macrograph/typesystem";
 import { createMousePosition } from "@solid-primitives/mouse";
 import { createEffect, createSignal, onCleanup, untrack } from "solid-js";
@@ -19,53 +12,11 @@ import { isPaneResizing, onPaneResizeEnd } from "../../../paneResizeSession";
 import { useGraphContext } from "../Context";
 import { colour } from "../util";
 import { markGraphLoadDetail, markGraphLoadPhase } from "../../../graphLoadPerf";
+import { connectionCacheKey, getCompiledEdges } from "../compiledEdges";
 
 const LOAD_SETTLE_MS = 80;
 
-type CompiledEdge = {
-	outNodeId: number;
-	inNodeId: number;
-	output: unknown;
-	input: unknown;
-	inputType: t.Any | null;
-};
-
 let lastGraphKey = "";
-const parsedRefCache = new Map<string, ReturnType<typeof splitIORef>>();
-let compiledEdges: CompiledEdge[] = [];
-let compiledEdgesKey = "";
-
-function parseIORefCached(ref: string) {
-	const cached = parsedRefCache.get(ref);
-	if (cached) return cached;
-	const parsed = splitIORef(ref);
-	parsedRefCache.set(ref, parsed);
-	return parsed;
-}
-
-function rebuildCompiledEdges(graph: Graph) {
-	compiledEdges = [];
-	for (const [refStr, conns] of graph.connections) {
-		const outRef = parseIORefCached(refStr);
-		if (outRef.type === "i") continue;
-		const output = graph.nodes.get(outRef.nodeId)?.output(outRef.ioId);
-		if (!output) continue;
-
-		for (const conn of conns) {
-			const inRef = parseIORefCached(conn);
-			const input = graph.nodes.get(inRef.nodeId)?.input(inRef.ioId);
-			if (!input) continue;
-
-			compiledEdges.push({
-				outNodeId: outRef.nodeId,
-				inNodeId: inRef.nodeId,
-				output,
-				input,
-				inputType: input instanceof DataInput ? input.type : null,
-			});
-		}
-	}
-}
 
 export const ConnectionRenderer = (props: {
 	graphBounds: GraphBounds;
@@ -108,6 +59,7 @@ export const ConnectionRenderer = (props: {
 		active();
 		ctx.model().kind;
 		ctx.model().id;
+		connectionCacheKey(ctx.model());
 		ctx.selectedItemIds();
 		props.graphBounds.width;
 		props.graphBounds.height;
@@ -201,9 +153,6 @@ export const ConnectionRenderer = (props: {
 				if (graphKey !== lastGraphKey) {
 					lastGraphKey = graphKey;
 					loadComplete = false;
-					parsedRefCache.clear();
-					compiledEdges = [];
-					compiledEdgesKey = "";
 				}
 
 				let connectionCount = 0;
@@ -242,13 +191,18 @@ export const ConnectionRenderer = (props: {
 					return !(maxX < visL || minX > visR || maxY < visT || minY > visB);
 				};
 
-				const compiledKey = `${graph.kind}:${graph.id}:${graph.connections.size}`;
-				if (compiledKey !== compiledEdgesKey) {
-					rebuildCompiledEdges(graph);
-					compiledEdgesKey = compiledKey;
-				}
+				const draggingPin =
+					interfaceCtx.state.status === "pinDragMode" ||
+					interfaceCtx.state.status === "connectionAssignMode"
+						? interfaceCtx.state.pin
+						: null;
 
-				for (const edge of compiledEdges) {
+				for (const edge of getCompiledEdges(graph)) {
+					if (
+						draggingPin &&
+						(edge.output === draggingPin || edge.input === draggingPin)
+					)
+						continue;
 					const outputPos = interfaceCtx.pinPositions.get(edge.output as any);
 					if (!outputPos) continue;
 					const inputPos = interfaceCtx.pinPositions.get(edge.input as any);

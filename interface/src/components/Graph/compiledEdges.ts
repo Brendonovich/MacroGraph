@@ -24,7 +24,7 @@ function parseIORefCached(ref: string) {
 
 export function getCompiledEdges(graph: Graph): CompiledEdge[] {
 	const graphKey = `${graph.kind}:${graph.id}`;
-	const compiledKey = `${graphKey}:${graph.connections.size}`;
+	const compiledKey = connectionCacheKey(graph);
 	if (graphKey !== lastGraphKey) {
 		lastGraphKey = graphKey;
 		parsedRefCache.clear();
@@ -56,4 +56,15 @@ export function getCompiledEdges(graph: Graph): CompiledEdge[] {
 		compiledEdgesKey = compiledKey;
 	}
 	return compiledEdges;
+}
+
+const connCacheKeys = new Map<string, string>();
+
+export function connectionCacheKey(graph: Graph): string {
+	let key = `${graph.kind}:${graph.id}:${graph.connections.size}`;
+	for (const [outRef, conns] of graph.connections) {
+		key += `|${outRef}`;
+		for (const inRef of conns) key += `,${inRef}`;
+	}
+	return key;
 }

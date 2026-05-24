@@ -112,10 +112,8 @@ export function handleSelectableItemPointerDown(
 	const nodePositions = new Map<Node, XY>();
 	const commentBoxPositions = new Map<CommentBox, XY>();
 
-	const downPosition = graph.toGraphSpace({
-		x: e.clientX,
-		y: e.clientY,
-	});
+	const downClient = { x: e.clientX, y: e.clientY };
+	const downPosition = graph.toGraphSpace(downClient);
 
 	const nodes = new Set<Node>();
 	const commentBoxes = new Set<CommentBox>();

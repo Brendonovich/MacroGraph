@@ -4,6 +4,7 @@ import { t } from "@macrograph/typesystem";
 import { createEventBus } from "@solid-primitives/event-bus";
 import { ReactiveMap } from "@solid-primitives/map";
 import "@total-typescript/ts-reset";
+import { createRoot } from "solid-js";
 import { createMutable } from "solid-js/store";
 
 import type { Core } from "./Core";
@@ -60,7 +61,7 @@ export class Project {
 	queues = new ReactiveMap<number, Queue>();
 	functionQueues = new ReactiveMap<number, FunctionQueue>();
 	name = "New Project";
-	events = createEventBus<ProjectEvent>();
+	events = createRoot(() => createEventBus<ProjectEvent>());
 
 	disableSave = false;
 

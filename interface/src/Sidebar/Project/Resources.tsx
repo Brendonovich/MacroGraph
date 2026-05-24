@@ -43,7 +43,7 @@ export function Resources() {
 	});
 
 	return (
-		<SidebarSection title="Resources" class="overflow-y-hidden flex flex-col">
+		<SidebarSection title="Resources" sectionKey="Resources" class="overflow-y-hidden flex flex-col">
 			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
 				<SearchInput
 					value={search()}
@@ -213,6 +213,7 @@ function AddResourceButton() {
 		<DropdownMenu.Root placement="bottom-end">
 			<DropdownMenu.Trigger
 				as={IconButton}
+				data-onboarding="create-resource"
 				onClick={(e) => e.stopPropagation()}
 			>
 				<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />

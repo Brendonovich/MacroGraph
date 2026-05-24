@@ -23,10 +23,18 @@ export function Properties(props: {
 }) {
 	const interfaceCtx = useInterfaceContext();
 
+	const visibleProperties = createMemo(() =>
+		Object.values(props.properties).filter((property) => {
+			if (property.id === "file")
+				return !!props.node.state.properties["useFilePicker"];
+			return true;
+		}),
+	);
+
 	return (
 		<SidebarSection title="Node Properties">
 			<For
-				each={Object.values(props.properties)}
+				each={visibleProperties()}
 				fallback={
 					<div class="text-center pt-6 w-full text-neutral-400">
 						Node has no properties
@@ -112,10 +120,29 @@ export function Properties(props: {
 															property().type.primitiveVariant() === "string"
 														}
 													>
-														<TextInput
-															value={value() as any}
-															onChange={onChange}
-														/>
+														<div class="flex gap-1">
+															<TextInput
+																class="flex-1 min-w-0"
+																value={value() as any}
+																onChange={onChange}
+															/>
+															<Show when={"filePicker" in property()}>
+																<button
+																	type="button"
+																	title="Browse"
+																	onClick={async () => {
+																		const file =
+																			await (
+																				property() as any
+																			).filePicker();
+																		if (file) onChange(file);
+																	}}
+																	class="px-2 py-0.5 text-xs bg-neutral-600 hover:bg-neutral-500 rounded"
+																>
+																	Browse
+																</button>
+															</Show>
+														</div>
 													</Match>
 													<Match
 														when={property().type.primitiveVariant() === "int"}

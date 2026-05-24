@@ -221,11 +221,6 @@ pub fn router() -> AlphaRouter<super::Ctx> {
 			"server",
 			R.subscription(|ctx, port: u16| async move {
 				let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
-				let _subscription_guard = RemoteHostSubscriptionGuard {
-					port,
-					ctx: ctx.clone(),
-					shutdown_tx: Some(shutdown_tx),
-				};
 				let (ws_shutdown_tx, ws_shutdown_rx) = broadcast::channel(1);
 
 				let root = remote_public_root(&ctx);
@@ -351,6 +346,11 @@ pub fn router() -> AlphaRouter<super::Ctx> {
 
 				// Hold the subscription open without rspc `Window::emit` per message.
 				async_stream::stream! {
+					let _subscription_guard = RemoteHostSubscriptionGuard {
+						port,
+						ctx: ctx.clone(),
+						shutdown_tx: Some(shutdown_tx),
+					};
 					std::future::pending::<()>().await;
 				}
 			}),

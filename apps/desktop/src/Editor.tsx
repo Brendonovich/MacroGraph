@@ -4,6 +4,7 @@ import {
 	Interface,
 	LoadCheckerDialog,
 	PlatformContext,
+	config,
 	importInvocationLogFromProject,
 	ensureEditorStorageMigrated,
 	loadParsedProject,
@@ -16,7 +17,8 @@ import {
 import * as pkgs from "@macrograph/packages";
 import { parseJsonWithContext, serde } from "@macrograph/runtime-serde";
 import { makePersisted } from "@solid-primitives/storage";
-import { convertFileSrc } from "@tauri-apps/api/tauri";
+import { open } from "@tauri-apps/api/dialog";
+import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
 import { Show, createSignal, onMount } from "solid-js";
 import "tauri-plugin-midi";
 
@@ -48,10 +50,46 @@ const platform = createPlatform({
   core,
 });
 
+const [audioDevices, setAudioDevices] = createSignal<
+  Array<{ deviceId: string; label: string }>
+>([]);
+
+invoke<Array<{ device_id: string; label: string }>>(
+  "enumerate_audio_outputs",
+)
+  .then((devices) =>
+    setAudioDevices(devices.map((d) => ({ deviceId: d.device_id, label: d.label }))),
+  )
+  .catch(() => {});
+
+const audioBackend: pkgs.audio.AudioBackend = {
+  play: (path, deviceName) =>
+    invoke("play_audio", { path, deviceName }).then((r: any) => r.id),
+  stop: (id) => invoke("stop_audio", { id }),
+  setVolume: (id, volume) => invoke("set_audio_volume", { id, volume }),
+  stopAll: () => invoke("stop_all_audio"),
+};
+
 [
   () =>
     pkgs.audio.pkg({
-      prepareURL: (url: string) => convertFileSrc(url),
+      prepareURL: (url: string) => url,
+      getDeviceName: () => config.audio.outputDeviceLabel,
+      backend: audioBackend,
+      selectFile: () =>
+        open({
+          filters: [
+            {
+              name: "Audio Files",
+              extensions: [
+                "mp3", "wav", "ogg", "aac", "flac", "wma",
+                "m4a", "opus", "webm",
+              ],
+            },
+            { name: "All Files", extensions: ["*"] },
+          ],
+          multiple: false,
+        }).then((r) => (typeof r === "string" ? r : null)),
     }),
   pkgs.discord.pkg,
   () =>
@@ -161,7 +199,7 @@ export function MenuItems() {
   return (
     <>
       <KeyboardShortcutsDialog />
-      <ConfigDialog />
+      <ConfigDialog audioDevices={audioDevices()} />
       <RemoteHostDialog />
       <Button
         title="Save Project"

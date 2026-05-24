@@ -20,7 +20,7 @@ export function pkg(core: Core) {
 
 	const types = createTypes(pkg);
 
-	helix.register(pkg, ctx.helixClient, types);
+	helix.register(pkg, ctx.helixClient, types, ctx.sentMessageIds);
 	eventsub.register(pkg, ctx, types);
 
 	pkg.registerResourceType(TwitchAccount);

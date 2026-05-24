@@ -67,7 +67,9 @@ import {
 	isGraphEditorTab,
 	type GraphViewState,
 	type SelectedItemID,
+	type TabState,
 } from "./components/Graph/Context";
+import { closeTabInGroup, setMosaicWorkspaceState } from "./mosaicLayout";
 import { graphRefsEqual, normalizeQueueEntries } from "@macrograph/runtime";
 import type { EditorState } from "./context";
 
@@ -122,6 +124,18 @@ export const historyActions = (core: Core, editor: EditorState) => {
 			return pkg?.resource(entry.typeName) as any;
 		}
 		return entry.type;
+	}
+
+	function closeMatchingTabs(predicate: (tab: TabState) => boolean) {
+		let state = editor.mosaicState;
+		for (const group of state.groups) {
+			for (let i = group.tabs.length - 1; i >= 0; i--) {
+				if (predicate(group.tabs[i]!)) {
+					state = closeTabInGroup(state, group.id, i);
+				}
+			}
+		}
+		setMosaicWorkspaceState(editor.setMosaicState, state);
 	}
 
 	function getFocusedGraphState(ref?: GraphRef) {
@@ -357,20 +371,15 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				const graph = getGraph(entry);
 				if (!graph) return;
 
+				closeMatchingTabs(
+					(tab) =>
+						tab.type === "graph" &&
+						tab.graphKind === entry.graphKind &&
+						tab.graphId === entry.graphId,
+				);
+
 				core.project.deleteGraphByKind(entry.graphKind, entry.graphId);
 				graph.dispose();
-
-				// editor.setGraphStates((s) => s.filter((s) => s.id !== entry.graphId));
-				// editor.setCurrentGraphId((id) => {
-				//   if (id === entry.graphId) {
-				//     const index =
-				//       editor.currentGraphIndex() ?? editor.graphStates.length - 1;
-				//     if (index === -1) return id;
-				//     return editor.graphStates[index]!.id;
-				//   }
-
-				//   return id;
-				// });
 			},
 			async rewind(entry) {
 				const graph = await deserializeGraph(
@@ -2723,6 +2732,9 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				};
 			},
 			perform(entry) {
+				closeMatchingTabs(
+					(tab) => tab.type === "function" && tab.functionId === entry.functionId,
+				);
 				core.project.deleteFunction(entry.functionId);
 			},
 			rewind(entry) {
@@ -3360,6 +3372,9 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				return { ...input, data: serializeQueue(queue) };
 			},
 			perform(entry) {
+				closeMatchingTabs(
+					(tab) => tab.type === "queue" && tab.queueId === entry.queueId,
+				);
 				core.project.removeQueue(entry.queueId);
 			},
 			rewind(entry) {
@@ -3487,6 +3502,11 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				return { ...input, data: serializeFunctionQueue(queue) };
 			},
 			perform(entry) {
+				closeMatchingTabs(
+					(tab) =>
+						tab.type === "functionQueue" &&
+						tab.functionQueueId === entry.functionQueueId,
+				);
 				core.project.removeFunctionQueue(entry.functionQueueId);
 			},
 			rewind(entry) {

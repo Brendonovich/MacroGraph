@@ -17,6 +17,17 @@ use std::path::PathBuf;
 use tauri::{command, AppHandle, Manager};
 use tokio_util::io::ReaderStream;
 
+macro_rules! emit_on_main {
+    ($app:expr, $event:expr, $payload:expr) => {{
+        let a = $app.clone();
+        let a_emit = a.clone();
+        let payload = $payload;
+        let _ = a.run_on_main_thread(move || {
+            let _ = a_emit.emit_all($event, payload);
+        });
+    }};
+}
+
 use super::{Error, FetchRequest, HttpExt, RequestId};
 
 #[derive(Serialize, Type)]
@@ -188,14 +199,15 @@ pub async fn fetch_multipart(
                     let prev = last_percent.load(Ordering::Relaxed);
                     if pct > prev {
                         last_percent.store(pct, Ordering::Relaxed);
-                        let _ = app.emit_all(
+                        emit_on_main!(
+                            app,
                             "http-upload-progress",
                             UploadProgressPayload {
                                 rid,
                                 percent: pct,
                                 sent: new_sent,
                                 total: upload_total,
-                            },
+                            }
                         );
                     }
                 }
@@ -227,14 +239,15 @@ pub async fn fetch_multipart(
 
         let res = request.send().await?;
         if upload_total > 0 {
-            let _ = app.emit_all(
+            emit_on_main!(
+                app,
                 "http-upload-progress",
                 UploadProgressPayload {
                     rid,
                     percent: 100,
                     sent: upload_total,
                     total: upload_total,
-                },
+                }
             );
         }
         Ok::<_, super::Error>(res)

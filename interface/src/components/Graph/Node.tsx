@@ -271,9 +271,7 @@ export const Node = (props: Props) => {
 				ref={ref}
 				class={clsx(
 					"absolute top-0 left-0 text-[12px] overflow-hidden rounded-lg flex flex-col bg-black/75 border-black/75 border-2",
-					graph.webglGraph() && "webgl-graph-node",
-					isSelected() && !graph.webglGraph() && "ring-2 ring-mg-focus opacity-100",
-					isSelected() && graph.webglGraph() && "opacity-100",
+					isSelected() && "ring-2 ring-mg-focus opacity-100",
 					connectionHighlight(),
 				)}
 				style={{

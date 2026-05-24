@@ -29,7 +29,7 @@ export interface SidebarProps extends ParentProps {
 	flat?: boolean;
 }
 
-export function Sidebar(props: SidebarProps) {
+export function Sidebar(props: SidebarProps & { "data-onboarding"?: string }) {
 	const [value, setValue] = makePersisted(
 		createSignal<Array<string>>(props.initialValue ?? []),
 		{ name: `sidebar-${props.name}` },
@@ -42,6 +42,7 @@ export function Sidebar(props: SidebarProps) {
 		<div
 			class={clsx("relative flex flex-col bg-[#2c2c2c]", props.class)}
 			style={{ width: `${props.width}px` }}
+			{...(props["data-onboarding"] ? { "data-onboarding": props["data-onboarding"] } : {})}
 		>
 			<Show when={props.toolbar}>
 				<div class="relative z-30 shrink-0">{props.toolbar}</div>
@@ -101,7 +102,7 @@ function SectionVisibilityToggle(props: {
 }
 
 export function SidebarSection(
-	props: ParentProps<{ title: string; class?: string; fitContent?: boolean }>,
+	props: ParentProps<{ title: string; class?: string; fitContent?: boolean; sectionKey?: string }>,
 ) {
 	const edit = useSidebarEdit();
 	const [height, setHeight] = makePersisted(createSignal(MIN_HEIGHT), {
@@ -159,7 +160,7 @@ export function SidebarSection(
 		<Show
 			when={customizing()}
 			fallback={
-				<Accordion.Item class="relative" value={props.title}>
+				<Accordion.Item class="relative" value={props.title} {...(props.sectionKey ? { "data-onboarding-section": props.sectionKey } : {})}>
 					<Accordion.Header class="w-full">
 						<Accordion.Trigger
 							type="button"

@@ -2,6 +2,7 @@ import type { contract, CREDENTIAL } from "@macrograph/api-contract";
 import { Maybe, Some, type Option } from "@macrograph/option";
 import { deserializeValue } from "@macrograph/typesystem";
 import type { InitClientReturn } from "@ts-rest/core";
+import { createRoot } from "solid-js";
 import { createMutable } from "solid-js/store";
 import * as v from "valibot";
 
@@ -309,10 +310,26 @@ export class Core {
 		return this.packages.find((p) => p.name === pkg)?.schema(name);
 	}
 
+	private packageDisposes = new Map<string, () => void>();
+
 	registerPackage(packageFactory: (core: this) => Package<any>) {
-		const pkg = packageFactory(this);
+		let dispose: () => void;
+		const pkg = createRoot((d) => {
+			dispose = d;
+			return packageFactory(this);
+		});
 		pkg.core = this;
+
+		const existingIdx = this.packages.findIndex((p) => p.name === pkg.name);
+		if (existingIdx >= 0) {
+			const existing = this.packages[existingIdx];
+			this.packageDisposes.get(existing.name)?.();
+			this.packageDisposes.delete(existing.name);
+			this.packages.splice(existingIdx, 1);
+		}
+
 		this.packages.push(pkg);
+		this.packageDisposes.set(pkg.name, dispose!);
 	}
 
 	emitEvent<TEvents extends EventsMap, TEvent extends keyof EventsMap>(

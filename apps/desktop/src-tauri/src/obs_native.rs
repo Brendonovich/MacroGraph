@@ -20,7 +20,60 @@ use tokio::sync::{broadcast, Mutex};
 use tokio_websockets::{ClientBuilder, Message, WebSocketStream};
 use tokio_websockets::MaybeTlsStream;
 
-use crate::R;
+use tauri::Manager;
+
+use crate::{Ctx as AppCtx, R};
+
+pub const OBS_NATIVE_EVENT: &str = "obs-native://event";
+
+fn spawn_obs_relay(ctx: &AppCtx, url: String) {
+    let ctx = ctx.clone();
+    let app = ctx
+        .app
+        .lock()
+        .ok()
+        .and_then(|guard| guard.as_ref().cloned());
+    let Some(app) = app else {
+        return;
+    };
+    tauri::async_runtime::spawn(async move {
+        let mut sub = {
+            let m = ctx.obs_native.conns.lock().await;
+            match m.get(&url) {
+                Some(c) => c.event_tx.subscribe(),
+                None => {
+                    let a = app.clone();
+                    let a_emit = a.clone();
+                    let payload = (url.clone(), ObsEventMsg {
+                        lifecycle: Some("not_connected".into()),
+                        event_type: None,
+                        event_data: None,
+                    });
+                    let _ = a.run_on_main_thread(move || {
+                        let _ = a_emit.emit_all(OBS_NATIVE_EVENT, payload);
+                    });
+                    return;
+                }
+            }
+        };
+        loop {
+            match sub.recv().await {
+                Ok(ev) => {
+                    let a = app.clone();
+                    let a_emit = a.clone();
+                    let payload = (url.clone(), ev);
+                    if a.run_on_main_thread(move || {
+                        let _ = a_emit.emit_all(OBS_NATIVE_EVENT, payload);
+                    }).is_err() {
+                        break;
+                    }
+                }
+                Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
+                Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+            }
+        }
+    });
+}
 
 type TcpWs = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
 type WsWrite = futures_util::stream::SplitSink<TcpWs, Message>;
@@ -501,28 +554,9 @@ pub fn router() -> AlphaRouter<super::Ctx> {
         .procedure(
             "events",
             R.subscription(|ctx, url: String| async move {
+                spawn_obs_relay(&ctx, url);
                 async_stream::stream! {
-                    let mut sub = {
-                        let m = ctx.obs_native.conns.lock().await;
-                        match m.get(&url) {
-                            Some(c) => c.event_tx.subscribe(),
-                            None => {
-                                yield ObsEventMsg {
-                                    lifecycle: Some("not_connected".into()),
-                                    event_type: None,
-                                    event_data: None,
-                                };
-                                return;
-                            }
-                        }
-                    };
-                    loop {
-                        match sub.recv().await {
-                            Ok(ev) => yield ev,
-                            Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
-                            Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
-                        }
-                    }
+                    std::future::pending::<()>().await;
                 }
             }),
         )

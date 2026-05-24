@@ -23,8 +23,6 @@ import clsx from "clsx";
 import { type SchemaMenuOpenState, useInterfaceContext } from "../../context";
 import { isCtrlEvent } from "../../util";
 import { ConnectionRenderer } from "./Connection";
-import { GraphWebGLRenderer } from "./WebGL/GraphWebGLRenderer";
-import { isWebGLGraphEnabled } from "../../graphWebGL";
 import { CommentBox } from "./CommentBox";
 import {
 	type GraphContext,
@@ -67,6 +65,8 @@ const NODE_ESTIMATED_WIDTH = 220;
 const NODE_ESTIMATED_HEIGHT = 140;
 /** Mount node shells + pins together each frame. */
 const LOAD_BATCH = 2000;
+/** Defer left-click graph gestures so child targets (nodes, pins) can claim the pointer first. */
+const LEFT_POINTER_DRAG_DEFER_MS = 1;
 
 interface Props extends Solid.ComponentProps<"div"> {
 	state: GraphViewState;
@@ -94,7 +94,10 @@ export const Graph = (props: Props) => {
 	const interfaceCtx = useInterfaceContext();
 
 	const model = () => props.graph;
-	const allNodes = Solid.createMemo(() => [...model().nodes.values()]);
+	const allNodes = Solid.createMemo(() => {
+		model().nodes.size;
+		return [...model().nodes.values()];
+	});
 	const graphRef = () => graphRefOf(model());
 	const active = () => props.active !== false;
 	const [transientTranslate, setTransientTranslate] = Solid.createSignal<XY>({
@@ -181,7 +184,6 @@ export const Graph = (props: Props) => {
 	const [pinsMountComplete, setPinsMountComplete] = Solid.createSignal(false);
 	const [loadComplete, setLoadComplete] = Solid.createSignal(false);
 	const [shellMode, setShellMode] = Solid.createSignal(false);
-	const webglGraph = () => isWebGLGraphEnabled();
 
 	let mountRaf: number | undefined;
 	let pinUpgradeRaf: number | undefined;
@@ -272,6 +274,7 @@ export const Graph = (props: Props) => {
 		markGraphLoadPhase("allNodesMounted", model());
 		markGraphLoadPhase("allPinsMounted", model());
 		markGraphLoadDetail("mountedNodes", allNodes().length, model());
+		setPinsLayoutEnabled(true);
 		// Two frames so the final batch can layout before measuring pin positions.
 		requestAnimationFrame(() => {
 			requestAnimationFrame(() => {
@@ -320,6 +323,7 @@ export const Graph = (props: Props) => {
 	function startPinUpgrade() {
 		const total = allNodes().length;
 		if (total === 0) {
+			setShellMode(false);
 			setLoadComplete(true);
 			return;
 		}
@@ -644,7 +648,6 @@ export const Graph = (props: Props) => {
 		pinsVisibleForIndex,
 		loadComplete,
 		shellMode,
-		webglGraph,
 		viewportReady: () => state.size.width > 0 && state.size.height > 0,
 	};
 
@@ -666,8 +669,12 @@ export const Graph = (props: Props) => {
 		);
 	}
 
-	function createTranslateSession(initialClientXY: XY) {
+	function createTranslateSession(
+		initialClientXY: XY,
+		opts?: { moveBuffer?: number },
+	) {
 		const oldTranslate = { ...currentTranslate() };
+		const moveBuffer = opts?.moveBuffer ?? POINTER_DRAG_BUFFER;
 
 		return {
 			stop: () => {
@@ -677,14 +684,16 @@ export const Graph = (props: Props) => {
 				props.onTranslateCommit?.(releaseTranslate);
 			},
 			updateControlPoint: (clientXY: XY) => {
-				const MOVE_BUFFER = 3;
-
 				const diff = {
 					x: initialClientXY.x - clientXY.x,
 					y: initialClientXY.y - clientXY.y,
 				};
 
-				if (Math.abs(diff.x) < MOVE_BUFFER && Math.abs(diff.y) < MOVE_BUFFER)
+				if (
+					moveBuffer > 0 &&
+					Math.abs(diff.x) < moveBuffer &&
+					Math.abs(diff.y) < moveBuffer
+				)
 					return;
 
 				if (pan() !== "active") setPan("active");
@@ -698,6 +707,42 @@ export const Graph = (props: Props) => {
 				props.onTranslateChange(nextTranslate);
 			},
 		};
+	}
+
+	function startRightButtonPan(clientXY: XY) {
+		setPan("waiting");
+
+		const translateSession = createTranslateSession(clientXY, { moveBuffer: 0 });
+
+		Solid.createRoot((dispose) => {
+			let ended = false;
+			const finishPanSession = () => {
+				if (ended) return;
+				ended = true;
+				dispose();
+				translateSession.stop();
+			};
+
+			Solid.createEffect(() => {
+				if (pan() === "active") interfaceCtx.setState({ status: "idle" });
+			});
+
+			createEventListenerMap(window, {
+				pointerup: finishPanSession,
+				pointercancel: finishPanSession,
+				lostpointercapture: finishPanSession,
+				pointermove: (e) => {
+					if (!secondaryPointerButtonHeld(e)) {
+						finishPanSession();
+						return;
+					}
+					translateSession.updateControlPoint({
+						x: e.clientX,
+						y: e.clientY,
+					});
+				},
+			});
+		});
 	}
 
 	function createDragAreaSession(initialClientXY: XY) {
@@ -1079,7 +1124,13 @@ export const Graph = (props: Props) => {
 				onPointerDown={(e) => {
 					if (e.pointerType !== "touch") tryCapturePointer(e);
 
+					if (e.button === 2 && e.pointerType !== "touch") {
+						startRightButtonPan({ x: e.clientX, y: e.clientY });
+						return;
+					}
+
 					setTimeout(() => {
+						if (e.button !== 0) return;
 						if (gesture.dragStarted) return;
 						const { pointerId } = e;
 
@@ -1148,8 +1199,10 @@ export const Graph = (props: Props) => {
 														y: (left.start.y + right.start.y) / 2,
 													};
 
-													const translateSession =
-														createTranslateSession(startCenter);
+													const translateSession = createTranslateSession(
+														startCenter,
+														{ moveBuffer: POINTER_DRAG_BUFFER },
+													);
 
 													Solid.createRoot((dispose) => {
 														createEventListenerMap(window, {
@@ -1230,120 +1283,20 @@ export const Graph = (props: Props) => {
 								});
 							}
 						} else {
-							switch (e.button) {
-								case 0: {
-									createDragAreaSession({ x: e.clientX, y: e.clientY });
-
-									break;
-								}
-								case 2: {
-									setPan("waiting");
-
-									const translateSession = createTranslateSession({
-										x: e.clientX,
-										y: e.clientY,
-									});
-
-									Solid.createRoot((dispose) => {
-										let ended = false;
-										const finishPanSession = () => {
-											if (ended) return;
-											ended = true;
-											dispose();
-											translateSession.stop();
-										};
-
-										Solid.createEffect(() => {
-											if (pan() === "active")
-												interfaceCtx.setState({ status: "idle" });
-										});
-
-										createEventListenerMap(window, {
-											pointerup: finishPanSession,
-											pointercancel: finishPanSession,
-											lostpointercapture: finishPanSession,
-											pointermove: (e) => {
-												if (!secondaryPointerButtonHeld(e)) {
-													finishPanSession();
-													return;
-												}
-												translateSession.updateControlPoint({
-													x: e.clientX,
-													y: e.clientY,
-												});
-											},
-										});
-									});
-
-									break;
-								}
-							}
+							createDragAreaSession({ x: e.clientX, y: e.clientY });
 						}
-					}, 1);
+					}, LEFT_POINTER_DRAG_DEFER_MS);
 				}}
 			>
 				<div class="absolute inset-0">
-					<Solid.Show
-						when={webglGraph()}
-						fallback={
-							<>
-								<DotGrid
-									active={active()}
-									width={() => state.size.width}
-									height={() => state.size.height}
-								/>
-								<Solid.Show when={pinsMountComplete()}>
-									<ConnectionRenderer
-										active={active()}
-										graphBounds={{
-											get x() {
-												return state.bounds.x;
-											},
-											get y() {
-												return state.bounds.y;
-											},
-											get width() {
-												return state.size.width;
-											},
-											get height() {
-												return state.size.height;
-											},
-										}}
-										onLoadComplete={() => {
-											markGraphLoadPhase("connectionsSettled", model());
-											connectionsPainted = true;
-											tryCompleteGraphLoad();
-										}}
-									/>
-								</Solid.Show>
-							</>
-						}
-					>
-						<GraphWebGLRenderer
+					<DotGrid
+						active={active()}
+						width={() => state.size.width}
+						height={() => state.size.height}
+					/>
+					<Solid.Show when={pinsMountComplete()}>
+						<ConnectionRenderer
 							active={active()}
-							nodes={allNodes}
-							commentBoxes={() => model().commentBoxes.values()}
-							dragArea={() => {
-								const r = dragArea();
-								if (!r) return null;
-								return { x: r.x, y: r.y, width: r.width, height: r.height };
-							}}
-							remoteSelectionBoxes={() =>
-								remoteSelectionBoxList()
-									.filter(
-										(b) =>
-											b.graphKind === model().kind &&
-											b.graphId === model().id &&
-											b.width > 0 &&
-											b.height > 0,
-									)
-									.map((b) => ({
-										x: b.x,
-										y: b.y,
-										width: b.width,
-										height: b.height,
-									}))
-							}
 							graphBounds={{
 								get x() {
 									return state.bounds.x;
@@ -1358,15 +1311,11 @@ export const Graph = (props: Props) => {
 									return state.size.height;
 								},
 							}}
-							onLoadComplete={
-								pinsMountComplete()
-									? () => {
-											markGraphLoadPhase("connectionsSettled", model());
-											connectionsPainted = true;
-											tryCompleteGraphLoad();
-										}
-									: undefined
-							}
+							onLoadComplete={() => {
+								markGraphLoadPhase("connectionsSettled", model());
+								connectionsPainted = true;
+								tryCompleteGraphLoad();
+							}}
 						/>
 					</Solid.Show>
 					<div
@@ -1420,7 +1369,7 @@ export const Graph = (props: Props) => {
 								/>
 							)}
 						</Solid.For>
-						<Solid.Show when={!webglGraph() && dragArea()}>
+						<Solid.Show when={dragArea()}>
 							{(dragArea) => (
 								<div
 									class="absolute bg-yellow-500/10 border-yellow-500 border rounded"
@@ -1434,8 +1383,7 @@ export const Graph = (props: Props) => {
 								/>
 							)}
 						</Solid.Show>
-						<Solid.Show when={!webglGraph()}>
-							{remoteSelectionBoxList()
+						{remoteSelectionBoxList()
 								.filter(
 									(b) =>
 										b.graphKind === model().kind &&
@@ -1453,7 +1401,6 @@ export const Graph = (props: Props) => {
 										}}
 									/>
 								))}
-						</Solid.Show>
 						{cursorList()
 							.filter(
 								(c) =>

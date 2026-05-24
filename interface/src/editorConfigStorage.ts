@@ -28,6 +28,7 @@ export async function hydrateEditorConfig(
 					...parsed,
 					nodes: { ...defaultConfig.nodes, ...parsed.nodes },
 					tabColors: { ...defaultConfig.tabColors, ...parsed.tabColors },
+					audio: { ...defaultConfig.audio, ...parsed.audio },
 				}),
 			);
 		} catch {

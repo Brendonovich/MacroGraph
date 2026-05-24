@@ -68,14 +68,15 @@
 			"dialog": true,
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQzOEQ2NzBDN0FFQkE1NzEKUldSeHBldDZER2VOMHlhUG5vaUNKVHV0L0RnT3Ardnd5RmJiQWNtZUhyd3I2QVVlYnZFVVM4Q1gK"
 		},
-		"windows": [
+			"windows": [
 			{
 				"fullscreen": false,
 				"resizable": true,
 				"title": "MacroGraph",
 				"width": 800,
 				"height": 600,
-				"userAgent": "Macrograph/0.0"
+				"userAgent": "Macrograph/0.0",
+				"additionalBrowserArgs": "--enable-features=SpeakerSelection"
 			}
 		]
 	}

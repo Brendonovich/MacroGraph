@@ -1,6 +1,7 @@
 import {
 	Core,
 	type RefreshedOAuthToken,
+	type WsMessage,
 	createWsProvider,
 } from "@macrograph/runtime";
 import "tauri-plugin-midi";
@@ -11,6 +12,8 @@ import { fetch, fetchMultipart } from "./http";
 import { client } from "./rspc";
 
 const AUTH_URL = `${env.VITE_MACROGRAPH_API_URL}/auth`;
+
+const WS_EVENT = "websocket://message";
 
 export const core = new Core({
 	fetch: fetch as any,
@@ -48,12 +51,21 @@ export const core = new Core({
 
 export const wsProvider = createWsProvider({
 	async startServer(port, onData) {
-		return client.addSubscription(["websocket.server", port], {
-			onData: (d) => onData(d),
+		const { listen } = await import("@tauri-apps/api/event");
+		const unlisten = await listen<[number, number, WsMessage]>(WS_EVENT, (event) => {
+			const [eventPort, client, message] = event.payload;
+			if (eventPort === port) onData([client, message] as [number, WsMessage]);
 		});
+		const unsubscribe = client.addSubscription(["websocket.server", port], {
+			onData() {},
+		});
+		return () => {
+			unlisten();
+			unsubscribe();
+		};
 	},
-	async stopServer(unsubscribe) {
-		unsubscribe();
+	async stopServer(cleanup) {
+		cleanup();
 	},
 	async disconnectAllClients() {
 		return client.mutation(["websocket.disconnectAllClients", null]);

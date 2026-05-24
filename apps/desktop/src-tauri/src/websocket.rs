@@ -15,7 +15,41 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 use tokio::sync::{broadcast, mpsc, oneshot, Mutex};
 
+use tauri::Manager;
+
 use crate::{Ctx as AppCtx, R};
+
+pub const WEBSOCKET_MESSAGE_EVENT: &str = "websocket://message";
+
+fn spawn_websocket_relay(
+    ctx: &AppCtx,
+    port: u16,
+    mut receiver_rx: mpsc::Receiver<(u8, Message)>,
+) {
+    let app = ctx
+        .app
+        .lock()
+        .ok()
+        .and_then(|guard| guard.as_ref().cloned());
+    let Some(app) = app else {
+        return;
+    };
+    tauri::async_runtime::spawn(async move {
+        while let Some((client, message)) = receiver_rx.recv().await {
+            let payload = (port, client, message);
+            let a = app.clone();
+            let a_emit = a.clone();
+            if a
+                .run_on_main_thread(move || {
+                    let _ = a_emit.emit_all(WEBSOCKET_MESSAGE_EVENT, payload);
+                })
+                .is_err()
+            {
+                break;
+            }
+        }
+    });
+}
 
 struct WsSubscriptionGuard {
     port: u16,
@@ -100,27 +134,23 @@ pub fn router() -> AlphaRouter<AppCtx> {
             "server",
             R.subscription(|ctx, port: u16| async move {
                 let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
-                let _subscription_guard = WsSubscriptionGuard {
-                    port,
-                    ctx: ctx.clone(),
-                    shutdown_tx: Some(shutdown_tx),
-                };
                 let (ws_shutdown_tx, ws_shutdown_rx) = broadcast::channel(1);
                 let (client_kick_tx, _) = broadcast::channel::<()>(64);
+
+                let addr = SocketAddr::from((Ipv4Addr::UNSPECIFIED, port));
+
+                let (receiver_tx, mut receiver_rx) = mpsc::channel::<(u8, Message)>(16);
+
+                ctx.ws.client_kicks.lock().await.remove(&port);
                 ctx.ws
                     .client_kicks
                     .lock()
                     .await
                     .insert(port, client_kick_tx.clone());
 
-                let addr = SocketAddr::from((Ipv4Addr::UNSPECIFIED, port));
-
-                let (receiver_tx, mut receiver_rx) = mpsc::channel::<(u8, Message)>(16);
-
                 let sender_txs = {
                     let mut senders = ctx.ws.senders.lock().await;
                     senders.remove(&port);
-                    ctx.ws.client_kicks.lock().await.remove(&port);
                     senders.entry(port).or_default().clone()
                 };
 
@@ -141,12 +171,17 @@ pub fn router() -> AlphaRouter<AppCtx> {
                         ws_shutdown_tx.send(()).ok();
                     });
 
+                spawn_websocket_relay(&ctx, port, receiver_rx);
+
                 tokio::spawn(server);
 
                 async_stream::stream! {
-                    while let Some(msg) = receiver_rx.recv().await {
-                        yield msg
-                    }
+                    let _subscription_guard = WsSubscriptionGuard {
+                        port,
+                        ctx: ctx.clone(),
+                        shutdown_tx: Some(shutdown_tx),
+                    };
+                    std::future::pending::<()>().await;
                 }
             }),
         )
@@ -248,7 +283,7 @@ async fn ws_handler(ws: WebSocketUpgrade, State(state): State<WsState>) -> Respo
     })
 }
 
-#[derive(Serialize, Type)]
+#[derive(Clone, Serialize, Type)]
 enum Message {
     Text(String),
     Connected,

@@ -7,6 +7,8 @@ use axum::routing::{get, post};
 use rspc::{alpha::Rspc, Router};
 use tauri::Manager;
 
+mod audio_devices;
+mod audio_player;
 mod crash_log;
 mod fs;
 mod http;
@@ -31,7 +33,7 @@ async fn main() {
     let ctx: Ctx = Default::default();
     let ctx_for_setup = ctx.clone();
 
-    let builder = tauri::Builder::default()
+let builder = tauri::Builder::default()
         .plugin(rspc::integrations::tauri::plugin(
             std::sync::Arc::new(router()),
             move || ctx.clone(),
@@ -44,6 +46,7 @@ async fn main() {
             let handle = app.handle();
             crash_log::init(&handle);
             app.manage(http::State::new(handle.clone()));
+            app.manage(audio_player::AudioPlayer::default());
             if let Ok(mut slot) = ctx_for_setup.app.lock() {
                 *slot = Some(handle);
             }
@@ -54,6 +57,11 @@ async fn main() {
             crash_log::crash_log_append,
             crash_log::crash_log_path,
             fs::file_size,
+            audio_devices::enumerate_audio_outputs,
+            audio_player::play_audio,
+            audio_player::stop_audio,
+            audio_player::set_audio_volume,
+            audio_player::stop_all_audio,
             http::fetch,
             http::fetch_multipart,
             http::fetch_cancel,
