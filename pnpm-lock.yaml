@@ -19,9 +19,6 @@ importers:
       '@biomejs/biome':
         specifier: ^2.3.5
         version: 2.3.5
-      '@solidjs/start-nitro-v2-plugin':
-        specifier: link:../../../Library/pnpm/global/5/node_modules/@solidjs/start-nitro-v2-plugin
-        version: link:../../Library/pnpm/global/5/node_modules/@solidjs/start-nitro-v2-plugin
       effect:
         specifier: ^3.19.13
         version: 3.19.13
