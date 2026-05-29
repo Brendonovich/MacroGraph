@@ -1962,7 +1962,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				id: "filterKind",
 				name: "Filter Kind",
 				type: t.string(),
-				fetchSuggestion: filterListSuggestionFactory(obs),
+				fetchSuggestions: filterListSuggestionFactory(obs),
 			}),
 			filterSettings: io.dataInput({
 				id: "filterSettings",

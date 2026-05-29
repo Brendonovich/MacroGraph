@@ -2,11 +2,13 @@ use std::collections::HashMap;
 use std::sync::mpsc;
 use std::sync::Mutex;
 use std::thread;
+use std::time::Duration;
 
 use rodio::cpal::traits::{DeviceTrait, HostTrait};
 use rodio::{OutputStream, OutputStreamHandle, Sink};
 use serde::Serialize;
 use specta::Type;
+use tauri::{AppHandle, Manager};
 
 #[derive(Type, Serialize)]
 pub struct PlayResult {
@@ -33,54 +35,69 @@ pub struct AudioPlayer {
 	tx: Mutex<mpsc::Sender<AudioCommand>>,
 }
 
-impl Default for AudioPlayer {
-	fn default() -> Self {
+impl AudioPlayer {
+	pub fn new(app_handle: AppHandle) -> Self {
 		let (tx, rx) = mpsc::channel::<AudioCommand>();
-		thread::spawn(move || audio_thread(rx));
+		thread::spawn(move || audio_thread(rx, app_handle));
 		Self {
 			tx: Mutex::new(tx),
 		}
 	}
 }
 
-fn audio_thread(rx: mpsc::Receiver<AudioCommand>) {
+fn audio_thread(rx: mpsc::Receiver<AudioCommand>, app_handle: AppHandle) {
 	let mut stream: Option<OutputStream> = None;
 	let mut handle: Option<OutputStreamHandle> = None;
 	let mut device_name: Option<String> = None;
 	let mut sinks: HashMap<String, Sink> = HashMap::new();
 
-	while let Ok(cmd) = rx.recv() {
-		match cmd {
-			AudioCommand::Play {
-				path,
-				device_name: new_device,
-				res,
-			} => {
-				let result = play_on_thread(
-					&path,
-					new_device.as_deref(),
-					&mut stream,
-					&mut handle,
-					&mut device_name,
-					&mut sinks,
-				);
-				let _ = res.send(result);
-			}
-			AudioCommand::Stop { id } => {
-				if let Some(sink) = sinks.remove(&id) {
-					sink.stop();
+	loop {
+		// Check for naturally finished sinks
+		let finished: Vec<String> = sinks
+			.iter()
+			.filter(|(_, sink)| sink.empty())
+			.map(|(id, _)| id.clone())
+			.collect();
+		for id in finished {
+			sinks.remove(&id);
+			let _ = app_handle.emit_all("audio-stopped", &id);
+		}
+
+		match rx.recv_timeout(Duration::from_millis(500)) {
+			Ok(cmd) => match cmd {
+				AudioCommand::Play {
+					path,
+					device_name: new_device,
+					res,
+				} => {
+					let result = play_on_thread(
+						&path,
+						new_device.as_deref(),
+						&mut stream,
+						&mut handle,
+						&mut device_name,
+						&mut sinks,
+					);
+					let _ = res.send(result);
 				}
-			}
-			AudioCommand::SetVolume { id, volume } => {
-				if let Some(sink) = sinks.get(&id) {
-					sink.set_volume(volume);
+				AudioCommand::Stop { id } => {
+					if let Some(sink) = sinks.remove(&id) {
+						sink.stop();
+					}
 				}
-			}
-			AudioCommand::StopAll => {
-				for (_, sink) in sinks.drain() {
-					sink.stop();
+				AudioCommand::SetVolume { id, volume } => {
+					if let Some(sink) = sinks.get(&id) {
+						sink.set_volume(volume);
+					}
 				}
-			}
+				AudioCommand::StopAll => {
+					for (_, sink) in sinks.drain() {
+						sink.stop();
+					}
+				}
+			},
+			Err(mpsc::RecvTimeoutError::Timeout) => continue,
+			Err(mpsc::RecvTimeoutError::Disconnected) => break,
 		}
 	}
 }

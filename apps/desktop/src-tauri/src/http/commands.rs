@@ -65,21 +65,26 @@ pub async fn fetch(
 
     match scheme {
         "http" | "https" => {
-            let mut builder = reqwest::ClientBuilder::new();
+            let http_state = app.http();
 
-            if let Some(timeout) = connect_timeout {
-                builder = builder.connect_timeout(Duration::from_millis(timeout as u64));
-            }
+            let client = if connect_timeout.is_some() || max_redirections.is_some() {
+                let mut builder = reqwest::ClientBuilder::new();
+                if let Some(timeout) = connect_timeout {
+                    builder = builder.connect_timeout(Duration::from_millis(timeout as u64));
+                }
+                if let Some(max_redirections) = max_redirections {
+                    builder = builder.redirect(if max_redirections == 0 {
+                        Policy::none()
+                    } else {
+                        Policy::limited(max_redirections as usize)
+                    });
+                }
+                builder.build()?
+            } else {
+                http_state.client.clone()
+            };
 
-            if let Some(max_redirections) = max_redirections {
-                builder = builder.redirect(if max_redirections == 0 {
-                    Policy::none()
-                } else {
-                    Policy::limited(max_redirections as usize)
-                });
-            }
-
-            let mut request = builder.build()?.request(method.clone(), url);
+            let mut request = client.request(method.clone(), url);
 
             for (key, value) in &headers {
                 let name = HeaderName::from_bytes(key.as_bytes())?;
@@ -97,7 +102,7 @@ pub async fn fetch(
 
             if headers.contains_key(header::RANGE.as_str()) {
                 // https://fetch.spec.whatwg.org/#http-network-or-cache-fetch step 18
-                // If httpRequest’s header list contains `Range`, then append (`Accept-Encoding`, `identity`)
+                // If httpRequest's header list contains `Range`, then append (`Accept-Encoding`, `identity`)
                 request = request.header(
                     header::ACCEPT_ENCODING,
                     HeaderValue::from_static("identity"),
@@ -112,7 +117,6 @@ pub async fn fetch(
                 request = request.body(data);
             }
 
-            let http_state = app.http();
             let rid = http_state.next_id();
             let fut = async move { Ok(request.send().await.map_err(Into::into)) };
             let mut request_table = http_state.requests.lock().await;
@@ -161,11 +165,13 @@ pub async fn fetch_multipart(
     let http_state = app.http();
     let rid = http_state.next_id();
 
-    let mut builder = reqwest::ClientBuilder::new();
-    if let Some(timeout) = connect_timeout {
+    let client = if let Some(timeout) = connect_timeout {
+        let mut builder = reqwest::ClientBuilder::new();
         builder = builder.connect_timeout(Duration::from_millis(timeout as u64));
-    }
-    let client = builder.build()?;
+        builder.build()?
+    } else {
+        http_state.client.clone()
+    };
 
     let app = app.clone();
     let fut = async move {
@@ -322,6 +328,7 @@ pub async fn fetch_send(
     let req = request_table
         .remove(&rid)
         .ok_or(Error::InvalidRequestId(rid))?;
+    drop(request_table);
 
     let res = match req.0.lock().await.as_mut().await {
         Ok(Ok(res)) => res,
@@ -358,6 +365,7 @@ pub(crate) async fn fetch_read_body(
     let res = response_table
         .remove(&rid)
         .ok_or(Error::InvalidRequestId(rid))?;
+    drop(response_table);
 
     Ok(res.bytes().await?.to_vec())
 }

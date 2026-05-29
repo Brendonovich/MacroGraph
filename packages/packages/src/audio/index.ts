@@ -10,10 +10,14 @@ export type AudioBackend = {
 	stop: (id: string) => Promise<void>;
 	setVolume: (id: string, volume: number) => Promise<void>;
 	stopAll: () => Promise<void>;
+	onStopped?: {
+		listen: (cb: (id: string) => void) => () => void;
+	};
 };
 
 const sounds = new Map<string, HTMLAudioElement>();
 const backendSounds = new Map<string, string>();
+const backendSoundsReverse = new Map<string, string>();
 
 export function pkg(args: {
 	prepareURL(url: string): string;
@@ -92,6 +96,7 @@ export function pkg(args: {
 					const deviceName = args.getDeviceName?.();
 					const backendId = await args.backend.play(file, deviceName);
 					backendSounds.set(id, backendId);
+					backendSoundsReverse.set(backendId, id);
 				} catch (e) {
 					console.error("Play Audio File: failed to play", e);
 				}
@@ -157,6 +162,7 @@ export function pkg(args: {
 				if (backendId) {
 					await args.backend.stop(backendId);
 					backendSounds.delete(id);
+					backendSoundsReverse.delete(backendId);
 				}
 			} else if (sounds.has(id)) {
 				const playing = sounds.get(ctx.getInput(io.id));
@@ -205,6 +211,7 @@ export function pkg(args: {
 			if (args.backend) {
 				await args.backend.stopAll();
 				backendSounds.clear();
+				backendSoundsReverse.clear();
 			} else {
 				for (const [, value] of sounds.entries()) {
 					if (value) value.pause();
@@ -212,6 +219,17 @@ export function pkg(args: {
 			}
 		},
 	});
+
+	if (args.backend?.onStopped) {
+		args.backend.onStopped.listen((backendId) => {
+			const originalId = backendSoundsReverse.get(backendId);
+			if (originalId) {
+				backendSounds.delete(originalId);
+				backendSoundsReverse.delete(backendId);
+				pkg.emitEvent({ name: "AudioStopped", data: { id: originalId } });
+			}
+		});
+	}
 
 	return pkg;
 }

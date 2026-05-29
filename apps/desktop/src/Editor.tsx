@@ -68,6 +68,17 @@ const audioBackend: pkgs.audio.AudioBackend = {
   stop: (id) => invoke("stop_audio", { id }),
   setVolume: (id, volume) => invoke("set_audio_volume", { id, volume }),
   stopAll: () => invoke("stop_all_audio"),
+  onStopped: {
+    listen: (cb) => {
+      let unlisten: (() => void) | undefined;
+      import("@tauri-apps/api/event").then(({ listen }) => {
+        listen<string>("audio-stopped", (event) => {
+          cb(event.payload);
+        }).then((u) => { unlisten = u; });
+      });
+      return () => unlisten?.();
+    },
+  },
 };
 
 [

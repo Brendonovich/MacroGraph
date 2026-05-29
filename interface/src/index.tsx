@@ -26,7 +26,6 @@ import {
 	createEventListenerMap,
 } from "@solid-primitives/event-listener";
 import { createMousePosition } from "@solid-primitives/mouse";
-import { debounce } from "@solid-primitives/scheduled";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import "@total-typescript/ts-reset";
 import type { Accessor } from "solid-js";
@@ -1401,19 +1400,11 @@ function MosaicTabPanel(props: {
 		if (!graph) return null;
 
 		const gi = groupIndex();
-		const commitGraphTranslate = debounce((next: XY) => {
-			if (gi < 0) return;
-			ctx.setMosaicState("groups", gi, "tabs", props.tabIndex, "translate", next);
-		}, 120);
-		const commitGraphTranslateNow = (next: XY) => {
-			if (gi < 0) return;
-			commitGraphTranslate.clear();
-			ctx.setMosaicState("groups", gi, "tabs", props.tabIndex, "translate", next);
-		};
 		const setGraphTranslate = (t: XY) => {
 			if (gi < 0) return;
-			commitGraphTranslate(t);
+			ctx.setMosaicState("groups", gi, "tabs", props.tabIndex, "translate", t);
 		};
+		const commitGraphTranslateNow = setGraphTranslate;
 		const setGraphScale = (s: number) => {
 			if (gi < 0) return;
 			ctx.setMosaicState("groups", gi, "tabs", props.tabIndex, "scale", s);

@@ -46,7 +46,7 @@ let builder = tauri::Builder::default()
             let handle = app.handle();
             crash_log::init(&handle);
             app.manage(http::State::new(handle.clone()));
-            app.manage(audio_player::AudioPlayer::default());
+            app.manage(audio_player::AudioPlayer::new(handle.clone()));
             if let Ok(mut slot) = ctx_for_setup.app.lock() {
                 *slot = Some(handle);
             }

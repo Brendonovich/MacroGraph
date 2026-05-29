@@ -559,17 +559,18 @@ export class ExecutionContext {
 				);
 			},
 			setVariable: (source, id, value) => {
+				if (source === "project") {
+					const variable = node.graph.core.project.variables.find((v) => v.id === id);
+					if (!variable) return;
+					variable.value = value;
+					return;
+				}
 				const scopeKey = `${source}:${id}`;
 				if (execCtx.variableScope) {
 					execCtx.variableScope.set(scopeKey, value);
 					return;
 				}
-				let variable: Variable | undefined;
-				if (source === "graph") {
-					variable = node.graph.variables.find((v) => v.id === id);
-				} else {
-					variable = node.graph.core.project.variables.find((v) => v.id === id);
-				}
+				const variable = node.graph.variables.find((v) => v.id === id);
 				if (!variable) return;
 				variable.value = value;
 			},

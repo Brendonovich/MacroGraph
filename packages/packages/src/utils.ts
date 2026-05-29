@@ -1,4 +1,4 @@
-import { JSONEnum, jsonToJS } from "@macrograph/json";
+import { JSONEnum, jsToJSON, jsonToJS } from "@macrograph/json";
 import { Maybe, None, type Option, Some } from "@macrograph/option";
 import {
 	type Core,
@@ -2768,6 +2768,38 @@ export function pkg(core: Core) {
 			} else {
 				throw new Error("Invalid regex!");
 			}
+		},
+	});
+
+	const StructEntry = pkg.createStruct("Struct Entry", (s) => ({
+		name: s.field("name", t.string()),
+		value: s.field("value", t.enum(JSONEnum)),
+	}));
+
+	pkg.createSchema({
+		name: "Struct Entries",
+		type: "pure",
+		createIO({ io }) {
+			const w = io.wildcard("");
+
+			return {
+				input: io.dataInput({
+					id: "",
+					type: t.wildcard(w),
+				}),
+				entries: io.dataOutput({
+					id: "entries",
+					type: t.list(t.struct(StructEntry)),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			const data = ctx.getInput(io.input);
+			const entries = Object.entries(data ?? {}).map(([name, value]) => ({
+				name,
+				value: jsToJSON(value),
+			}));
+			ctx.setOutput(io.entries, entries);
 		},
 	});
 

@@ -419,7 +419,7 @@ export function pkg(core: Core) {
 			}
 
 			let type: string;
-			let body: string | FormData | null;
+			let body: string | FormData | null = null;
 			const input = ctx.getInput(io.body);
 			switch (input.variant) {
 				case "Plaintext": {
@@ -449,10 +449,12 @@ export function pkg(core: Core) {
 				}
 			}
 
-			headers.set("content-type", type);
+			if (type) {
+				headers.set("content-type", type);
+			}
 
 			const response = await core.fetch(ctx.getInput(io.url), {
-				method: "PUT",
+				method: "POST",
 				body,
 				headers,
 			});

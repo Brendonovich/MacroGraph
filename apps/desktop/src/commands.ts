@@ -76,5 +76,5 @@ export function fetchReadBody(rid: number) {
 }
 
 export type AudioOutputDevice = { device_id: string; label: string }
-export type FetchResponse = { status: number; statusText: string; headers: ([string, string])[]; url: string }
 export type PlayResult = { id: string }
+export type FetchResponse = { status: number; statusText: string; headers: ([string, string])[]; url: string }

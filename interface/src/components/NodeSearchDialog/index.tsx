@@ -1,11 +1,6 @@
 import { Dialog } from "@kobalte/core";
 import { createEventListener } from "@solid-primitives/event-listener";
-import {
-	type Graph,
-	type GraphKind,
-	type Node,
-	graphRefOf,
-} from "@macrograph/runtime";
+import { type GraphKind, graphRefOf } from "@macrograph/runtime";
 import clsx from "clsx";
 import { For, batch, createEffect, createMemo, createSignal, on } from "solid-js";
 import { useInterfaceContext } from "../../context";
@@ -19,6 +14,7 @@ type Row = {
 	graphName: string;
 	displayName: string;
 	schemaQualified: string;
+	trackInvocations: boolean;
 };
 
 function createControl() {
@@ -147,7 +143,11 @@ export function NodeSearchDialog() {
 				const graphName = graph.name;
 				const displayName = node.state.name;
 				const schemaQualified = `${node.schema.package.name}/${node.schema.name}`;
+				const trackInvocations = node.state.trackInvocations;
 				const raw = `${graphName} ${displayName} ${schemaQualified}`;
+				const tokens = tokeniseString(raw);
+				if (trackInvocations) tokens.push("tracking:on", "tracked");
+				else tokens.push("tracking:off");
 				const row: Row = {
 					graphKind: graph.kind,
 					graphId: graph.id,
@@ -155,8 +155,9 @@ export function NodeSearchDialog() {
 					graphName,
 					displayName,
 					schemaQualified,
+					trackInvocations,
 				};
-				pairs.push([tokeniseString(raw), row]);
+				pairs.push([tokens, row]);
 			}
 		}
 
@@ -206,6 +207,17 @@ export function NodeSearchDialog() {
 		});
 		frameNodeInActiveTab(ctx, graph, node);
 		control.hide();
+	}
+
+	function toggleTracking(row: Row, e: MouseEvent) {
+		e.stopPropagation();
+		const graph = ctx.core.project.getGraphByKind(row.graphKind, row.graphId);
+		if (!graph) return;
+		ctx.execute("setNodeTrackInvocations", {
+			...graphRefOf(graph),
+			nodeId: row.nodeId,
+			trackInvocations: !row.trackInvocations,
+		});
 	}
 
 	return (
@@ -258,7 +270,18 @@ export function NodeSearchDialog() {
 										data-element="action"
 										tabIndex={0}
 									>
-										<div class="text-neutral-400 text-xs">{row.graphName}</div>
+										<div class="flex items-center justify-between">
+											<div class="text-neutral-400 text-xs">{row.graphName}</div>
+											{row.trackInvocations && (
+												<button
+													class="text-xs bg-amber-600/20 text-amber-400 px-1.5 py-0.5 rounded hover:bg-amber-600/40 transition-colors"
+													onClick={(e) => toggleTracking(row, e)}
+													title="Click to disable tracking"
+												>
+													Tracking
+												</button>
+											)}
+										</div>
 										<div class="font-medium">{row.displayName}</div>
 										<div class="text-neutral-500 text-xs">{row.schemaQualified}</div>
 									</li>
@@ -266,7 +289,7 @@ export function NodeSearchDialog() {
 							</For>
 						</div>
 						<div class="px-4 py-2 text-neutral-500 text-xs border-t border-neutral-800">
-							Ctrl+Shift+F to toggle · arrows to move · enter to open
+							Ctrl+Shift+F to toggle · arrows to move · enter to open · type "tracking:on" to find tracked nodes
 						</div>
 					</Dialog.Content>
 				</div>

@@ -1,7 +1,7 @@
-import { JSONEnum, toJSON } from "@macrograph/json";
+import { JSONEnum, jsToJSON, toJSON } from "@macrograph/json";
 import { Maybe } from "@macrograph/option";
 import { Package } from "@macrograph/runtime";
-import { t } from "@macrograph/typesystem";
+import { Field, Struct, t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
 
 export function pkg() {
@@ -342,6 +342,38 @@ export function pkg() {
 
 			ctx.setOutput(io.mapOut, map);
 			ctx.setOutput(io.out, current);
+		},
+	});
+
+	pkg.createSchema({
+		name: "Map Entries",
+		type: "pure",
+		createIO({ io }) {
+			const w = io.wildcard("");
+
+			const entryStruct = new Struct("Map Entry", {
+				key: new Field("key", t.string()),
+				value: new Field("value", t.wildcard(w)),
+			});
+
+			return {
+				map: io.dataInput({
+					id: "map",
+					type: t.map(t.wildcard(w)),
+				}),
+				entries: io.dataOutput({
+					id: "entries",
+					type: t.list(t.struct(entryStruct)),
+				}),
+			};
+		},
+		run({ ctx, io }) {
+			const map = ctx.getInput(io.map);
+			const entries = [...map.entries()].map(([key, value]) => ({
+				key,
+				value,
+			}));
+			ctx.setOutput(io.entries, entries);
 		},
 	});
 

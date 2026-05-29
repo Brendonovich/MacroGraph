@@ -611,6 +611,7 @@ export const [InterfaceContextProvider, useInterfaceContext] =
 		createEffect(() => {
 			if (!mosaicHydrated()) return;
 			if (workspaceKey() !== loadedWorkspaceKey) return;
+			JSON.stringify(mosaicState.groups);
 			persistMosaicLayoutDebounced();
 		});
 

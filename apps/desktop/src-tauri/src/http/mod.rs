@@ -32,6 +32,7 @@ pub struct State<R: Runtime> {
     #[allow(dead_code)]
     pub app: AppHandle<R>,
     pub current_id: AtomicU32,
+    pub client: reqwest::Client,
     pub requests: Mutex<RequestTable>,
     pub responses: Mutex<ResponseTable>,
 }
@@ -41,6 +42,9 @@ impl<R: Runtime> State<R> {
         Self {
             app,
             current_id: 0.into(),
+            client: reqwest::ClientBuilder::new()
+                .build()
+                .expect("failed to create reqwest client"),
             requests: Default::default(),
             responses: Default::default(),
         }

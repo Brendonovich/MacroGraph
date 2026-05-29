@@ -125,7 +125,7 @@ export function renderType(type: BaseType): RenderedType | undefined {
 		return type.wildcard.value().map(renderType).unwrapOr("wildcard");
 	if (type instanceof t.Struct) {
 		const struct = type.struct as StructBase;
-		if (struct.source.variant === "package")
+		if (struct.source?.variant === "package")
 			return {
 				type: "struct",
 				package: struct.source.package,
