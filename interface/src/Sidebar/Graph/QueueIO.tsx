@@ -1,7 +1,12 @@
 import { ContextMenu } from "@kobalte/core/context-menu";
 import type { Queue } from "@macrograph/runtime";
-import { serializeValue } from "@macrograph/typesystem";
-import { For, Show, createMemo } from "solid-js";
+import {
+	For,
+	Show,
+	type ValidComponent,
+	createMemo,
+	createSignal,
+} from "solid-js";
 
 import {
 	ContextMenuContent,
@@ -9,7 +14,104 @@ import {
 } from "../../components/Graph/ContextMenu";
 import { SidebarSection } from "../../components/Sidebar";
 import { TypeEditor } from "../../components/TypeEditor";
+import { IconButton } from "../../components/ui";
 import { useInterfaceContext } from "../../context";
+import { createTokenisedSearchFilter, tokeniseString } from "../../util";
+import {
+	InlineTextEditor,
+	InlineTextEditorContext,
+	useInlineTextEditorCtx,
+} from "../InlineTextEditor";
+import { SearchInput } from "../SearchInput";
+
+function FieldList(props: {
+	title: string;
+	items: Array<{ id: string; name: string; type: any }>;
+	onAdd: () => void;
+	onDelete: (id: string) => void;
+	onRename: (id: string, name: string) => void;
+	onTypeChange: (id: string, type: any) => void;
+}) {
+	const [search, setSearch] = createSignal("");
+
+	const tokenisedFilters = createMemo(() =>
+		props.items.map((f) => [tokeniseString(f.name), f] as const),
+	);
+	const filtered = createTokenisedSearchFilter(search, tokenisedFilters);
+
+	return (
+		<SidebarSection title={props.title}>
+			<div class="flex flex-row items-center w-full gap-1 p-1 border-b border-neutral-900">
+				<SearchInput
+					value={search()}
+					onInput={(e) => {
+						e.stopPropagation();
+						setSearch(e.currentTarget.value);
+					}}
+				/>
+				<IconButton
+					type="button"
+					title={`Add ${props.title}`}
+					class="p-0.5"
+					onClick={(e) => {
+						e.stopPropagation();
+						props.onAdd();
+					}}
+				>
+					<IconMaterialSymbolsAddRounded class="size-5 stroke-2" />
+				</IconButton>
+			</div>
+			<div class="flex-1 overflow-y-auto">
+				<ul class="flex flex-col divide-y divide-neutral-700 px-2">
+					<For each={filtered()}>
+						{(item) => (
+							<li class="flex flex-col gap-1 flex-1 group/item py-2 pt-1">
+								<InlineTextEditorContext>
+									<Show when>
+										{(_) => {
+											const inlineEditorCtx = useInlineTextEditorCtx()!;
+											return (
+												<ContextMenu placement="bottom-start">
+													<InlineTextEditor<ValidComponent>
+														as={(asProps) => (
+															<ContextMenu.Trigger {...asProps} />
+														)}
+														value={item.name}
+														onChange={(name) => props.onRename(item.id, name)}
+													/>
+													<ContextMenuContent>
+														<ContextMenuItem
+															onSelect={() => inlineEditorCtx.setEditing(true)}
+														>
+															<IconAntDesignEditOutlined /> Rename
+														</ContextMenuItem>
+														<ContextMenuItem
+															class="text-red-500"
+															onSelect={() => props.onDelete(item.id)}
+														>
+															<IconAntDesignDeleteOutlined />
+															Delete
+														</ContextMenuItem>
+													</ContextMenuContent>
+												</ContextMenu>
+											);
+										}}
+									</Show>
+								</InlineTextEditorContext>
+								<div class="bg-black/30 p-2 rounded-md">
+									<TypeEditor
+										type={item.type}
+										onChange={(type) => props.onTypeChange(item.id, type)}
+									/>
+								</div>
+							</li>
+						)}
+					</For>
+				</ul>
+			</div>
+		</SidebarSection>
+	);
+}
 
 function QueueSettings(props: { queue: Queue }) {
 	const ctx = useInterfaceContext();
@@ -17,17 +119,6 @@ function QueueSettings(props: { queue: Queue }) {
 	return (
 		<SidebarSection title={`Queue: ${props.queue.name}`}>
 			<div class="flex flex-col gap-3 p-2">
-				<div class="bg-black/30 p-2 rounded-md">
-					<TypeEditor
-						type={props.queue.itemType}
-						onChange={(type) => {
-							ctx.execute("setQueueItemType", {
-								queueId: props.queue.id,
-								type,
-							});
-						}}
-					/>
-				</div>
 				<div class="flex flex-col gap-2">
 					<label class="flex flex-row items-center gap-2 cursor-pointer">
 						<input
@@ -68,11 +159,7 @@ function QueueRunning(props: { queue: Queue }) {
 						{(entry) => (
 							<div class="flex flex-row items-end gap-1 rounded p-1 bg-amber-950/40 border border-amber-700/40 text-left w-full">
 								<pre class="flex-1 whitespace-pre-wrap max-w-full text-xs text-amber-100/90">
-									{JSON.stringify(
-										serializeValue(entry.value, props.queue.itemType),
-										null,
-										2,
-									)}
+									{JSON.stringify(entry.data, null, 2)}
 								</pre>
 							</div>
 						)}
@@ -111,11 +198,7 @@ function QueueItems(props: { queue: Queue }) {
 						<ContextMenu>
 							<ContextMenu.Trigger class="flex flex-row items-end gap-1 rounded p-1 bg-black/30 text-left w-full">
 								<pre class="flex-1 whitespace-pre-wrap max-w-full text-xs">
-									{JSON.stringify(
-										serializeValue(entry.value, props.queue.itemType),
-										null,
-										2,
-									)}
+									{JSON.stringify(entry.data, null, 2)}
 								</pre>
 							</ContextMenu.Trigger>
 							<ContextMenuContent>
@@ -141,9 +224,27 @@ function QueueItems(props: { queue: Queue }) {
 }
 
 export function QueueIO(props: { queue: Queue }) {
+	const ctx = useInterfaceContext();
+
 	return (
 		<>
 			<QueueSettings queue={props.queue} />
+			<FieldList
+				title="Inputs"
+				items={props.queue.inputs.map((f) => ({ id: f.id, name: f.name ?? f.id, type: f.type }))}
+				onAdd={() => ctx.execute("createQueueInput", { queueId: props.queue.id })}
+				onDelete={(id) => ctx.execute("deleteQueueInput", { queueId: props.queue.id, inputId: id })}
+				onRename={(id, name) => ctx.execute("setQueueInputName", { queueId: props.queue.id, inputId: id, name })}
+				onTypeChange={(id, type) => ctx.execute("setQueueInputType", { queueId: props.queue.id, inputId: id, type })}
+			/>
+			<FieldList
+				title="Outputs"
+				items={props.queue.outputs.map((f) => ({ id: f.id, name: f.name ?? f.id, type: f.type }))}
+				onAdd={() => ctx.execute("createQueueOutput", { queueId: props.queue.id })}
+				onDelete={(id) => ctx.execute("deleteQueueOutput", { queueId: props.queue.id, outputId: id })}
+				onRename={(id, name) => ctx.execute("setQueueOutputName", { queueId: props.queue.id, outputId: id, name })}
+				onTypeChange={(id, type) => ctx.execute("setQueueOutputType", { queueId: props.queue.id, outputId: id, type })}
+			/>
 			<QueueRunning queue={props.queue} />
 			<QueueItems queue={props.queue} />
 		</>

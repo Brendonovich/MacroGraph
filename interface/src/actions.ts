@@ -3294,40 +3294,6 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				queue.items = entry.prev;
 			},
 		}),
-		setQueueItemType: historyAction({
-			prepare(input: { queueId: number; type: t.Any }) {
-				const queue = core.project.queues.get(input.queueId);
-				if (!queue) return;
-
-				return {
-					...input,
-					type: input.type.serialize(),
-					prev: queue.itemType.serialize(),
-					prevValue: [...queue.items],
-				};
-			},
-			perform(entry) {
-				const queue = core.project.queues.get(entry.queueId);
-				if (!queue) return;
-
-				const type = deserializeType(
-					entry.type,
-					core.project.getType.bind(core.project),
-				);
-				queue.itemType = type;
-				queue.items = [];
-			},
-			rewind(entry) {
-				const queue = core.project.queues.get(entry.queueId);
-				if (!queue) return;
-
-				queue.itemType = deserializeType(
-					entry.prev,
-					core.project.getType.bind(core.project),
-				);
-				queue.items = entry.prevValue;
-			},
-		}),
 		setQueuePaused: historyAction({
 			prepare(input: { queueId: number; paused: boolean }) {
 				const queue = core.project.queues.get(input.queueId);
@@ -3362,6 +3328,170 @@ export const historyActions = (core: Core, editor: EditorState) => {
 				const queue = core.project.queues.get(entry.queueId);
 				if (!queue) return;
 				queue.items = entry.prev;
+			},
+		}),
+		createQueueInput: historyAction({
+			prepare(input: { queueId: number }) {
+				const queue = core.project.queues.get(input.queueId);
+				if (!queue) return;
+				const id = queue.inputIdCounter++;
+				return { ...input, id: id.toString() };
+			},
+			perform(entry) {
+				core.project.createQueueInput({ queueId: entry.queueId, id: entry.id });
+			},
+			rewind(entry) {
+				core.project.deleteQueueInput(entry.queueId, entry.id);
+			},
+		}),
+		createQueueOutput: historyAction({
+			prepare(input: { queueId: number }) {
+				const queue = core.project.queues.get(input.queueId);
+				if (!queue) return;
+				const id = queue.outputIdCounter++;
+				return { ...input, id: id.toString() };
+			},
+			perform(entry) {
+				core.project.createQueueOutput({ queueId: entry.queueId, id: entry.id });
+			},
+			rewind(entry) {
+				core.project.deleteQueueOutput(entry.queueId, entry.id);
+			},
+		}),
+		deleteQueueInput: historyAction({
+			prepare(input: { queueId: number; inputId: string }) {
+				const queue = core.project.queues.get(input.queueId);
+				if (!queue) return;
+				const field = queue.inputs.find((f) => f.id === input.inputId);
+				if (!field) return;
+				return { ...input, data: { type: field.type.serialize(), name: field.name } };
+			},
+			perform(entry) {
+				core.project.deleteQueueInput(entry.queueId, entry.inputId);
+			},
+			rewind(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				const type = deserializeType(entry.data.type, core.project.getType.bind(core.project));
+				queue.inputs.push(new Field(entry.inputId, type, entry.data.name));
+			},
+		}),
+		deleteQueueOutput: historyAction({
+			prepare(input: { queueId: number; outputId: string }) {
+				const queue = core.project.queues.get(input.queueId);
+				if (!queue) return;
+				const field = queue.outputs.find((f) => f.id === input.outputId);
+				if (!field) return;
+				return { ...input, data: { type: field.type.serialize(), name: field.name } };
+			},
+			perform(entry) {
+				core.project.deleteQueueOutput(entry.queueId, entry.outputId);
+			},
+			rewind(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				const type = deserializeType(entry.data.type, core.project.getType.bind(core.project));
+				queue.outputs.push(new Field(entry.outputId, type, entry.data.name));
+			},
+		}),
+		setQueueInputName: historyAction({
+			prepare(input: { queueId: number; inputId: string; name: string }) {
+				const queue = core.project.queues.get(input.queueId);
+				if (!queue) return;
+				const field = queue.inputs.find((f) => f.id === input.inputId);
+				if (!field) return;
+				return { ...input, prev: field.name ?? field.id };
+			},
+			perform(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				const field = queue.inputs.find((f) => f.id === entry.inputId);
+				if (!field) return;
+				field.name = entry.name;
+			},
+			rewind(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				const field = queue.inputs.find((f) => f.id === entry.inputId);
+				if (!field) return;
+				field.name = entry.prev;
+			},
+		}),
+		setQueueOutputName: historyAction({
+			prepare(input: { queueId: number; outputId: string; name: string }) {
+				const queue = core.project.queues.get(input.queueId);
+				if (!queue) return;
+				const field = queue.outputs.find((f) => f.id === input.outputId);
+				if (!field) return;
+				return { ...input, prev: field.name ?? field.id };
+			},
+			perform(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				const field = queue.outputs.find((f) => f.id === entry.outputId);
+				if (!field) return;
+				field.name = entry.name;
+			},
+			rewind(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				const field = queue.outputs.find((f) => f.id === entry.outputId);
+				if (!field) return;
+				field.name = entry.prev;
+			},
+		}),
+		setQueueInputType: historyAction({
+			prepare(input: { queueId: number; inputId: string; type: t.Any }) {
+				return {
+					...input,
+					type: input.type.serialize(),
+					prev: (() => {
+						const queue = core.project.queues.get(input.queueId);
+						const field = queue?.inputs.find((f) => f.id === input.inputId);
+						return field?.type.serialize();
+					})(),
+				};
+			},
+			perform(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				const field = queue.inputs.find((f) => f.id === entry.inputId);
+				if (!field) return;
+				field.type = deserializeType(entry.type, core.project.getType.bind(core.project));
+			},
+			rewind(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				const field = queue.inputs.find((f) => f.id === entry.inputId);
+				if (!field) return;
+				field.type = deserializeType(entry.prev, core.project.getType.bind(core.project));
+			},
+		}),
+		setQueueOutputType: historyAction({
+			prepare(input: { queueId: number; outputId: string; type: t.Any }) {
+				return {
+					...input,
+					type: input.type.serialize(),
+					prev: (() => {
+						const queue = core.project.queues.get(input.queueId);
+						const field = queue?.outputs.find((f) => f.id === input.outputId);
+						return field?.type.serialize();
+					})(),
+				};
+			},
+			perform(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				const field = queue.outputs.find((f) => f.id === entry.outputId);
+				if (!field) return;
+				field.type = deserializeType(entry.type, core.project.getType.bind(core.project));
+			},
+			rewind(entry) {
+				const queue = core.project.queues.get(entry.queueId);
+				if (!queue) return;
+				const field = queue.outputs.find((f) => f.id === entry.outputId);
+				if (!field) return;
+				field.type = deserializeType(entry.prev, core.project.getType.bind(core.project));
 			},
 		}),
 		deleteQueue: historyAction({
@@ -4091,62 +4221,59 @@ export const historyActions = (core: Core, editor: EditorState) => {
 		setGraphSelection: historyAction({
 			prepare(input: GraphRef & {
 				selection: Array<SelectedItemID>;
-				prev?: Array<SelectedItemID>;
+				prev?: Array<{ groupIdx: number; tabIdx: number; selectedItemIds: SelectedItemID[] }>;
 			}) {
-				const graphState = getFocusedGraphState(input);
-				if (!graphState) return;
+				const prev: Array<{ groupIdx: number; tabIdx: number; selectedItemIds: SelectedItemID[] }> = [];
+				for (const [groupIdx, group] of editor.mosaicState.groups.entries()) {
+					for (const [tabIdx, tab] of group.tabs.entries()) {
+						if (!isGraphEditorTab(tab)) continue;
+						if (tab.selectedItemIds.length === 0) continue;
+						prev.push({
+							groupIdx,
+							tabIdx,
+							selectedItemIds: [...tab.selectedItemIds],
+						});
+					}
+				}
 
 				return {
 					...input,
 					selection: Array.isArray(input.selection) ? input.selection : [],
-					prev: input.prev ?? [...(graphState.selectedItemIds ?? [])],
+					prev,
 				};
 			},
 			perform(entry) {
-				const group = editor.mosaicState.groups.find((g) =>
-					g.tabs.some(
+				for (const [groupIdx, group] of editor.mosaicState.groups.entries()) {
+					for (const [tabIdx, tab] of group.tabs.entries()) {
+						if (!isGraphEditorTab(tab)) continue;
+						editor.setMosaicState(
+							"groups", groupIdx, "tabs", tabIdx, "selectedItemIds", [],
+						);
+					}
+				}
+				for (const [groupIdx, group] of editor.mosaicState.groups.entries()) {
+					const tabIdx = group.tabs.findIndex(
 						(t) => isGraphEditorTab(t) && graphRefsEqual(graphRefFromTab(t), entry),
-					),
-				);
-				if (!group) return;
+					);
+					if (tabIdx < 0) continue;
 
-				const tabIdx = group.tabs.findIndex(
-					(t) => isGraphEditorTab(t) && graphRefsEqual(graphRefFromTab(t), entry),
-				);
-				if (tabIdx < 0) return;
-
-				const groupIdx = editor.mosaicState.groups.indexOf(group);
-				editor.setMosaicState(
-					"groups",
-					groupIdx,
-					"tabs",
-					tabIdx,
-					"selectedItemIds",
-					[...(Array.isArray(entry.selection) ? entry.selection : [])],
-				);
+					editor.setMosaicState(
+						"groups",
+						groupIdx,
+						"tabs",
+						tabIdx,
+						"selectedItemIds",
+						[...(Array.isArray(entry.selection) ? entry.selection : [])],
+					);
+				}
 			},
 			rewind(entry) {
-				const group = editor.mosaicState.groups.find((g) =>
-					g.tabs.some(
-						(t) => isGraphEditorTab(t) && graphRefsEqual(graphRefFromTab(t), entry),
-					),
-				);
-				if (!group) return;
-
-				const tabIdx = group.tabs.findIndex(
-					(t) => isGraphEditorTab(t) && graphRefsEqual(graphRefFromTab(t), entry),
-				);
-				if (tabIdx < 0) return;
-
-				const groupIdx = editor.mosaicState.groups.indexOf(group);
-				editor.setMosaicState(
-					"groups",
-					groupIdx,
-					"tabs",
-					tabIdx,
-					"selectedItemIds",
-					[...(Array.isArray(entry.prev) ? entry.prev : [])],
-				);
+				for (const { groupIdx, tabIdx, selectedItemIds } of entry.prev) {
+					editor.setMosaicState(
+						"groups", groupIdx, "tabs", tabIdx, "selectedItemIds",
+						[...selectedItemIds],
+					);
+				}
 			},
 		}),
 		// _moveGraphToIndex: _historyAction(() => {

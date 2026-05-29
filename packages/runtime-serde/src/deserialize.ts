@@ -418,8 +418,6 @@ export function deserializeQueue(
 	data: serde.Queue,
 	owner: runtime.Project,
 ): runtime.Queue {
-	const type = deserializeType(data.type, owner.getType.bind(owner));
-
 	let graphId = data.graphId;
 	if (graphId == null) {
 		graphId = owner.queueGraphIdCounter++;
@@ -428,10 +426,25 @@ export function deserializeQueue(
 	const queue = new runtime.Queue({
 		id: data.id,
 		name: data.name,
-		itemType: type,
 		graphId,
 		owner,
 	});
+
+	const isNewFormat = data.inputs && data.inputs.length > 0;
+
+	if (isNewFormat) {
+		queue.inputs = data.inputs.map((f) => deserializeField(owner, f));
+		queue.outputs = data.outputs.map((f) => deserializeField(owner, f));
+		queue.inputIdCounter = data.inputIdCounter ?? 0;
+		queue.outputIdCounter = data.outputIdCounter ?? 0;
+	} else if (data.type) {
+		// Legacy: single type → one input and one output field
+		const type = deserializeType(data.type, owner.getType.bind(owner));
+		queue.inputs = [new Field("0", type, "Value")];
+		queue.outputs = [new Field("0", type, "Value")];
+		queue.inputIdCounter = 1;
+		queue.outputIdCounter = 1;
+	}
 
 	if (data.graphId == null) {
 		const graph = new runtime.Graph({
@@ -464,20 +477,27 @@ export function deserializeQueue(
 		}
 	}
 	const rawData = data as Record<string, unknown>;
-	const rawItems = "value" in rawData ? rawData.value : rawData.items ?? [];
+	const rawItems = rawData.items ?? [];
 	queue.items = (rawItems as any[]).map((item: any) => {
-		if (
-			item &&
-			typeof item === "object" &&
-			typeof item.id === "string" &&
-			"value" in item
-		) {
-			return {
-				id: item.id,
-				value: deserializeValue(item.value, type),
-			};
+		if (item && typeof item === "object" && typeof item.id === "string") {
+			if ("data" in item) {
+				const data: Record<string, any> = {};
+				for (const input of queue.inputs) {
+					data[input.id] = deserializeValue(item.data[input.id], input.type);
+				}
+				return { id: item.id, data };
+			}
+			// Legacy item with "value"
+			if ("value" in item) {
+				const data: Record<string, any> = {};
+				const firstInput = queue.inputs[0];
+				if (firstInput) {
+					data[firstInput.id] = deserializeValue(item.value, firstInput.type);
+				}
+				return { id: item.id, data };
+			}
 		}
-		return runtime.createQueueEntry(deserializeValue(item, type));
+		return runtime.createQueueEntry({});
 	});
 	queue.paused = data.paused ?? false;
 	return queue;

@@ -1,5 +1,5 @@
 import { Maybe, type Option } from "@macrograph/option";
-import type { EnumBase, StructBase } from "@macrograph/typesystem";
+import type { AnyType, EnumBase, StructBase } from "@macrograph/typesystem";
 import { t } from "@macrograph/typesystem";
 import { createEventBus } from "@solid-primitives/event-bus";
 import { ReactiveMap } from "@solid-primitives/map";
@@ -385,7 +385,7 @@ export class Project {
 		return this.queueIdCounter++;
 	}
 
-	createQueue(args?: { id?: number; name?: string; itemType?: t.Any }) {
+	createQueue(args?: { id?: number; name?: string }) {
 		const id = args?.id ?? this.generateQueueId();
 		const graphId = this.queueGraphIdCounter++;
 		const name = args?.name ?? `Queue ${id}`;
@@ -400,10 +400,11 @@ export class Project {
 		const queue = new Queue({
 			id,
 			name,
-			itemType: args?.itemType ?? t.string(),
 			graphId,
 			owner: this,
 		});
+		queue.createInput({ name: "Value" });
+		queue.createOutput({ name: "Value" });
 		this.queues.set(id, queue);
 		return queue;
 	}
@@ -411,6 +412,30 @@ export class Project {
 	setQueueValue(id: number, value: any[]) {
 		const queue = this.queues.get(id);
 		if (queue) queue.items = normalizeQueueEntries(value);
+	}
+
+	createQueueInput(args: { queueId: number; id?: string; name?: string; type?: AnyType }) {
+		const queue = this.queues.get(args.queueId);
+		if (!queue) return;
+		queue.createInput(args);
+	}
+
+	createQueueOutput(args: { queueId: number; id?: string; name?: string; type?: AnyType }) {
+		const queue = this.queues.get(args.queueId);
+		if (!queue) return;
+		queue.createOutput(args);
+	}
+
+	deleteQueueInput(queueId: number, id: string) {
+		const queue = this.queues.get(queueId);
+		if (!queue) return;
+		queue.deleteInput(id);
+	}
+
+	deleteQueueOutput(queueId: number, id: string) {
+		const queue = this.queues.get(queueId);
+		if (!queue) return;
+		queue.deleteOutput(id);
 	}
 
 	removeQueue(id: number) {

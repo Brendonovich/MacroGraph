@@ -27,14 +27,14 @@ export function pkg(core?: any) {
 
 			const execIn = io.execInput({ id: "exec" });
 
+			const inputs = queue.inputs.map((f: any) =>
+				io.dataInput({ id: `in:${f.id}`, name: f.name ?? f.id, type: f.type }),
+			);
+
 			return {
 				execIn,
 				execOut: io.execOutput({ id: "exec" }),
-				value: io.dataInput({
-					id: "value",
-					name: "Value",
-					type: queue.itemType,
-				}),
+				inputs,
 			};
 		},
 		async run({ ctx, io, properties, graph }: any) {
@@ -44,8 +44,12 @@ export function pkg(core?: any) {
 			const queue = graph.project.queues.get(queueId);
 			if (!queue) return;
 
-			const value = ctx.getInput(io.value);
-			queue.addItem(value);
+			const data: Record<string, any> = {};
+			for (const inp of io.inputs ?? []) {
+				const fieldId = inp.id.replace("in:", "");
+				data[fieldId] = ctx.getInput(inp);
+			}
+			queue.addItem(data);
 
 			ctx.exec(io.execOut);
 		},
@@ -65,18 +69,21 @@ export function pkg(core?: any) {
 			const queue = ctx.graph.project.queues.get(queueId);
 			if (!queue) return;
 
+			const outputs = queue.outputs.map((f: any) =>
+				io.dataOutput({ id: `out:${f.id}`, name: f.name ?? f.id, type: f.type }),
+			);
+
 			return {
 				exec: io.execOutput({ id: "exec" }),
-				item: io.dataOutput({
-					id: "item",
-					name: "Item",
-					type: queue.itemType,
-				}),
+				outputs,
 			};
 		},
 		run({ ctx, io, data }: any) {
 			if (!io) return;
-			ctx.setOutput(io.item, data.item);
+			for (const out of io.outputs ?? []) {
+				const fieldId = out.id.replace("out:", "");
+				ctx.setOutput(out, data.data?.[fieldId]);
+			}
 			ctx.exec(io.exec);
 		},
 	});
@@ -176,11 +183,9 @@ export function pkg(core?: any) {
 			if (!queue) return;
 
 			const exec = io.execOutput({ id: "exec" });
-			io.dataOutput({
-				id: "item",
-				name: "Current Item",
-				type: queue.itemType,
-			});
+			for (const f of queue.inputs) {
+				io.dataOutput({ id: `in:${f.id}`, name: f.name ?? f.id, type: f.type });
+			}
 			return { exec };
 		},
 		async run({ ctx, io }: any) {
@@ -200,14 +205,10 @@ export function pkg(core?: any) {
 			)?.[1];
 			if (!queue) return;
 
-			return {
-				exec: io.execInput({ id: "exec" }),
-				item: io.dataInput({
-					id: "item",
-					name: "Item",
-					type: queue.itemType,
-				}),
-			};
+			io.execInput({ id: "exec" });
+			for (const f of queue.outputs) {
+				io.dataInput({ id: `out:${f.id}`, name: f.name ?? f.id, type: f.type });
+			}
 		},
 		async run({ ctx, io, graph }: any) {
 			if (!io) return;
@@ -218,22 +219,30 @@ export function pkg(core?: any) {
 			if (!queue) return;
 
 			const entryId = ctx.queueEntryId;
-			let eventItem = entryId
+			const entryData = entryId
 				? queue.getEntryValue(entryId)
 				: queue.getActiveItem();
 			if (entryId) queue.completeEntry(entryId);
 			else queue.completeItem();
-			if (io.item && hasConnection(io.item)) {
-				try {
-					eventItem = ctx.getInput(io.item);
-				} catch {
-					// Missing optional data must not fail iteration.
+
+			const data: Record<string, any> = {};
+			for (const f of queue.outputs) {
+				const inputId = `out:${f.id}`;
+				const input = io.inputs?.find((i: any) => i.id === inputId);
+				if (input && hasConnection(input)) {
+					try {
+						data[f.id] = ctx.getInput(input);
+					} catch {
+						data[f.id] = entryData?.[f.id];
+					}
+				} else {
+					data[f.id] = entryData?.[f.id];
 				}
 			}
 
 			pkg.emitEvent({
 				name: `iterated:${queue.id}`,
-				data: { queueId: queue.id, item: eventItem },
+				data: { queueId: queue.id, data },
 			});
 		},
 	});

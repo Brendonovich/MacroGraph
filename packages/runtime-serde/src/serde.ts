@@ -93,22 +93,26 @@ export const FunctionQueue = v.object({
 });
 export type FunctionQueue = v.InferOutput<typeof FunctionQueue>;
 
-export const Queue = v.object({
-	id: v.number(),
-	name: v.string(),
-	graphId: v.optional(IntID),
-	items: v.optional(v.array(v.any()), []),
-	paused: v.optional(v.boolean(), false),
-	type: Type,
-});
-export type Queue = v.InferOutput<typeof Queue>;
-
 export const Field = v.object({
 	id: v.pipe(v.union([v.string(), v.number()]), v.transform(String)),
 	name: v.optional(v.string()),
 	type: Type,
 });
 export type Field = v.InferOutput<typeof Field>;
+
+export const Queue = v.object({
+	id: v.number(),
+	name: v.string(),
+	graphId: v.optional(IntID),
+	items: v.optional(v.array(v.any()), []),
+	paused: v.optional(v.boolean(), false),
+	inputs: v.optional(v.array(Field), []),
+	outputs: v.optional(v.array(Field), []),
+	inputIdCounter: v.optional(v.number(), 0),
+	outputIdCounter: v.optional(v.number(), 0),
+	type: v.optional(Type),
+});
+export type Queue = v.InferOutput<typeof Queue>;
 
 export const CustomEventField = v.object({
 	id: v.number(),

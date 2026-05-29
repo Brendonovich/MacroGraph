@@ -1,4 +1,4 @@
-import { Disposable, type t } from "@macrograph/typesystem";
+import { Disposable, Field, type AnyType, t } from "@macrograph/typesystem";
 import { createMutable } from "solid-js/store";
 
 import { trackDeep } from "@solid-primitives/deep";
@@ -12,13 +12,12 @@ export const MAX_QUEUE_ITEMS = 2000;
 
 export type QueueEntry = {
 	id: string;
-	value: any;
+	data: Record<string, any>;
 };
 
 export type QueueArgs = {
 	id: number;
 	name: string;
-	itemType: t.Any;
 	graphId: number;
 	owner: Project;
 };
@@ -35,8 +34,8 @@ function newQueueEntryId(): string {
 	return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-export function createQueueEntry(value: any): QueueEntry {
-	return { id: newQueueEntryId(), value };
+export function createQueueEntry(data: Record<string, any>): QueueEntry {
+	return { id: newQueueEntryId(), data };
 }
 
 /** Normalize persisted or UI values into queue entries. */
@@ -46,18 +45,22 @@ export function normalizeQueueEntries(items: any[]): QueueEntry[] {
 			item &&
 			typeof item === "object" &&
 			typeof item.id === "string" &&
-			"value" in item
+			"data" in item &&
+			typeof item.data === "object"
 		) {
 			return item as QueueEntry;
 		}
-		return createQueueEntry(item);
+		return createQueueEntry(typeof item === "object" && item !== null ? item : {});
 	});
 }
 
 export class Queue extends Disposable {
 	id: number;
 	name: string;
-	itemType: t.Any;
+	inputs: Field[] = [];
+	outputs: Field[] = [];
+	inputIdCounter = 0;
+	outputIdCounter = 0;
 	graphId: number;
 	owner: Project;
 
@@ -76,7 +79,6 @@ export class Queue extends Disposable {
 
 		this.id = args.id;
 		this.name = args.name;
-		this.itemType = args.itemType;
 		this.graphId = args.graphId;
 		this.owner = args.owner;
 
@@ -100,7 +102,15 @@ export class Queue extends Disposable {
 			);
 			createEffect(
 				on(
-					() => self.itemType,
+					() => trackDeep(self.inputs),
+					() => {
+						self.owner.emit("modified");
+					},
+				),
+			);
+			createEffect(
+				on(
+					() => trackDeep(self.outputs),
 					() => {
 						self.owner.emit("modified");
 					},
@@ -119,8 +129,28 @@ export class Queue extends Disposable {
 		return self;
 	}
 
-	addItem(value: any) {
-		const next = [...this.items, createQueueEntry(value)];
+	createInput(args?: { id?: string; name?: string; type?: AnyType }) {
+		const id = args?.id ?? (this.inputIdCounter++).toString();
+		this.inputs.push(new Field(id, args?.type ?? t.string(), args?.name ?? `Input ${id}`));
+	}
+
+	createOutput(args?: { id?: string; name?: string; type?: AnyType }) {
+		const id = args?.id ?? (this.outputIdCounter++).toString();
+		this.outputs.push(new Field(id, args?.type ?? t.string(), args?.name ?? `Output ${id}`));
+	}
+
+	deleteInput(id: string) {
+		const idx = this.inputs.findIndex((f) => f.id === id);
+		if (idx >= 0) this.inputs.splice(idx, 1);
+	}
+
+	deleteOutput(id: string) {
+		const idx = this.outputs.findIndex((f) => f.id === id);
+		if (idx >= 0) this.outputs.splice(idx, 1);
+	}
+
+	addItem(data: Record<string, any>) {
+		const next = [...this.items, createQueueEntry(data)];
 		if (next.length > MAX_QUEUE_ITEMS) {
 			this.items = next.slice(next.length - MAX_QUEUE_ITEMS);
 			this.owner.core.warn(
@@ -141,14 +171,14 @@ export class Queue extends Disposable {
 		}
 	}
 
-	/** Value of an in-flight item (first active run). */
-	getActiveItem(): any | undefined {
-		for (const run of this.activeRuns.values()) return run.entry.value;
+	/** Data of an in-flight item (first active run). */
+	getActiveItem(): Record<string, any> | undefined {
+		for (const run of this.activeRuns.values()) return run.entry.data;
 		return undefined;
 	}
 
-	getEntryValue(entryId: string): any | undefined {
-		return this.activeRuns.get(entryId)?.entry.value;
+	getEntryValue(entryId: string): Record<string, any> | undefined {
+		return this.activeRuns.get(entryId)?.entry.data;
 	}
 
 	/** Mark the entry identified by exec context as iterated. */
@@ -169,7 +199,7 @@ export class Queue extends Disposable {
 			return;
 		}
 		for (const [id, run] of this.activeRuns) {
-			if (run.entry.value === item) {
+			if (run.entry.data === item) {
 				run.iterateFired = true;
 				return;
 			}
@@ -313,8 +343,6 @@ export class Queue extends Disposable {
 			return;
 		}
 
-		const itemOutput = startNode.state.outputs.find((o) => o.id === "item");
-
 		this.addRunning(entry);
 		const run: QueueItemRun = { entry, iterateFired: false };
 		this.activeRuns.set(entry.id, run);
@@ -323,8 +351,15 @@ export class Queue extends Disposable {
 		try {
 			const execCtx = new ExecutionContext(startNode);
 			execCtx.queueEntryId = entry.id;
-			if (itemOutput && "type" in itemOutput)
-				execCtx.data.set(itemOutput as any, entry.value);
+
+			for (const input of this.inputs) {
+				const output = startNode.state.outputs.find(
+					(o) => o.id === `in:${input.id}`,
+				);
+				if (output && "type" in output) {
+					execCtx.data.set(output as any, entry.data[input.id]);
+				}
+			}
 
 			const scope = new Map<string, any>();
 			execCtx.variableScope = scope;

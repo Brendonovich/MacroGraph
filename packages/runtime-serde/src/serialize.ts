@@ -240,10 +240,18 @@ export function serializeQueue(
 		graphId: q.graphId,
 		items: q.items.map((entry) => ({
 			id: entry.id,
-			value: serializeValue(entry.value, q.itemType),
+			data: Object.fromEntries(
+				q.inputs.map((input) => [
+					input.id,
+					serializeValue(entry.data[input.id], input.type),
+				]),
+			),
 		})),
 		paused: q.paused,
-		type: q.itemType.serialize(),
+		inputs: q.inputs.map(serializeField),
+		outputs: q.outputs.map(serializeField),
+		inputIdCounter: q.inputIdCounter,
+		outputIdCounter: q.outputIdCounter,
 	};
 }
 
