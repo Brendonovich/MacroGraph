@@ -3,12 +3,15 @@ import {
 	CommentBox,
 	type DataOutput,
 	ExecInput,
+	type FunctionQueue,
 	type GetNodeSize,
 	Graph,
+	type GraphFunction,
 	type InputPin,
 	Node,
 	type OutputPin,
 	Project,
+	type Queue,
 	type ScopeOutput,
 	getNodesInRect,
 } from "@macrograph/runtime";
@@ -16,9 +19,12 @@ import {
 	parseJsonWithContext,
 	serde,
 	serializeCommentBox,
+	serializeFunction,
+	serializeFunctionQueue,
 	serializeGraph,
 	serializeNode,
 	serializeProject,
+	serializeQueue,
 } from "@macrograph/runtime-serde";
 import * as v from "valibot";
 
@@ -53,6 +59,21 @@ export const ClipboardItem = v.variant("type", [
 				commentBoxes: v.array(v.number()),
 			}),
 		),
+	}),
+	v.object({
+		type: v.literal("function"),
+		function: serde.GraphFunction,
+		graph: serde.Graph,
+	}),
+	v.object({
+		type: v.literal("queue"),
+		queue: serde.Queue,
+		graph: serde.Graph,
+	}),
+	v.object({
+		type: v.literal("functionQueue"),
+		functionQueue: serde.FunctionQueue,
+		graph: serde.Graph,
 	}),
 ]);
 
@@ -173,6 +194,39 @@ export function graphToClipboardItem(
 	};
 }
 
+export function functionToClipboardItem(
+	fn: GraphFunction,
+	graph: Graph,
+): Extract<ClipboardItem, { type: "function" }> {
+	return {
+		type: "function",
+		function: serializeFunction(fn),
+		graph: serializeGraph(graph),
+	};
+}
+
+export function queueToClipboardItem(
+	queue: Queue,
+	graph: Graph,
+): Extract<ClipboardItem, { type: "queue" }> {
+	return {
+		type: "queue",
+		queue: serializeQueue(queue),
+		graph: serializeGraph(graph),
+	};
+}
+
+export function functionQueueToClipboardItem(
+	queue: FunctionQueue,
+	graph: Graph,
+): Extract<ClipboardItem, { type: "functionQueue" }> {
+	return {
+		type: "functionQueue",
+		functionQueue: serializeFunctionQueue(queue),
+		graph: serializeGraph(graph),
+	};
+}
+
 export function projectToClipboardItem(
 	project: Project,
 ): Extract<ClipboardItem, { type: "project" }> {
@@ -182,7 +236,7 @@ export function projectToClipboardItem(
 	};
 }
 
-export type ClipboardModel = Node | CommentBox | Graph | Project;
+export type ClipboardModel = Node | CommentBox | Graph | Project | GraphFunction | Queue | FunctionQueue;
 
 export interface ModelArgs {
 	model: ClipboardModel;
@@ -200,7 +254,6 @@ export function modelToClipboardItem(
 	if (model instanceof Graph) return graphToClipboardItem(model);
 	if (model instanceof Project) return projectToClipboardItem(model);
 
-	// should never happen
 	throw new Error("Invalid clipboard item");
 }
 

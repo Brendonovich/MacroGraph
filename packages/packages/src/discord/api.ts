@@ -491,14 +491,14 @@ export function register(pkg: Package, { api }: Ctx, core: Core) {
 				for (const [k, v] of Object.entries(fields)) {
 					formData.set(k, v);
 				}
-				if (filePath) {
-					const { readBinaryFile } = await import("@tauri-apps/api/fs");
-					formData.set(
-						"files[0]",
-						new Blob([await readBinaryFile(filePath)]),
-						filePath.split(/[\/\\]/).at(-1)!,
-					);
-				}
+			if (filePath) {
+				const data = await window.electronAPI.fs.readBinaryFile(filePath);
+				formData.set(
+					"files[0]",
+					new Blob([data]),
+					filePath.split(/[\/\\]/).at(-1)!,
+				);
+			}
 				const response = await core.fetch(webhookUrl, {
 					method: "POST",
 					body: formData,

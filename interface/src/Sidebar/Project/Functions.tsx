@@ -1,3 +1,7 @@
+import {
+	functionToClipboardItem,
+	serializeClipboardItem,
+} from "@macrograph/clipboard";
 import type { GraphFunction } from "@macrograph/runtime";
 import { ContextMenu } from "@kobalte/core/context-menu";
 import { Dialog } from "@kobalte/core/dialog";
@@ -17,6 +21,7 @@ import {
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton } from "../../components/ui";
 import { useInterfaceContext } from "../../context";
+import { usePlatform } from "../../platform";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor, InlineTextEditorContext } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
@@ -24,6 +29,7 @@ import { Button } from "../../settings/ui";
 
 export function Functions(props?: { onFunctionClicked?: (fn: GraphFunction) => void }) {
 	const ctx = useInterfaceContext();
+	const platform = usePlatform();
 
 	const [search, setSearch] = createSignal("");
 
@@ -91,6 +97,20 @@ export function Functions(props?: { onFunctionClicked?: (fn: GraphFunction) => v
 												/>
 												<ContextMenuContent>
 													<ContextMenuRenameItem />
+													<ContextMenuItem
+														onSelect={() => {
+															const graph = ctx.core.project.functionGraphs.get(fn.graphId);
+															if (!graph) return;
+															platform.clipboard.writeText(
+																serializeClipboardItem(
+																	functionToClipboardItem(fn, graph),
+																),
+															);
+														}}
+													>
+														<IconTablerCopy />
+														Copy
+													</ContextMenuItem>
 													<ContextMenuItem
 														class="text-red-500"
 														onSelect={() => {

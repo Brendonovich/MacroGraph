@@ -10,11 +10,10 @@ const CREDENTIALS_URL = "https://www.macrograph.app/account/credentials";
 
 async function openCredentialsPage(e: MouseEvent) {
 	e.preventDefault();
-	if (typeof window !== "undefined" && "__TAURI_INVOKE__" in window) {
-		const { open } = await import("@tauri-apps/api/shell");
-		await open(CREDENTIALS_URL);
+	try {
+		await window.electronAPI.shell.openExternal(CREDENTIALS_URL);
 		return;
-	}
+	} catch {}
 	window.open(CREDENTIALS_URL, "_blank", "noopener,noreferrer");
 }
 

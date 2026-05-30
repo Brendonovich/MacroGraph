@@ -22,16 +22,12 @@ export function sanitizeFilePath(path: string): string {
 	return p;
 }
 
-/** Local file size in bytes (desktop Tauri only). */
+/** Local file size in bytes (desktop Electron only). */
 export async function getLocalFileSizeBytes(
 	path: string,
 ): Promise<number | null> {
-	if (typeof window === "undefined" || !("__TAURI_INVOKE__" in window)) {
-		return null;
-	}
 	try {
-		const { invoke } = await import("@tauri-apps/api/tauri");
-		return await invoke<number>("file_size", { path: sanitizeFilePath(path) });
+		return await window.electronAPI.fs.fileSize(sanitizeFilePath(path));
 	} catch {
 		return null;
 	}

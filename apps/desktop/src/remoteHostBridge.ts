@@ -303,7 +303,7 @@ export function broadcastRemoteHostCursorPosition(
 ) {
 	if (!remoteHostSettings.enabled) return;
 	const port = remoteHostSettings.port;
-	const data = stringifyCursorWire({ id: "host", ...payload });
+	const data = stringifyCursorWire({ ...payload, id: "host" });
 	void client.mutation([
 		"remoteHost.send",
 		{ port, client: null, data },
@@ -439,7 +439,9 @@ export function installRemoteHostBridge(opts: {
 			RemoteServerMessage,
 		]) => {
 			if (msg === "Connected") {
+				userNames.set(clientId, `User ${clientId}`);
 				sendSnapshot(clientId);
+				broadcastUserList(port);
 				return;
 			}
 			if (typeof msg === "object" && msg !== null && "ConnectedWithUser" in msg) {
@@ -585,11 +587,10 @@ export function installRemoteHostBridge(opts: {
 
 		const listenGen = listenGeneration;
 		void (async () => {
-			const { listen } = await import("@tauri-apps/api/event");
-			const unlisten = await listen<[number, RemoteServerMessage]>(
+			const unlisten = window.electronAPI.onEvent(
 				REMOTE_HOST_MESSAGE_EVENT,
-				(event) => {
-					handleRemoteServerMessage(event.payload);
+				(payload: unknown) => {
+					handleRemoteServerMessage(payload as [number, RemoteServerMessage]);
 				},
 			);
 			if (listenGen !== listenGeneration) {
@@ -600,7 +601,8 @@ export function installRemoteHostBridge(opts: {
 		})();
 
 		// Keeps the axum remote server alive; messages use REMOTE_HOST_MESSAGE_EVENT on the main thread.
-		const u = client.addSubscription(["remoteHost.server", port], {
+		const password = remoteHostSettings.password?.trim() || null;
+		const u = client.addSubscription(["remoteHost.server", port, password], {
 			onData() {},
 		});
 

@@ -1,5 +1,4 @@
 import { StartClient, mount } from "@solidjs/start/client";
-import { crashLogAppend } from "./commands";
 
 function formatError(err: unknown): string {
 	if (err instanceof Error) {
@@ -15,9 +14,9 @@ function formatError(err: unknown): string {
 function installCrashDiagnostics() {
 	const append = async (kind: string, message: string) => {
 		try {
-			await crashLogAppend(kind, message);
+			await window.electronAPI.crashLog.append(kind, message);
 		} catch {
-			// vinxi dev / non-Tauri
+			// dev / non-Electron
 		}
 	};
 

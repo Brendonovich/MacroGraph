@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "CommonJS",
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"strict": true,
+		"ignoreDeprecations": "6.0",
+		"outDir": "../dist-electron",
+		"rootDir": ".",
+		"declaration": false,
+		"sourceMap": true,
+		"skipLibCheck": true
+	},
+	"include": ["./**/*.ts"]
+}

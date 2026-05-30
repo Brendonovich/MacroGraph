@@ -36,6 +36,7 @@ import {
 	deserializeCustomEvent,
 	deserializeCustomStruct,
 	deserializeField,
+	deserializeFunction,
 	deserializeGraph,
 	deserializeNode,
 	deserializeFunctionQueue,
@@ -4054,21 +4055,46 @@ export const historyActions = (core: Core, editor: EditorState) => {
 					{ type: "selection" }
 				>;
 			}) {
-				const graph = getGraph(input);
-				if (!graph) return;
+		const graph = getGraph(input);
+			if (!graph) return;
 
-				const nodeIdMap = new Map<number, number>();
-				const boxIdMap = new Map<number, number>();
-
-				for (const nodeData of selection.nodes) {
-					const id = graph.generateId();
-					nodeIdMap.set(nodeData.id, id);
-					nodeData.id = id;
-					nodeData.position = {
-						x: input.mousePosition.x + nodeData.position.x - selection.origin.x,
-						y: input.mousePosition.y + nodeData.position.y - selection.origin.y,
-					};
+			// Filter out internal nodes (Function Input/Output, Queue Input/Output, etc.)
+			// as they are auto-created by the system and must not be duplicated by paste.
+			const internalNodeIds = new Set<number>();
+			selection.nodes = selection.nodes.filter((nodeData) => {
+				const schema = graph.project.core.schema(
+					nodeData.schema.package,
+					nodeData.schema.id,
+				);
+				if (schema?.internal) {
+					internalNodeIds.add(nodeData.id);
+					return false;
 				}
+				return true;
+			});
+
+			if (selection.selected)
+				selection.selected.nodes = selection.selected.nodes.filter(
+					(id) => !internalNodeIds.has(id),
+				);
+			selection.connections = selection.connections.filter(
+				(conn) =>
+					!internalNodeIds.has(conn.from.node) &&
+					!internalNodeIds.has(conn.to.node),
+			);
+
+			const nodeIdMap = new Map<number, number>();
+			const boxIdMap = new Map<number, number>();
+
+			for (const nodeData of selection.nodes) {
+				const id = graph.generateId();
+				nodeIdMap.set(nodeData.id, id);
+				nodeData.id = id;
+				nodeData.position = {
+					x: input.mousePosition.x + nodeData.position.x - selection.origin.x,
+					y: input.mousePosition.y + nodeData.position.y - selection.origin.y,
+				};
+			}
 
 				for (const box of selection.commentBoxes) {
 					const id = graph.generateId();
@@ -4216,6 +4242,110 @@ export const historyActions = (core: Core, editor: EditorState) => {
 
 				core.project.deleteGraphByKind("graph", entry.data.id);
 				graph.dispose();
+			},
+		}),
+		pasteFunction: historyAction({
+			prepare(data: v.InferOutput<typeof serde.GraphFunction> & { fnGraph: v.InferOutput<typeof serde.Graph> }) {
+				const fnId = core.project.functionIdCounter++;
+				const graphId = core.project.functionGraphIdCounter++;
+
+				data.id = fnId;
+				data.fnGraph.id = graphId;
+
+				return { data, fnId, graphId };
+			},
+			async perform(entry) {
+				const fn = deserializeFunction(core.project, entry.data);
+				const graph = await deserializeGraph(core.project, entry.data.fnGraph, "function");
+				if (!graph) return;
+
+				core.project.functionGraphs.set(graph.id, graph);
+				core.project.functionGraphOrder.push(graph.id);
+				core.project.functions.set(fn.id, fn);
+			},
+			rewind(entry) {
+				const fn = core.project.functions.get(entry.data.id);
+				if (!fn) return;
+
+				const graph = core.project.functionGraphs.get(entry.data.fnGraph.id);
+				if (graph) {
+					core.project.functionGraphs.delete(graph.id);
+					core.project.functionGraphOrder = core.project.functionGraphOrder.filter(
+						(id) => id !== graph.id,
+					);
+					graph.dispose();
+				}
+				core.project.functions.delete(fn.id);
+			},
+		}),
+		pasteQueue: historyAction({
+			prepare(data: v.InferOutput<typeof serde.Queue> & { queueGraph: v.InferOutput<typeof serde.Graph> }) {
+				const queueId = core.project.generateQueueId();
+				const graphId = core.project.queueGraphIdCounter++;
+
+				data.id = queueId;
+				data.queueGraph.id = graphId;
+
+				return { data, queueId, graphId };
+			},
+			async perform(entry) {
+				const queue = deserializeQueue(entry.data, core.project);
+				const graph = await deserializeGraph(core.project, entry.data.queueGraph, "queue");
+				if (!graph) return;
+
+				core.project.queueGraphs.set(graph.id, graph);
+				core.project.queueGraphOrder.push(graph.id);
+				core.project.queues.set(queue.id, queue);
+			},
+			rewind(entry) {
+				const queue = core.project.queues.get(entry.data.id);
+				if (!queue) return;
+
+				const graph = core.project.queueGraphs.get(entry.data.queueGraph.id);
+				if (graph) {
+					core.project.queueGraphs.delete(graph.id);
+					core.project.queueGraphOrder = core.project.queueGraphOrder.filter(
+						(id) => id !== graph.id,
+					);
+					graph.dispose();
+				}
+				core.project.queues.delete(queue.id);
+				queue.dispose();
+			},
+		}),
+		pasteFunctionQueue: historyAction({
+			prepare(data: v.InferOutput<typeof serde.FunctionQueue> & { fnQueueGraph: v.InferOutput<typeof serde.Graph> }) {
+				const queueId = core.project.generateFunctionQueueId();
+				const graphId = core.project.functionQueueGraphIdCounter++;
+
+				data.id = queueId;
+				data.fnQueueGraph.id = graphId;
+
+				return { data, queueId, graphId };
+			},
+			async perform(entry) {
+				const queue = deserializeFunctionQueue(entry.data, core.project);
+				const graph = await deserializeGraph(core.project, entry.data.fnQueueGraph, "functionQueue");
+				if (!graph) return;
+
+				core.project.functionQueueGraphs.set(graph.id, graph);
+				core.project.functionQueueGraphOrder.push(graph.id);
+				core.project.functionQueues.set(queue.id, queue);
+			},
+			rewind(entry) {
+				const queue = core.project.functionQueues.get(entry.data.id);
+				if (!queue) return;
+
+				const graph = core.project.functionQueueGraphs.get(entry.data.fnQueueGraph.id);
+				if (graph) {
+					core.project.functionQueueGraphs.delete(graph.id);
+					core.project.functionQueueGraphOrder = core.project.functionQueueGraphOrder.filter(
+						(id) => id !== graph.id,
+					);
+					graph.dispose();
+				}
+				core.project.functionQueues.delete(queue.id);
+				queue.dispose();
 			},
 		}),
 		setGraphSelection: historyAction({

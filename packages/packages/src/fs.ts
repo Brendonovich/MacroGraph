@@ -1,6 +1,5 @@
 import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
-import { readTextFile, writeTextFile } from "@tauri-apps/api/fs";
 
 type Entry = { Dir: string } | { File: string };
 
@@ -88,8 +87,7 @@ export function register(actions: { list(path: string): Promise<Entry[]> }) {
 			const filePath = ctx.getInput(io.file);
 
 			try {
-				// If it's a local file path, use Tauri's readTextFile
-				const content = await readTextFile(filePath);
+				const content = await window.electronAPI.fs.readTextFile(filePath);
 				ctx.setOutput(io.textOut, content);
 			} catch (err) {
 				console.error("Failed to read file:", err);
@@ -125,7 +123,7 @@ export function register(actions: { list(path: string): Promise<Entry[]> }) {
 			const textToWrite = ctx.getInput(io.text);
 
 			try {
-				await writeTextFile(filePath, textToWrite);
+				await window.electronAPI.fs.writeTextFile(filePath, textToWrite);
 				ctx.setOutput(io.success, true);
 			} catch (err) {
 				console.error("Failed to write file:", err);

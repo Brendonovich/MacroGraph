@@ -1,5 +1,4 @@
 import { t } from "@macrograph/typesystem";
-import { writeBinaryFile } from "@tauri-apps/api/fs";
 
 import { Maybe } from "@macrograph/option";
 import { createStruct } from "@macrograph/runtime";
@@ -44,7 +43,7 @@ async function TextToSpeech(
 	);
 
 	if (response.body && response.status === 200) {
-		await writeBinaryFile(filePath, await streamToArrayBuffer(response.body));
+		await window.electronAPI.fs.writeBinaryFile(filePath, Array.from(await streamToArrayBuffer(response.body)));
 		state = filePath;
 	} else {
 		state = null;

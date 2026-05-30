@@ -1,0 +1,195 @@
+[1780048120] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780048277] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780048120)
+[1780048277] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780048289] [pagehide] webview pagehide (possible shutdown)
+[1780048455] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780048277)
+[1780048455] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780048530] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780048455)
+[1780048530] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780048824] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780048530)
+[1780048824] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780048923] [pagehide] webview pagehide (possible shutdown)
+[1780048923] [exit] window-all-closed
+[1780048923] [exit] application Exit
+[1780048928] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780049310] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780048928)
+[1780049310] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780049366] [unhandled rejection] Error: Error invoking remote method 'obs:call': Error: No source was found by the name of `CAMERA` within the canvas `Main`.
+Error: Error invoking remote method 'obs:call': Error: No source was found by the name of `CAMERA` within the canvas `Main`.
+[1780049367] [unhandled rejection] Error: Error invoking remote method 'obs:call': Error: No source was found by the name of `CAMERA` within the canvas `Main`.
+Error: Error invoking remote method 'obs:call': Error: No source was found by the name of `CAMERA` within the canvas `Main`.
+[1780049475] [unhandled rejection] Error: Error invoking remote method 'http:fetchSend': AggregateError
+Error: Error invoking remote method 'http:fetchSend': AggregateError
+[1780049492] [unhandled rejection] Error: Error invoking remote method 'http:fetchSend': AggregateError
+Error: Error invoking remote method 'http:fetchSend': AggregateError
+[1780049533] [unhandled rejection] Error: Error invoking remote method 'http:fetchSend': AggregateError
+Error: Error invoking remote method 'http:fetchSend': AggregateError
+[1780049587] [pagehide] webview pagehide (possible shutdown)
+[1780049603] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780049310)
+[1780049603] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780049721] [pagehide] webview pagehide (possible shutdown)
+[1780049728] [unhandled rejection] Error: Error invoking remote method 'http:fetchSend': Error: connect timeout
+Error: Error invoking remote method 'http:fetchSend': Error: connect timeout
+[1780049786] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780049603)
+[1780049786] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780050103] [panic] TypeError: Cannot read properties of null (reading 'clients')
+TypeError: Cannot read properties of null (reading 'clients')
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:544:32)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)
+[1780050149] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780050196] [panic] TypeError: Cannot read properties of null (reading 'clients')
+TypeError: Cannot read properties of null (reading 'clients')
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:545:32)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)
+[1780050312] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780050609] [pagehide] webview pagehide (possible shutdown)
+[1780050732] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780050312)
+[1780050732] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780050979] [panic] TypeError: Cannot read properties of null (reading 'clients')
+TypeError: Cannot read properties of null (reading 'clients')
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:545:32)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)
+[1780051192] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780051253] [pagehide] webview pagehide (possible shutdown)
+[1780051263] [pagehide] webview pagehide (possible shutdown)
+[1780051265] [pagehide] webview pagehide (possible shutdown)
+[1780051271] [pagehide] webview pagehide (possible shutdown)
+[1780051285] [pagehide] webview pagehide (possible shutdown)
+[1780051371] [panic] TypeError: Cannot read properties of null (reading 'clients')
+TypeError: Cannot read properties of null (reading 'clients')
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:545:32)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)
+[1780051452] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780051628] [panic] TypeError: Cannot read properties of null (reading 'clients')
+TypeError: Cannot read properties of null (reading 'clients')
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:545:32)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)
+[1780051700] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780052000] [pagehide] webview pagehide (possible shutdown)
+[1780052007] [pagehide] webview pagehide (possible shutdown)
+[1780052013] [pagehide] webview pagehide (possible shutdown)
+[1780052023] [pagehide] webview pagehide (possible shutdown)
+[1780052024] [pagehide] webview pagehide (possible shutdown)
+[1780052030] [pagehide] webview pagehide (possible shutdown)
+[1780052083] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780051700)
+[1780052083] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780052194] [pagehide] webview pagehide (possible shutdown)
+[1780052203] [pagehide] webview pagehide (possible shutdown)
+[1780052204] [pagehide] webview pagehide (possible shutdown)
+[1780052296] [pagehide] webview pagehide (possible shutdown)
+[1780052306] [pagehide] webview pagehide (possible shutdown)
+[1780052307] [pagehide] webview pagehide (possible shutdown)
+[1780052324] [pagehide] webview pagehide (possible shutdown)
+[1780052335] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780052083)
+[1780052335] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780052337] [pagehide] webview pagehide (possible shutdown)
+[1780052343] [pagehide] webview pagehide (possible shutdown)
+[1780052353] [pagehide] webview pagehide (possible shutdown)
+[1780052355] [pagehide] webview pagehide (possible shutdown)
+[1780052372] [pagehide] webview pagehide (possible shutdown)
+[1780052384] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780052335)
+[1780052384] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780052511] [panic] TypeError: Cannot read properties of null (reading 'clients')
+TypeError: Cannot read properties of null (reading 'clients')
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:545:32)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)
+[1780052534] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780052590] [pagehide] webview pagehide (possible shutdown)
+[1780052600] [pagehide] webview pagehide (possible shutdown)
+[1780052601] [pagehide] webview pagehide (possible shutdown)
+[1780052601] [pagehide] webview pagehide (possible shutdown)
+[1780053002] [pagehide] webview pagehide (possible shutdown)
+[1780053002] [exit] window-all-closed
+[1780053002] [exit] application Exit
+[1780053002] [panic] Error: No main window
+Error: No main window
+    at getWindow (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:178:15)
+    at sendToRenderer (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:182:17)
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:299:17)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)
+[1780053900] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780053907] [pagehide] webview pagehide (possible shutdown)
+[1780053941] [pagehide] webview pagehide (possible shutdown)
+[1780053947] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780053900)
+[1780053947] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780054013] [pagehide] webview pagehide (possible shutdown)
+[1780054045] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780053947)
+[1780054045] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780054258] [pagehide] webview pagehide (possible shutdown)
+[1780054337] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780054045)
+[1780054337] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780054343] [pagehide] webview pagehide (possible shutdown)
+[1780054355] [pagehide] webview pagehide (possible shutdown)
+[1780054412] [pagehide] webview pagehide (possible shutdown)
+[1780054429] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780054337)
+[1780054429] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780054515] [pagehide] webview pagehide (possible shutdown)
+[1780054716] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780054429)
+[1780054716] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780054722] [pagehide] webview pagehide (possible shutdown)
+[1780054734] [pagehide] webview pagehide (possible shutdown)
+[1780054955] [pagehide] webview pagehide (possible shutdown)
+[1780054992] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780054716)
+[1780054992] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780055259] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780054992)
+[1780055259] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780055382] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780055259)
+[1780055382] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780055468] [pagehide] webview pagehide (possible shutdown)
+[1780055480] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780055382)
+[1780055480] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780055856] [pagehide] webview pagehide (possible shutdown)
+[1780055856] [exit] window-all-closed
+[1780055856] [exit] application Exit
+[1780055856] [panic] Error: No main window
+Error: No main window
+    at getWindow (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:179:15)
+    at sendToRenderer (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:183:17)
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:301:17)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)
+[1780111182] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780111213] [pagehide] webview pagehide (possible shutdown)
+[1780111213] [exit] window-all-closed
+[1780111213] [exit] application Exit
+[1780111213] [panic] Error: No main window
+Error: No main window
+    at getWindow (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:179:15)
+    at sendToRenderer (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:183:17)
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:301:17)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)

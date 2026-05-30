@@ -1,3 +1,7 @@
+import {
+	functionQueueToClipboardItem,
+	serializeClipboardItem,
+} from "@macrograph/clipboard";
 import type { FunctionQueue } from "@macrograph/runtime";
 import { ContextMenu } from "@kobalte/core/context-menu";
 import { Dialog } from "@kobalte/core/dialog";
@@ -16,16 +20,18 @@ import {
 import { SidebarSection } from "../../components/Sidebar";
 import { IconButton } from "../../components/ui";
 import { useInterfaceContext } from "../../context";
+import { usePlatform } from "../../platform";
 import { createTokenisedSearchFilter, tokeniseString } from "../../util";
 import { InlineTextEditor, InlineTextEditorContext } from "../InlineTextEditor";
 import { SearchInput } from "../SearchInput";
 import { Button } from "../../settings/ui";
 
-export function FunctionQueues(props: {
+export 	function FunctionQueues(props: {
 	project: import("@macrograph/runtime").Project;
 	onFunctionQueueClicked(queue: FunctionQueue): void;
 }) {
 	const ctx = useInterfaceContext();
+	const platform = usePlatform();
 
 	const [search, setSearch] = createSignal("");
 
@@ -89,6 +95,20 @@ export function FunctionQueues(props: {
 												/>
 												<ContextMenuContent>
 													<ContextMenuRenameItem />
+													<ContextMenuItem
+														onSelect={() => {
+															const graph = ctx.core.project.functionQueueGraphs.get(queue.graphId);
+															if (!graph) return;
+															platform.clipboard.writeText(
+																serializeClipboardItem(
+																	functionQueueToClipboardItem(queue, graph),
+																),
+															);
+														}}
+													>
+														<IconTablerCopy />
+														Copy
+													</ContextMenuItem>
 													<ContextMenuItem
 														class="text-red-500"
 														onSelect={() => {

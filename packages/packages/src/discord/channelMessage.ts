@@ -125,21 +125,30 @@ export async function sendDiscordChannelMessage(
 				onProgress: onUploadProgress,
 			},
 		));
-	} else if (filePath) {
-		const { readBinaryFile } = await import("@tauri-apps/api/fs");
-		const formData = new FormData();
-		formData.set("payload_json", JSON.stringify(payload));
-		formData.set(
-			"files[0]",
-			new Blob([await readBinaryFile(filePath)]),
-			filePath.split(/[\/\\]/).at(-1)!,
-		);
-		const response = await core.fetch(url, {
-			method: "POST",
-			headers: { Authorization: authHeader },
-			body: formData,
-		});
-		status = response.status;
+	} else if (filePath) {
+		const data = await window.electronAPI.fs.readBinaryFile(filePath);
+
+		const formData = new FormData();
+
+		formData.set("payload_json", JSON.stringify(payload));
+
+		formData.set(
+			"files[0]",
+			new Blob([data]),
+			filePath.split(/[\/\\]/).at(-1)!,
+		);
+
+		const response = await core.fetch(url, {
+
+			method: "POST",
+
+			headers: { Authorization: authHeader },
+
+			body: formData,
+
+		});
+
+		status = response.status;
 	} else {
 		const response = await core.fetch(url, {
 			method: "POST",

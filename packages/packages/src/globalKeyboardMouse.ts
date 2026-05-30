@@ -1,13 +1,14 @@
 import { Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 import { type EventBus, createEventBus } from "@solid-primitives/event-bus";
-import { events, type Key, commands } from "tauri-plugin-kb-mouse";
 
 let unlistenFns: Array<() => void> = [];
 
 export function pkg() {
 	unlistenFns.forEach((fn) => fn());
 	unlistenFns = [];
+
+	window.electronAPI.kbMouse.startHooks().catch(() => {});
 
 	const pkg = new Package({
 		name: "Global Mouse & Keyboard",
@@ -29,8 +30,8 @@ export function pkg() {
 			}),
 		}),
 		async run({ ctx, io }) {
-			await commands.simulateKeys(
-				ctx.getInput(io.keys) as Key[],
+			await window.electronAPI.kbMouse.simulateKeys(
+				ctx.getInput(io.keys),
 				ctx.getInput(io.delay),
 			);
 		},
@@ -58,7 +59,7 @@ export function pkg() {
 			}),
 		}),
 		async run({ ctx, io }) {
-			await commands.simulateMouse(
+			await window.electronAPI.kbMouse.simulateMouse(
 				ctx.getInput(io.button).variant,
 				ctx.getInput(io.delay),
 			);
@@ -86,7 +87,7 @@ export function pkg() {
 			}),
 		}),
 		async run({ ctx, io }) {
-			await commands.setMousePosition(
+			await window.electronAPI.kbMouse.setMousePosition(
 				ctx.getInput(io.x),
 				ctx.getInput(io.y),
 				ctx.getInput(io.absolute),
@@ -94,31 +95,33 @@ export function pkg() {
 		},
 	});
 
-	const pressedKeys = new Set<Key>();
+	const pressedKeys = new Set<string>();
 
-	const busses = new Map<Key, EventBus<"pressed" | "released">>();
+	const busses = new Map<string, EventBus<"pressed" | "released">>();
 
 	for (const a of alphabet) {
 		busses.set(a, createEventBus());
 	}
 
-	events.keyDown.listen((e) => {
-		const { key, appFocused } = e.payload;
+	const unlistenKeyDown = window.electronAPI.onEvent("kb:keyDown", (payload: unknown) => {
+		const { key, appFocused } = payload as { key: string; appFocused: boolean };
 		if (appFocused) return;
 
 		pressedKeys.add(key);
 		busses.get(key)?.emit("pressed");
-	}).then((fn) => unlistenFns.push(fn));
+	});
+	unlistenFns.push(unlistenKeyDown);
 
-	events.keyUp.listen((e) => {
-		const { key, appFocused } = e.payload;
+	const unlistenKeyUp = window.electronAPI.onEvent("kb:keyUp", (payload: unknown) => {
+		const { key, appFocused } = payload as { key: string; appFocused: boolean };
 
 		pressedKeys.delete(key);
 
 		if (appFocused) return;
 
 		busses.get(key)?.emit("released");
-	}).then((fn) => unlistenFns.push(fn));
+	});
+	unlistenFns.push(unlistenKeyUp);
 
 	for (const a of alphabet) {
 		if (typeof a !== "string") continue;
@@ -164,7 +167,7 @@ export function pkg() {
 	return pkg;
 }
 
-const alphabet = new Set<Key>([
+const alphabet = new Set<string>([
 	"KeyA",
 	"KeyB",
 	"KeyC",

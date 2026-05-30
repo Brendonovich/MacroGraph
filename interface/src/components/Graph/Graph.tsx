@@ -911,21 +911,28 @@ export const Graph = (props: Props) => {
 			if (target) {
 				lastFollowGraphRef.kind = ref.graphKind;
 				lastFollowGraphRef.id = ref.graphId;
-				const followPos = target.viewportCenter ?? target.position;
-				const screenPos = toScreenSpace(followPos, state.bounds, props.state);
-				const centerX = state.size.width / 2;
-				const centerY = state.size.height / 2;
 
-				const targetTranslateX =
-					viewState().translate.x + (screenPos.x - centerX) / props.state.scale;
-				const targetTranslateY =
-					viewState().translate.y + (screenPos.y - centerY) / props.state.scale;
+				if (target.viewportCenter && target.scale) {
+					const center = target.viewportCenter;
+					const newScale = target.scale;
+					const vpCenterX = state.size.width / 2;
+					const vpCenterY = state.size.height / 2;
+					props.onScaleChange(newScale);
+					props.onTranslateChange({
+						x: center.x - vpCenterX / newScale,
+						y: center.y - vpCenterY / newScale,
+					});
+				} else {
+					const followPos = target.viewportCenter ?? target.position;
+					const screenPos = toScreenSpace(followPos, state.bounds, props.state);
+					const centerX = state.size.width / 2;
+					const centerY = state.size.height / 2;
 
-				const lerpFactor = 0.08;
-				props.onTranslateChange({
-					x: viewState().translate.x + (targetTranslateX - viewState().translate.x) * lerpFactor,
-					y: viewState().translate.y + (targetTranslateY - viewState().translate.y) * lerpFactor,
-				});
+					props.onTranslateChange({
+						x: viewState().translate.x + (screenPos.x - centerX) / props.state.scale,
+						y: viewState().translate.y + (screenPos.y - centerY) / props.state.scale,
+					});
+				}
 			} else {
 				const other = cursors.find(
 					(c) =>
@@ -1025,16 +1032,17 @@ export const Graph = (props: Props) => {
 					setRef(ref);
 				}}
 				onPointerMove={(e) => {
-					const graphSpace = ctx.toGraphSpace({ x: e.clientX, y: e.clientY });
-					sendCursor?.({
-						id: "",
-						...graphRef(),
-						position: graphSpace,
-						viewportCenter: {
-							x: (state.size.width / 2) / props.state.scale + viewState().translate.x,
-							y: (state.size.height / 2) / props.state.scale + viewState().translate.y,
-						},
-					});
+		const graphSpace = ctx.toGraphSpace({ x: e.clientX, y: e.clientY });
+				sendCursor?.({
+					id: "",
+					...graphRef(),
+					position: graphSpace,
+					viewportCenter: {
+						x: (state.size.width / 2) / props.state.scale + viewState().translate.x,
+						y: (state.size.height / 2) / props.state.scale + viewState().translate.y,
+					},
+					scale: props.state.scale,
+				});
 				}}
 				onPointerLeave={(e) => {
 					const { clientX, clientY } = e;

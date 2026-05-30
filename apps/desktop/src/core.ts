@@ -4,16 +4,14 @@ import {
 	type WsMessage,
 	createWsProvider,
 } from "@macrograph/runtime";
-import "tauri-plugin-midi";
 
 import { rawApi } from "./api";
 import { env } from "./env";
 import { fetch, fetchMultipart } from "./http";
-import { client } from "./rspc";
 
 const AUTH_URL = `${env.VITE_MACROGRAPH_API_URL}/auth`;
 
-const WS_EVENT = "websocket://message";
+const WS_EVENT = "ws:server:message";
 
 export const core = new Core({
 	fetch: fetch as any,
@@ -24,16 +22,10 @@ export const core = new Core({
 	api: rawApi,
 	oauth: {
 		authorize: (provider) =>
-			new Promise((res) => {
-				client.addSubscription(
-					["oauth.authorize", `${AUTH_URL}/${provider}/login`],
-					{
-						onData(data) {
-							res({ ...data, issued_at: Date.now() / 1000 });
-						},
-					},
-				);
-			}),
+			window.electronAPI.oauth.authorize(`${AUTH_URL}/${provider}/login`).then((data) => ({
+				...data,
+				issued_at: Date.now() / 1000,
+			})),
 		refresh: async (provider, refreshToken) => {
 			const res = await fetch(`${AUTH_URL}/${provider}/refresh`, {
 				method: "POST",
@@ -51,29 +43,26 @@ export const core = new Core({
 
 export const wsProvider = createWsProvider({
 	async startServer(port, onData) {
-		const { listen } = await import("@tauri-apps/api/event");
-		const unlisten = await listen<[number, number, WsMessage]>(WS_EVENT, (event) => {
-			const [eventPort, client, message] = event.payload;
+		await window.electronAPI.ws.startServer(port);
+		const unlisten = window.electronAPI.onEvent(WS_EVENT, (eventPayload: unknown) => {
+			const [eventPort, client, message] = eventPayload as [number, number, WsMessage];
 			if (eventPort === port) onData([client, message] as [number, WsMessage]);
-		});
-		const unsubscribe = client.addSubscription(["websocket.server", port], {
-			onData() {},
 		});
 		return () => {
 			unlisten();
-			unsubscribe();
 		};
 	},
 	async stopServer(cleanup) {
 		cleanup();
 	},
 	async disconnectAllClients() {
-		return client.mutation(["websocket.disconnectAllClients", null]);
+		return window.electronAPI.ws.disconnectAllClients();
 	},
 	async sendMessage(data) {
-		return client.mutation([
-			"websocket.send",
-			{ port: data.port, client: data.client, data: data.data },
-		]);
+		return window.electronAPI.ws.send({
+			port: data.port,
+			client: data.client,
+			data: data.data,
+		});
 	},
 });

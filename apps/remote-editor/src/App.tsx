@@ -45,6 +45,7 @@ import {
 	createWsProvider,
 	NODE_EMIT,
 	setRemoteHostRpcHandler,
+	setRemoteShellMode,
 	type OutboundWsBridge,
 } from "@macrograph/runtime";
 import {
@@ -63,6 +64,8 @@ import "./app.css";
 
 const AUTH_STORAGE_KEY = "mg-remote-password";
 const REMEMBER_CREDS_KEY = "mg-remote-creds";
+
+setRemoteShellMode(true);
 
 const core = new Core({
 	remoteShell: true,
@@ -152,6 +155,7 @@ const remotePlatform: Platform = {
 	pkgs.queue.pkg,
 	pkgs.customEvents.pkg,
 	pkgs.speakerbot.pkg,
+	pkgs.tiktok.pkg,
 	() => pkgs.websocketServer.pkg(wsProviderStub),
 	pkgs.midi.pkg,
 	pkgs.elevenlabs.pkg,
@@ -210,6 +214,8 @@ export default function App() {
 	const reconnectState = { attempts: 0, startTime: 0, maxTime: 60_000 };
 	const [editorSessionActive, setEditorSessionActive] = createSignal(false);
 	const [projectReady, setProjectReady] = createSignal(false);
+	const [reconnectDelay, setReconnectDelay] = createSignal(0);
+	let reconnectCountdown: ReturnType<typeof setInterval> | null = null;
 
 	const [graphLiveFromLocal, setGraphLiveFromLocal] = createSignal(false);
 
@@ -269,12 +275,12 @@ export default function App() {
 		const r = (Math.random() * 16) | 0;
 		return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
 	});
-	const broadcastCursorToHost = (
-		payload: import("@macrograph/interface").WireCursorPosition,
-	) => {
-		if (joinPhase() !== "editor") return;
-		sendWs(stringifyCursorWire({ id: cursorId, ...payload }));
-	};
+const broadcastCursorToHost = (
+  payload: import("@macrograph/interface").WireCursorPosition,
+) => {
+  if (joinPhase() !== "editor") return;
+  sendWs(stringifyCursorWire({ ...payload, id: cursorId }));
+};
 
 	const broadcastPinDragToHost = (drag: import("@macrograph/interface").RemotePinDrag) => {
 		if (joinPhase() !== "editor") return;
@@ -299,11 +305,16 @@ export default function App() {
 			clearTimeout(reconnectTimer);
 			reconnectTimer = null;
 		}
+		if (reconnectCountdown !== null) {
+			clearInterval(reconnectCountdown);
+			reconnectCountdown = null;
+		}
 	}
 
 	function resetReconnectState() {
 		reconnectState.attempts = 0;
 		reconnectState.startTime = 0;
+		setReconnectDelay(0);
 		clearReconnectTimer();
 	}
 
@@ -325,9 +336,24 @@ export default function App() {
 		);
 		reconnectState.attempts += 1;
 		setJoinPhase("reconnecting");
+		setReconnectDelay(Math.floor(delay / 1000));
+
+		if (reconnectCountdown) clearInterval(reconnectCountdown);
+		reconnectCountdown = setInterval(() => {
+			setReconnectDelay((prev) => {
+				if (prev <= 1) {
+					if (reconnectCountdown) clearInterval(reconnectCountdown);
+					reconnectCountdown = null;
+					return 0;
+				}
+				return prev - 1;
+			});
+		}, 1000);
 
 		reconnectTimer = setTimeout(() => {
 			reconnectTimer = null;
+			if (reconnectCountdown) clearInterval(reconnectCountdown);
+			reconnectCountdown = null;
 			openWebSocket({ reconnect: true });
 		}, delay);
 	}
@@ -764,7 +790,16 @@ export default function App() {
 			>
 				<div class="w-screen h-screen flex flex-col items-center justify-center text-neutral-300 gap-3">
 					<IconSvgSpinners90Ring class="size-10" />
-					<span>Connecting…</span>
+					<Show when={joinPhase() === "connecting"} fallback={
+						<>
+							<span>Connection lost. Reconnecting…</span>
+							<span class="text-xs text-neutral-500">
+								Attempt {reconnectState.attempts} — retrying in {reconnectDelay()}s
+							</span>
+						</>
+					}>
+						<span>Connecting…</span>
+					</Show>
 				</div>
 			</Show>
 
@@ -823,7 +858,7 @@ export default function App() {
 							<IconSvgSpinners90Ring class="size-10" />
 							<span>Connection lost. Reconnecting…</span>
 							<span class="text-xs text-neutral-500">
-								Attempt {reconnectState.attempts}
+								Attempt {reconnectState.attempts} — retrying in {reconnectDelay()}s
 							</span>
 						</div>
 					</Show>

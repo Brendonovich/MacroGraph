@@ -3,7 +3,6 @@ import { Maybe, None } from "@macrograph/option";
 import { type Core, Package } from "@macrograph/runtime";
 import { t } from "@macrograph/typesystem";
 import { ReactiveMap } from "@solid-primitives/map";
-import { writeBinaryFile } from "@tauri-apps/api/fs";
 
 export async function streamToArrayBuffer(
 	stream: ReadableStream<Uint8Array>,
@@ -171,7 +170,7 @@ export function pkg(core: Core) {
 
 			if (response.body && response.status === 200) {
 				const data = await streamToArrayBuffer(response.body);
-				writeBinaryFile(ctx.getInput(io.path), data);
+				await window.electronAPI.fs.writeBinaryFile(ctx.getInput(io.path), Array.from(data));
 				ctx.setOutput(io.responseBody, None);
 			} else {
 				ctx.setOutput(

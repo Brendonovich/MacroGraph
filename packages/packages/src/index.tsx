@@ -32,6 +32,7 @@ export * as websocket from "./websocketClient";
 export * as websocketServer from "./websocketServer";
 export * as queue from "./queue";
 export * as functionQueue from "./functionQueue";
+export * as tiktok from "./tiktok";
 export * as variables from "./variables";
 export * as voicemod from "./voicemod";
 export * as functions from "./functions";

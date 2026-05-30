@@ -1043,6 +1043,36 @@ function createKeydownShortcuts(
 
 						break;
 					}
+					case "function": {
+						await ctx.execute("pasteFunction", { ...item.function, fnGraph: item.graph } as any);
+						const fnGraph = ctx.core.project.getGraphByKind(
+							"function",
+							item.graph.id,
+						);
+						if (fnGraph) ctx.selectGraphInGroup(target.groupId, fnGraph);
+
+						break;
+					}
+					case "queue": {
+						await ctx.execute("pasteQueue", { ...item.queue, queueGraph: item.graph } as any);
+						const queueGraph = ctx.core.project.getGraphByKind(
+							"queue",
+							item.graph.id,
+						);
+						if (queueGraph) ctx.selectGraphInGroup(target.groupId, queueGraph);
+
+						break;
+					}
+					case "functionQueue": {
+						await ctx.execute("pasteFunctionQueue", { ...item.functionQueue, fnQueueGraph: item.graph } as any);
+						const fnQueueGraph = ctx.core.project.getGraphByKind(
+							"functionQueue",
+							item.graph.id,
+						);
+						if (fnQueueGraph) ctx.selectGraphInGroup(target.groupId, fnQueueGraph);
+
+						break;
+					}
 				}
 
 				break;

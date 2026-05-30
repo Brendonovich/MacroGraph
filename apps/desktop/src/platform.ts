@@ -11,9 +11,6 @@ import {
 	serde,
 	serializeProject,
 } from "@macrograph/runtime-serde";
-import { ask, open, save } from "@tauri-apps/api/dialog";
-import { readText, writeText } from "@tauri-apps/api/clipboard";
-import { readTextFile, writeTextFile } from "@tauri-apps/api/fs";
 import type { Accessor, Setter } from "solid-js";
 
 export function createPlatform(props: {
@@ -27,7 +24,7 @@ export function createPlatform(props: {
 				let url = !saveAs ? props.projectUrl() : null;
 
 				if (url === null) {
-					url = await save({
+					url = await window.electronAPI.dialog.save({
 						defaultPath: "macrograph-project.json",
 						filters: [{ name: "JSON", extensions: ["json"] }],
 					});
@@ -45,7 +42,7 @@ export function createPlatform(props: {
 					wk,
 				).catch(() => []);
 
-				await writeTextFile(
+				await window.electronAPI.fs.writeTextFile(
 					url,
 					JSON.stringify(
 						{
@@ -61,10 +58,10 @@ export function createPlatform(props: {
 				await saveProjectToStorage(props.core.project, url);
 			},
 			async loadProject() {
-				if (await ask("Would you like to save this project?"))
+				if (await window.electronAPI.dialog.confirm("Would you like to save this project?"))
 					await this.saveProject();
 
-				const url = await open({
+				const url = await window.electronAPI.dialog.open({
 					filters: [{ name: "JSON", extensions: ["json"] }],
 					multiple: false,
 				});
@@ -72,7 +69,7 @@ export function createPlatform(props: {
 				if (typeof url !== "string") return;
 
 				const previousUrl = props.projectUrl();
-				const data = await readTextFile(url);
+				const data = await window.electronAPI.fs.readTextFile(url);
 				const serializedProject = parseJsonWithContext(
 					"apps/desktop platform.loadProject: project file from disk",
 					serde.Project,
@@ -108,10 +105,10 @@ export function createPlatform(props: {
 		},
 		clipboard: {
 			async readText() {
-				return (await readText()) ?? "";
+				return (await window.electronAPI.clipboard.readText()) ?? "";
 			},
 			async writeText(text: string) {
-				await writeText(text);
+				await window.electronAPI.clipboard.writeText(text);
 			},
 		},
 	} satisfies Platform;

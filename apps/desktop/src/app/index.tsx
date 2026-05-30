@@ -14,7 +14,6 @@ import {
 import "@macrograph/ui/global.css";
 import { createAsync, useAction } from "@solidjs/router";
 import { useQueryClient } from "@tanstack/solid-query";
-import { open as openURL } from "@tauri-apps/api/shell";
 import {
 	ErrorBoundary,
 	type ParentProps,
@@ -28,7 +27,6 @@ import { toast } from "solid-sonner";
 import { api, logOutAction, sessionToken, setSessionToken } from "../api";
 import { core } from "../core";
 import { env } from "../env";
-import { rspc } from "../rspc";
 
 export default function () {
 	return (
@@ -101,7 +99,7 @@ function UserDropdown(props: ParentProps<{ user: { email: string } }>) {
 							{...props}
 							class="w-full"
 							onClick={() =>
-								openURL(`${env.VITE_MACROGRAPH_API_URL}/credentials`)
+								window.electronAPI.shell.openExternal(`${env.VITE_MACROGRAPH_API_URL}/credentials`)
 							}
 						/>
 					)}
@@ -129,10 +127,7 @@ function LogInDialog(props: ParentProps) {
 		const sessionToken = await new Promise<string>((res, rej) => {
 			if (!open()) return;
 
-			rspc.createSubscription(() => ["loginListen"] as any, {
-				onData: res,
-				onError: rej,
-			});
+			window.electronAPI.loginListen().then(res).catch(rej);
 		});
 
 		setSessionToken(sessionToken);
@@ -174,7 +169,7 @@ function LogInDialog(props: ParentProps) {
 
 				<Button
 					onClick={() =>
-						openURL(`${env.VITE_MACROGRAPH_API_URL}?promptLogin=true`)
+						window.electronAPI.shell.openExternal(`${env.VITE_MACROGRAPH_API_URL}?promptLogin=true`)
 					}
 				>
 					Open MacroGraph Web

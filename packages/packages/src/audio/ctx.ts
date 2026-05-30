@@ -39,6 +39,7 @@ export function createCtx() {
 	}
 
 	createEffect(() => {
+		if (!navigator.mediaDevices) return;
 		refresh();
 		navigator.mediaDevices.addEventListener("devicechange", refresh);
 		return () =>

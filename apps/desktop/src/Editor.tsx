@@ -17,10 +17,7 @@ import {
 import * as pkgs from "@macrograph/packages";
 import { parseJsonWithContext, serde } from "@macrograph/runtime-serde";
 import { makePersisted } from "@solid-primitives/storage";
-import { open } from "@tauri-apps/api/dialog";
-import { convertFileSrc, invoke } from "@tauri-apps/api/tauri";
 import { Show, createSignal, onMount } from "solid-js";
-import "tauri-plugin-midi";
 
 import { Button } from "@macrograph/ui";
 import "./app.css";
@@ -54,29 +51,80 @@ const [audioDevices, setAudioDevices] = createSignal<
   Array<{ deviceId: string; label: string }>
 >([]);
 
-invoke<Array<{ device_id: string; label: string }>>(
-  "enumerate_audio_outputs",
-)
-  .then((devices) =>
-    setAudioDevices(devices.map((d) => ({ deviceId: d.device_id, label: d.label }))),
-  )
-  .catch(() => {});
+navigator.mediaDevices.enumerateDevices().then((devices) =>
+  setAudioDevices(
+    devices
+      .filter((d) => d.kind === "audiooutput")
+      .map((d) => ({ deviceId: d.deviceId, label: d.label })),
+  ),
+).catch(() => {});
+
+const audioCtx = new AudioContext();
+function ensureAudioCtx() {
+  if (audioCtx.state === "suspended") audioCtx.resume();
+}
+const audioPlayers = new Map<
+  string,
+  { source: AudioBufferSourceNode; gain: GainNode }
+>();
+let onAudioStopped: ((id: string) => void) | null = null;
 
 const audioBackend: pkgs.audio.AudioBackend = {
-  play: (path, deviceName) =>
-    invoke("play_audio", { path, deviceName }).then((r: any) => r.id),
-  stop: (id) => invoke("stop_audio", { id }),
-  setVolume: (id, volume) => invoke("set_audio_volume", { id, volume }),
-  stopAll: () => invoke("stop_all_audio"),
+  play: async (path, deviceName) => {
+    ensureAudioCtx();
+    const id = crypto.randomUUID();
+
+    const data = await window.electronAPI.fs.readBinaryFile(path);
+    const buffer = await audioCtx.decodeAudioData(
+      new Uint8Array(data).buffer,
+    );
+
+    if (deviceName && typeof (audioCtx as any).setSinkId === "function") {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const device = devices.find(
+        (d) => d.label === deviceName || d.deviceId === deviceName,
+      );
+      if (device) {
+        try {
+          await (audioCtx as any).setSinkId(device.deviceId);
+        } catch {}
+      }
+    }
+
+    const source = audioCtx.createBufferSource();
+    const gain = audioCtx.createGain();
+    source.buffer = buffer;
+    source.connect(gain);
+    gain.connect(audioCtx.destination);
+    source.start();
+    source.onended = () => {
+      audioPlayers.delete(id);
+      onAudioStopped?.(id);
+    };
+    audioPlayers.set(id, { source, gain });
+    return id;
+  },
+  stop: async (id) => {
+    const player = audioPlayers.get(id);
+    if (player) {
+      player.source.stop();
+      audioPlayers.delete(id);
+    }
+  },
+  setVolume: async (id, volume) => {
+    const player = audioPlayers.get(id);
+    if (player) player.gain.gain.value = volume;
+  },
+  stopAll: async () => {
+    for (const [, player] of audioPlayers) player.source.stop();
+    audioPlayers.clear();
+  },
   onStopped: {
     listen: (cb) => {
-      let unlisten: (() => void) | undefined;
-      import("@tauri-apps/api/event").then(({ listen }) => {
-        listen<string>("audio-stopped", (event) => {
-          cb(event.payload);
-        }).then((u) => { unlisten = u; });
-      });
-      return () => unlisten?.();
+      onAudioStopped = cb;
+      return () => {
+        onAudioStopped = null;
+      };
     },
   },
 };
@@ -88,7 +136,7 @@ const audioBackend: pkgs.audio.AudioBackend = {
       getDeviceName: () => config.audio.outputDeviceLabel,
       backend: audioBackend,
       selectFile: () =>
-        open({
+        window.electronAPI.dialog.open({
           filters: [
             {
               name: "Audio Files",
@@ -109,7 +157,6 @@ const audioBackend: pkgs.audio.AudioBackend = {
     }),
   pkgs.github.pkg,
   pkgs.goxlr.pkg,
-  // pkgs.google.pkg,
   pkgs.http.pkg,
   pkgs.json.pkg,
   pkgs.keyboard.pkg,
@@ -118,8 +165,6 @@ const audioBackend: pkgs.audio.AudioBackend = {
   pkgs.logic.pkg,
   pkgs.map.pkg,
   () => pkgs.obs.pkg({ obsNative: obsNativeBridge }),
-  // pkgs.patreon.pkg,
-  // pkgs.spotify.pkg,
   () => pkgs.streamdeck.pkg(wsProvider),
   pkgs.streamlabs.pkg,
   () =>
@@ -133,8 +178,9 @@ const audioBackend: pkgs.audio.AudioBackend = {
   pkgs.variables.pkg,
   pkgs.queue.pkg,
   pkgs.customEvents.pkg,
-  pkgs.speakerbot.pkg,
-  () => pkgs.websocketServer.pkg(wsProvider),
+	pkgs.speakerbot.pkg,
+	pkgs.tiktok.pkg,
+	() => pkgs.websocketServer.pkg(wsProvider),
   pkgs.globalKeyboardMouse.pkg,
   pkgs.midi.pkg,
   pkgs.elevenlabs.pkg,

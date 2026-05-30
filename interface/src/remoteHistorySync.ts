@@ -236,6 +236,7 @@ export type WireCursorPosition = {
 	graphId: number;
 	position: { x: number; y: number };
 	viewportCenter?: { x: number; y: number };
+	scale?: number;
 };
 
 export type RemoteCursor = WireCursorPosition;
@@ -400,14 +401,15 @@ export function parseCursorMessage(
 ): WireCursorPosition | null {
 	if (body.type !== "cursor") return null;
 	const id = typeof body.id === "string" ? body.id : null;
-	if (!id) return null;
+	if (typeof id !== "string") return null;
 	const graphId = parseWireNumber(body.graphId);
 	if (graphId == null) return null;
 	const graphKind = parseWireGraphKind(body.graphKind);
 	const position = parseWirePosition(body.position);
 	if (!position) return null;
 	const viewportCenter = parseWirePosition(body.viewportCenter);
-	return { id, graphKind, graphId, position, viewportCenter: viewportCenter ?? undefined };
+	const scale = typeof body.scale === "number" && body.scale > 0 ? body.scale : undefined;
+	return { id, graphKind, graphId, position, viewportCenter: viewportCenter ?? undefined, scale };
 }
 
 export function stringifyNodeExecuteWire(

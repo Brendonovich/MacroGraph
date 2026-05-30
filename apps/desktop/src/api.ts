@@ -2,12 +2,14 @@ import { contract } from "@macrograph/api-contract";
 import { makePersisted } from "@solid-primitives/storage";
 import { initClient } from "@ts-rest/core";
 import { initQueryClient } from "@ts-rest/solid-query";
+import { QueryClient } from "@tanstack/solid-query";
 import { createSignal } from "solid-js";
 
 import { action } from "@solidjs/router";
 import { env } from "./env";
 import { fetch } from "./http";
-import { queryClient } from "./rspc";
+
+export const queryClient = new QueryClient();
 
 async function readJsonBody(r: Response): Promise<unknown> {
 	const text = await r.text();
