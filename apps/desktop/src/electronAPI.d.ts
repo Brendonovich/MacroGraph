@@ -130,6 +130,17 @@ interface ElectronAPI {
 		getState(args: { target: string; addr: string; port: number }): Promise<LifxDevice | null>;
 		cleanup(): Promise<void>;
 	};
+	elgatoKeyLight: {
+		discover(manualAddr?: string): Promise<Array<{ id: string; name: string; addr: string; port: number }>>;
+		startObserving(): Promise<void>;
+		stopObserving(): Promise<void>;
+		getState(args: { addr: string; port: number }): Promise<{ numberOfLights: number; lights: Array<{ on: number; brightness: number; temperature: number }> }>;
+		setState(args: { addr: string; port: number; state: { on?: number; brightness?: number; temperature?: number } }): Promise<any>;
+		toggle(args: { addr: string; port: number }): Promise<any>;
+		incrBrightness(args: { addr: string; port: number; delta: number }): Promise<any>;
+		incrTemperature(args: { addr: string; port: number; delta: number }): Promise<any>;
+		cleanup(): Promise<void>;
+	};
 }
 
 interface Window {

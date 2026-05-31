@@ -27,6 +27,16 @@ import {
 	lifxCleanup,
 	type LifxDevice,
 } from "./lifx-lan";
+import {
+	elgatoDiscover,
+	elgatoGetState,
+	elgatoSetState,
+	elgatoToggle,
+	elgatoIncrBrightness,
+	elgatoIncrTemperature,
+	elgatoCleanup,
+	type ElgatoDevice,
+} from "./elgato-keylight";
 
 const DEV = process.env.NODE_ENV === "development" || process.argv.includes("--dev");
 const DEV_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:3000";
@@ -195,6 +205,7 @@ function registerIpcHandlers() {
 	registerTikTokHandlers();
 	registerIkeaHandlers();
 	registerLifxHandlers();
+	registerElgatoKeyLightHandlers();
 }
 
 // ── Platform (dialogs, clipboard, shell) ──────────────────────────────────────
@@ -1266,6 +1277,71 @@ function registerLifxHandlers() {
 			lifxState.discoverTimer = null;
 		}
 		await lifxCleanup();
+	});
+}
+
+// ── Elgato Key Light ────────────────────────────────────────────────────────────
+
+const elgatoKeyLightState: { devices: ElgatoDevice[]; discoverTimer: ReturnType<typeof setInterval> | null } = {
+	devices: [],
+	discoverTimer: null,
+};
+
+function registerElgatoKeyLightHandlers() {
+	ipcMain.handle("elgatoKeyLight:discover", async (_, manualAddr?: string) => {
+		try {
+			elgatoKeyLightState.devices = await elgatoDiscover(manualAddr);
+			sendToRenderer("elgatoKeyLight:deviceUpdate", elgatoKeyLightState.devices);
+			return elgatoKeyLightState.devices;
+		} catch (err: any) {
+			sendToRenderer("elgatoKeyLight:error", err.message ?? String(err));
+			throw err;
+		}
+	});
+
+	ipcMain.handle("elgatoKeyLight:startObserving", async () => {
+		if (elgatoKeyLightState.discoverTimer) clearInterval(elgatoKeyLightState.discoverTimer);
+		elgatoKeyLightState.discoverTimer = setInterval(async () => {
+			try {
+				elgatoKeyLightState.devices = await elgatoDiscover();
+				sendToRenderer("elgatoKeyLight:deviceUpdate", elgatoKeyLightState.devices);
+			} catch {}
+		}, 30000);
+	});
+
+	ipcMain.handle("elgatoKeyLight:stopObserving", async () => {
+		if (elgatoKeyLightState.discoverTimer) {
+			clearInterval(elgatoKeyLightState.discoverTimer);
+			elgatoKeyLightState.discoverTimer = null;
+		}
+	});
+
+	ipcMain.handle("elgatoKeyLight:getState", async (_, args: { addr: string; port: number }) => {
+		return await elgatoGetState(args.addr, args.port);
+	});
+
+	ipcMain.handle("elgatoKeyLight:setState", async (_, args: { addr: string; port: number; state: { on?: number; brightness?: number; temperature?: number } }) => {
+		return await elgatoSetState(args.addr, args.port, args.state);
+	});
+
+	ipcMain.handle("elgatoKeyLight:toggle", async (_, args: { addr: string; port: number }) => {
+		return await elgatoToggle(args.addr, args.port);
+	});
+
+	ipcMain.handle("elgatoKeyLight:incrBrightness", async (_, args: { addr: string; port: number; delta: number }) => {
+		return await elgatoIncrBrightness(args.addr, args.port, args.delta);
+	});
+
+	ipcMain.handle("elgatoKeyLight:incrTemperature", async (_, args: { addr: string; port: number; delta: number }) => {
+		return await elgatoIncrTemperature(args.addr, args.port, args.delta);
+	});
+
+	ipcMain.handle("elgatoKeyLight:cleanup", async () => {
+		if (elgatoKeyLightState.discoverTimer) {
+			clearInterval(elgatoKeyLightState.discoverTimer);
+			elgatoKeyLightState.discoverTimer = null;
+		}
+		elgatoCleanup();
 	});
 }
 

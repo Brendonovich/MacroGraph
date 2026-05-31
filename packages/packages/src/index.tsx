@@ -39,6 +39,7 @@ export * as functions from "./functions";
 export * as script from "./script";
 export * as ikea from "./ikea";
 export * as lifx from "./lifx";
+export * as elgatoKeyLight from "./elgatoKeyLight";
 
 export {
 	applyHostMirrorPayloadToCore,

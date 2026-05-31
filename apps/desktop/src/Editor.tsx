@@ -190,7 +190,8 @@ const audioBackend: pkgs.audio.AudioBackend = {
   pkgs.functionQueue.pkg,
   pkgs.script.pkg,
   pkgs.ikea.pkg,
-  pkgs.lifx.pkg,
+	pkgs.lifx.pkg,
+	pkgs.elgatoKeyLight.pkg,
 ].map((p) => core.registerPackage(p));
 
 export default function Editor() {

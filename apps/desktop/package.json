@@ -33,6 +33,7 @@
 		"coap-packet": "^1.1.1",
 		"express": "^5.2.1",
 		"form-data": "^4.0.5",
+		"multicast-dns": "^7.2.5",
 		"node-dtls-client": "^2.0.2",
 		"obs-websocket-js": "^5.0.5",
 		"solid-js": "^1.9.5",

@@ -147,4 +147,18 @@ contextBridge.exposeInMainWorld("electronAPI", {
 			ipcRenderer.invoke("lifx:getState", args),
 		cleanup: () => ipcRenderer.invoke("lifx:cleanup"),
 	},
+	elgatoKeyLight: {
+		discover: (manualAddr?: string) => ipcRenderer.invoke("elgatoKeyLight:discover", manualAddr),
+		startObserving: () => ipcRenderer.invoke("elgatoKeyLight:startObserving"),
+		stopObserving: () => ipcRenderer.invoke("elgatoKeyLight:stopObserving"),
+		getState: (args: { addr: string; port: number }) => ipcRenderer.invoke("elgatoKeyLight:getState", args),
+		setState: (args: { addr: string; port: number; state: { on?: number; brightness?: number; temperature?: number } }) =>
+			ipcRenderer.invoke("elgatoKeyLight:setState", args),
+		toggle: (args: { addr: string; port: number }) => ipcRenderer.invoke("elgatoKeyLight:toggle", args),
+		incrBrightness: (args: { addr: string; port: number; delta: number }) =>
+			ipcRenderer.invoke("elgatoKeyLight:incrBrightness", args),
+		incrTemperature: (args: { addr: string; port: number; delta: number }) =>
+			ipcRenderer.invoke("elgatoKeyLight:incrTemperature", args),
+		cleanup: () => ipcRenderer.invoke("elgatoKeyLight:cleanup"),
+	},
 });

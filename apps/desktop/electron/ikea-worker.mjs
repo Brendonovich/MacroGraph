@@ -188,7 +188,7 @@ process.stdin.on("data", async (data) => {
 				const c = req.lightCommand;
 				if (c.state !== undefined) p["3311"][0]["5850"] = c.state ? 1 : 0;
 				if (c.dimmer !== undefined) p["3311"][0]["5851"] = Math.max(0, Math.min(254, Math.round(c.dimmer)));
-				if (c.colorTemp !== undefined) p["3311"][0]["5711"] = c.colorTemp;
+				if (c.colorTemp !== undefined) p["3311"][0]["5711"] = kelvinToMireds(c.colorTemp);
 				if (c.hexColor !== undefined) p["3311"][0]["5706"] = c.hexColor.replace("#", "");
 				await coapReq(currentConn, "put", `15001/${req.deviceId}`, JSON.stringify(p));
 				sendMsg({ type: "success" });
@@ -221,6 +221,16 @@ process.stdin.on("data", async (data) => {
 	}
 });
 
+function miredsToKelvin(mireds) {
+	if (mireds === undefined || mireds === 0) return undefined;
+	return Math.round(1000000 / mireds);
+}
+
+function kelvinToMireds(kelvin) {
+	if (kelvin === undefined || kelvin === 0) return undefined;
+	return Math.round(1000000 / kelvin);
+}
+
 function parseDevice(id, raw) {
 	const data = JSON.parse(raw);
 	const tc = data["5750"] ?? -1;
@@ -229,7 +239,7 @@ function parseDevice(id, raw) {
 	const info = data["3"];
 	if (info) dev.deviceInfo = { manufacturer: info["0"] ?? "", modelNumber: info["1"] ?? "", firmwareVersion: info["3"] ?? "", batteryLevel: info["9"] };
 	const ls = data["3311"];
-	if (ls?.length > 0) dev.lightState = { on: ls[0]["5850"] === 1, brightness: ls[0]["5851"] ?? 0, colorTemp: ls[0]["5711"], hexColor: ls[0]["5706"] };
+	if (ls?.length > 0) dev.lightState = { on: ls[0]["5850"] === 1, brightness: ls[0]["5851"] ?? 0, colorTemp: miredsToKelvin(ls[0]["5711"]), hexColor: ls[0]["5706"] };
 	return dev;
 }
 

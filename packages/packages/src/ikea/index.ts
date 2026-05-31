@@ -48,12 +48,12 @@ export function pkg() {
 				}),
 				brightness: io.dataOutput({
 					id: "brightness",
-					name: "Brightness",
+					name: "Brightness (0-254)",
 					type: t.int(),
 				}),
 				colorTemp: io.dataOutput({
 					id: "colorTemp",
-					name: "Color Temp",
+					name: "Color Temp (Kelvin)",
 					type: t.int(),
 				}),
 				hexColor: io.dataOutput({
@@ -145,7 +145,7 @@ export function pkg() {
 			return {
 				colorTemp: io.dataInput({
 					id: "colorTemp",
-					name: "Color Temp (mireds)",
+					name: "Color Temp (Kelvin)",
 					type: t.int(),
 				}),
 			};

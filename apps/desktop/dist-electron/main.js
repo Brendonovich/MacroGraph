@@ -50,6 +50,7 @@ const form_data_1 = __importDefault(require("form-data"));
 const tiktok_live_connector_1 = require("tiktok-live-connector");
 const ikea_coap_1 = require("./ikea-coap");
 const lifx_lan_1 = require("./lifx-lan");
+const elgato_keylight_1 = require("./elgato-keylight");
 const DEV = process.env.NODE_ENV === "development" || process.argv.includes("--dev");
 const DEV_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:3000";
 const APP_VERSION = electron_1.app.getVersion() || "1.0.0";
@@ -205,6 +206,7 @@ function registerIpcHandlers() {
     registerTikTokHandlers();
     registerIkeaHandlers();
     registerLifxHandlers();
+    registerElgatoKeyLightHandlers();
 }
 // ── Platform (dialogs, clipboard, shell) ──────────────────────────────────────
 function registerPlatformHandlers() {
@@ -1189,6 +1191,63 @@ function registerLifxHandlers() {
             lifxState.discoverTimer = null;
         }
         await (0, lifx_lan_1.lifxCleanup)();
+    });
+}
+// ── Elgato Key Light ────────────────────────────────────────────────────────────
+const elgatoKeyLightState = {
+    devices: [],
+    discoverTimer: null,
+};
+function registerElgatoKeyLightHandlers() {
+    electron_1.ipcMain.handle("elgatoKeyLight:discover", async (_, manualAddr) => {
+        try {
+            elgatoKeyLightState.devices = await (0, elgato_keylight_1.elgatoDiscover)(manualAddr);
+            sendToRenderer("elgatoKeyLight:deviceUpdate", elgatoKeyLightState.devices);
+            return elgatoKeyLightState.devices;
+        }
+        catch (err) {
+            sendToRenderer("elgatoKeyLight:error", err.message ?? String(err));
+            throw err;
+        }
+    });
+    electron_1.ipcMain.handle("elgatoKeyLight:startObserving", async () => {
+        if (elgatoKeyLightState.discoverTimer)
+            clearInterval(elgatoKeyLightState.discoverTimer);
+        elgatoKeyLightState.discoverTimer = setInterval(async () => {
+            try {
+                elgatoKeyLightState.devices = await (0, elgato_keylight_1.elgatoDiscover)();
+                sendToRenderer("elgatoKeyLight:deviceUpdate", elgatoKeyLightState.devices);
+            }
+            catch { }
+        }, 30000);
+    });
+    electron_1.ipcMain.handle("elgatoKeyLight:stopObserving", async () => {
+        if (elgatoKeyLightState.discoverTimer) {
+            clearInterval(elgatoKeyLightState.discoverTimer);
+            elgatoKeyLightState.discoverTimer = null;
+        }
+    });
+    electron_1.ipcMain.handle("elgatoKeyLight:getState", async (_, args) => {
+        return await (0, elgato_keylight_1.elgatoGetState)(args.addr, args.port);
+    });
+    electron_1.ipcMain.handle("elgatoKeyLight:setState", async (_, args) => {
+        return await (0, elgato_keylight_1.elgatoSetState)(args.addr, args.port, args.state);
+    });
+    electron_1.ipcMain.handle("elgatoKeyLight:toggle", async (_, args) => {
+        return await (0, elgato_keylight_1.elgatoToggle)(args.addr, args.port);
+    });
+    electron_1.ipcMain.handle("elgatoKeyLight:incrBrightness", async (_, args) => {
+        return await (0, elgato_keylight_1.elgatoIncrBrightness)(args.addr, args.port, args.delta);
+    });
+    electron_1.ipcMain.handle("elgatoKeyLight:incrTemperature", async (_, args) => {
+        return await (0, elgato_keylight_1.elgatoIncrTemperature)(args.addr, args.port, args.delta);
+    });
+    electron_1.ipcMain.handle("elgatoKeyLight:cleanup", async () => {
+        if (elgatoKeyLightState.discoverTimer) {
+            clearInterval(elgatoKeyLightState.discoverTimer);
+            elgatoKeyLightState.discoverTimer = null;
+        }
+        (0, elgato_keylight_1.elgatoCleanup)();
     });
 }
 const tikTokConnections = new Map();
