@@ -14,7 +14,7 @@ export function sanitizeFilePath(path: string): string {
 		.replace(WHITESPACE, "")
 		.replace(/^["']+|["']+$/g, "");
 
-	// Windows drive paths: use backslashes (both work on OS, keeps Tauri/Rust consistent)
+	// Windows drive paths: use backslashes (both work on OS, keeps cross-platform consistent)
 	if (WINDOWS_DRIVE_PATH.test(p)) {
 		p = p.replace(/\//g, "\\");
 	}

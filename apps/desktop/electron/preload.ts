@@ -135,4 +135,16 @@ contextBridge.exposeInMainWorld("electronAPI", {
 		stopObserving: (host: string) =>
 			ipcRenderer.invoke("ikea:stopObserving", { host, deviceId: 0 }),
 	},
+	lifx: {
+		discover: (manualAddr?: string) => ipcRenderer.invoke("lifx:discover", manualAddr),
+		startObserving: () => ipcRenderer.invoke("lifx:startObserving"),
+		stopObserving: () => ipcRenderer.invoke("lifx:stopObserving"),
+		setPower: (args: { target: string; addr: string; port: number; level: boolean; duration: number }) =>
+			ipcRenderer.invoke("lifx:setPower", args),
+		setColor: (args: { target: string; addr: string; port: number; color: { hue?: number; saturation?: number; brightness?: number; kelvin?: number }; duration: number }) =>
+			ipcRenderer.invoke("lifx:setColor", args),
+		getState: (args: { target: string; addr: string; port: number }) =>
+			ipcRenderer.invoke("lifx:getState", args),
+		cleanup: () => ipcRenderer.invoke("lifx:cleanup"),
+	},
 });

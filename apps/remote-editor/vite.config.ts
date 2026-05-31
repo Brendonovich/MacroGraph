@@ -40,7 +40,7 @@ export default defineConfig({
 		postcss: path.join(__dirname, "postcss.config.js"),
 	},
 	build: {
-		outDir: path.resolve(__dirname, "../desktop/src-tauri/remote-public"),
+		outDir: path.resolve(__dirname, "../desktop/remote-public"),
 		emptyOutDir: true,
 	},
 });

@@ -49,6 +49,7 @@ const child_process_1 = require("child_process");
 const form_data_1 = __importDefault(require("form-data"));
 const tiktok_live_connector_1 = require("tiktok-live-connector");
 const ikea_coap_1 = require("./ikea-coap");
+const lifx_lan_1 = require("./lifx-lan");
 const DEV = process.env.NODE_ENV === "development" || process.argv.includes("--dev");
 const DEV_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:3000";
 const APP_VERSION = electron_1.app.getVersion() || "1.0.0";
@@ -203,6 +204,7 @@ function registerIpcHandlers() {
     registerHttpHandlers();
     registerTikTokHandlers();
     registerIkeaHandlers();
+    registerLifxHandlers();
 }
 // ── Platform (dialogs, clipboard, shell) ──────────────────────────────────────
 function registerPlatformHandlers() {
@@ -1131,12 +1133,62 @@ function registerIkeaHandlers() {
     });
     electron_1.ipcMain.handle("ikea:startObserving", async (_, { host, deviceId }) => {
         await (0, ikea_coap_1.ikeaStartObserving)(host, deviceId, (device) => {
-            console.log(`[IKEA] forwarding deviceUpdate to renderer: ${device.name} on=${device.lightState?.on} brightness=${device.lightState?.brightness}`);
             sendToRenderer("ikea:deviceUpdate", [host, device]);
         });
     });
     electron_1.ipcMain.handle("ikea:stopObserving", async (_, { host, deviceId }) => {
         await (0, ikea_coap_1.ikeaStopObserving)(host, deviceId);
+    });
+}
+// ── LIFX LAN ───────────────────────────────────────────────────────────────────
+const lifxState = {
+    bulbs: [],
+    discoverTimer: null,
+};
+function registerLifxHandlers() {
+    electron_1.ipcMain.handle("lifx:discover", async (_, manualAddr) => {
+        try {
+            lifxState.bulbs = await (0, lifx_lan_1.lifxDiscover)(manualAddr);
+            sendToRenderer("lifx:deviceUpdate", lifxState.bulbs);
+            return lifxState.bulbs;
+        }
+        catch (err) {
+            sendToRenderer("lifx:error", err.message ?? String(err));
+            throw err;
+        }
+    });
+    electron_1.ipcMain.handle("lifx:startObserving", async () => {
+        if (lifxState.discoverTimer)
+            clearInterval(lifxState.discoverTimer);
+        lifxState.discoverTimer = setInterval(async () => {
+            try {
+                lifxState.bulbs = await (0, lifx_lan_1.lifxDiscover)();
+                sendToRenderer("lifx:deviceUpdate", lifxState.bulbs);
+            }
+            catch { }
+        }, 10000);
+    });
+    electron_1.ipcMain.handle("lifx:stopObserving", async () => {
+        if (lifxState.discoverTimer) {
+            clearInterval(lifxState.discoverTimer);
+            lifxState.discoverTimer = null;
+        }
+    });
+    electron_1.ipcMain.handle("lifx:setPower", async (_, args) => {
+        await (0, lifx_lan_1.lifxSetPower)(args.target, args.addr, args.port, args.level, args.duration);
+    });
+    electron_1.ipcMain.handle("lifx:setColor", async (_, args) => {
+        await (0, lifx_lan_1.lifxSetColor)(args.target, args.addr, args.port, args.color, args.duration);
+    });
+    electron_1.ipcMain.handle("lifx:getState", async (_, args) => {
+        return await (0, lifx_lan_1.lifxGetState)(args.target, args.addr, args.port);
+    });
+    electron_1.ipcMain.handle("lifx:cleanup", async () => {
+        if (lifxState.discoverTimer) {
+            clearInterval(lifxState.discoverTimer);
+            lifxState.discoverTimer = null;
+        }
+        await (0, lifx_lan_1.lifxCleanup)();
     });
 }
 const tikTokConnections = new Map();

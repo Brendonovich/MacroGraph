@@ -57,31 +57,28 @@ function coapReq(s, method, path, payload) {
 }
 
 function sendMsg(msg) {
-	const str = JSON.stringify(msg);
-	process.stdout.write(str + "\n");
-	process.stderr.write("[IKEA Worker] sent: " + str.substring(0, 200) + "\n");
+	process.stdout.write(JSON.stringify(msg) + "\n");
 }
 
 const OBSERVE_TOKEN_PREFIX = 0xFD;
 let observeTokens = {}; // token hex string -> deviceId
 let observedDeviceIds = new Set();
 let observeAttached = false;
+let fallbackPollTimer = null;
+let lastFallbackStates = {};
 
 function attachObserveListener(s) {
 	if (observeAttached) return;
 	observeAttached = true;
-	process.stderr.write("[IKEA Worker] attaching observe listener\n");
 	s.on("message", (msg) => {
 		try {
 			const p = coap.parse(msg);
-			process.stderr.write("[IKEA Worker] got message token=" + (p.token ? p.token.toString("hex") : "none") + " code=" + p.code + "\n");
 			if (!p.token || p.token[0] !== OBSERVE_TOKEN_PREFIX) return;
 			const key = p.token.toString("hex");
 			const deviceId = observeTokens[key];
 			if (deviceId === undefined) return;
 			const raw = p.payload?.toString();
 			if (!raw) return;
-			process.stderr.write("[IKEA Worker] observe notification for device " + deviceId + "\n");
 			if (deviceId === -1) {
 				const ids = JSON.parse(raw);
 				for (const id of ids) {
@@ -94,9 +91,7 @@ function attachObserveListener(s) {
 				const device = parseDevice(deviceId, raw);
 				sendMsg({ type: "device_update", device_id: deviceId, device });
 			}
-		} catch (e) {
-			process.stderr.write("[IKEA Worker] observe error: " + e.message + "\n");
-		}
+		} catch {}
 	});
 }
 
@@ -108,29 +103,47 @@ function observeOneDevice(s, deviceId) {
 	const buf = coapGenerate("get", `15001/${deviceId}`, null, token, [
 		{ name: "Observe", value: Buffer.from([0]) },
 	]);
-	process.stderr.write("[IKEA Worker] observing device " + deviceId + "\n");
 	s.send(buf);
 }
 
+async function pollDevices(s) {
+	try {
+		const raw = await coapReq(s, "get", "15001");
+		const ids = JSON.parse(raw);
+		for (const id of ids) {
+			try {
+				const d = await coapReq(s, "get", `15001/${id}`);
+				const device = parseDevice(id, d);
+				const key = String(id);
+				const prev = JSON.stringify(lastFallbackStates[key]);
+				const curr = JSON.stringify(device);
+				if (prev !== curr) {
+					lastFallbackStates[key] = device;
+					sendMsg({ type: "device_update", device_id: id, device });
+				}
+			} catch {}
+		}
+	} catch {}
+}
+
 async function observeAllDevices(s) {
-	process.stderr.write("[IKEA Worker] starting observe all\n");
 	const raw = await coapReq(s, "get", "15001");
 	const ids = JSON.parse(raw);
-	process.stderr.write("[IKEA Worker] got " + ids.length + " device ids\n");
-	// Observe device list for new devices
 	const listToken = Buffer.from([OBSERVE_TOKEN_PREFIX, 0xFF, 0xFF]);
 	observeTokens[listToken.toString("hex")] = -1;
 	const listBuf = coapGenerate("get", "15001", null, listToken, [
 		{ name: "Observe", value: Buffer.from([0]) },
 	]);
 	s.send(listBuf);
-	process.stderr.write("[IKEA Worker] observing device list\n");
-	// Observe each device
+	// Seed fallback states and observe each device
+	lastFallbackStates = {};
 	for (const id of ids) {
 		observedDeviceIds.add(id);
 		observeOneDevice(s, id);
 	}
-	process.stderr.write("[IKEA Worker] observe all done\n");
+	// Fallback poll every 30s in case Observe misses reconnections
+	if (fallbackPollTimer) clearInterval(fallbackPollTimer);
+	fallbackPollTimer = setInterval(() => pollDevices(s), 10000);
 }
 
 process.stdin.on("data", async (data) => {
@@ -186,13 +199,17 @@ process.stdin.on("data", async (data) => {
 				sendMsg({ type: "observing_started" });
 			}
 			else if (cmd === "stop_observing") {
+				if (fallbackPollTimer) { clearInterval(fallbackPollTimer); fallbackPollTimer = null; }
 				observeTokens = {};
 				observedDeviceIds = new Set();
+				lastFallbackStates = {};
 				sendMsg({ type: "observing_stopped" });
 			}
 			else if (cmd === "disconnect") {
+				if (fallbackPollTimer) { clearInterval(fallbackPollTimer); fallbackPollTimer = null; }
 				observeTokens = {};
 				observedDeviceIds = new Set();
+				lastFallbackStates = {};
 				observeAttached = false;
 				if (currentConn) { try { currentConn.close(); } catch {} currentConn = null; }
 				sendMsg({ type: "disconnected" });

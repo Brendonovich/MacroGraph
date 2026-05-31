@@ -298,3 +298,223 @@ TypeError: bridge.getDevice is not a function
 [1780219241] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780218773)
 [1780219241] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
 [1780219272] [pagehide] webview pagehide (possible shutdown)
+[1780219751] [pagehide] webview pagehide (possible shutdown)
+[1780219766] [pagehide] webview pagehide (possible shutdown)
+[1780219802] [pagehide] webview pagehide (possible shutdown)
+[1780219840] [pagehide] webview pagehide (possible shutdown)
+[1780219854] [pagehide] webview pagehide (possible shutdown)
+[1780219887] [pagehide] webview pagehide (possible shutdown)
+[1780220155] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780219241)
+[1780220155] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780221076] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780220155)
+[1780221076] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780221091] [pagehide] webview pagehide (possible shutdown)
+[1780221568] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780221076)
+[1780221568] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780221773] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780221568)
+[1780221773] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780221881] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780221773)
+[1780221881] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780222351] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780221881)
+[1780222351] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780222738] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780222351)
+[1780222738] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780222881] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780222738)
+[1780222881] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780223328] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780222881)
+[1780223328] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780223381] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780223328)
+[1780223381] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780223398] [pagehide] webview pagehide (possible shutdown)
+[1780223416] [exit] window-all-closed
+[1780223416] [exit] application Exit
+[1780223541] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780223648] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780223541)
+[1780223648] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780223687] [pagehide] webview pagehide (possible shutdown)
+[1780223764] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780223648)
+[1780223764] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780223813] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780223764)
+[1780223813] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780224155] [pagehide] webview pagehide (possible shutdown)
+[1780224158] [pagehide] webview pagehide (possible shutdown)
+[1780224196] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780223813)
+[1780224196] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780224214] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224214] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224214] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224214] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224275] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780224196)
+[1780224275] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780224284] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224284] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224284] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224284] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224294] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224294] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224294] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224294] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224329] [pagehide] webview pagehide (possible shutdown)
+[1780224329] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224329] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224329] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224329] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:155:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224464] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780224275)
+[1780224464] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780224472] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:183:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224472] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:183:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224472] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:183:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224472] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/lifx/index.ts:183:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780224552] [pagehide] webview pagehide (possible shutdown)
+[1780224552] [exit] window-all-closed
+[1780224552] [exit] application Exit
+[1780224552] [panic] Error: No main window
+Error: No main window
+    at getWindow (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:181:15)
+    at sendToRenderer (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:185:17)
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:305:17)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)

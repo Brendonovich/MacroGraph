@@ -108,5 +108,14 @@ electron_1.contextBridge.exposeInMainWorld("electronAPI", {
         startObserving: (host) => electron_1.ipcRenderer.invoke("ikea:startObserving", { host, deviceId: 0 }),
         stopObserving: (host) => electron_1.ipcRenderer.invoke("ikea:stopObserving", { host, deviceId: 0 }),
     },
+    lifx: {
+        discover: (manualAddr) => electron_1.ipcRenderer.invoke("lifx:discover", manualAddr),
+        startObserving: () => electron_1.ipcRenderer.invoke("lifx:startObserving"),
+        stopObserving: () => electron_1.ipcRenderer.invoke("lifx:stopObserving"),
+        setPower: (args) => electron_1.ipcRenderer.invoke("lifx:setPower", args),
+        setColor: (args) => electron_1.ipcRenderer.invoke("lifx:setColor", args),
+        getState: (args) => electron_1.ipcRenderer.invoke("lifx:getState", args),
+        cleanup: () => electron_1.ipcRenderer.invoke("lifx:cleanup"),
+    },
 });
 //# sourceMappingURL=preload.js.map

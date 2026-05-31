@@ -29,8 +29,8 @@ This graph shows a simple Twitch resubscription checkking if its tier 3 and then
 
 ## Running
 
-1. Make sure you have [Tauri](https://tauri.app/v1/guides/getting-started/prerequisites) and [pnpm](https://pnpm.io/) setup.
+1. Make sure you have [Node.js](https://nodejs.org/) and [pnpm](https://pnpm.io/) setup.
 2. Run `pnpm install`
-3. Run `pnpm desktop tauri dev`
+3. Run `pnpm desktop dev`
 
 [Figma Designs](https://www.figma.com/file/VO7zmohUtZSqC1eIyGUuN3/MacroGraph-Designs?node-id=0%3A1&t=FfCvKUpKsLp5b0ST-1)

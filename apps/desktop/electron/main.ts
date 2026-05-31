@@ -19,6 +19,14 @@ import {
 	ikeaStartObserving,
 	ikeaStopObserving,
 } from "./ikea-coap";
+import {
+	lifxDiscover,
+	lifxSetPower,
+	lifxSetColor,
+	lifxGetState,
+	lifxCleanup,
+	type LifxDevice,
+} from "./lifx-lan";
 
 const DEV = process.env.NODE_ENV === "development" || process.argv.includes("--dev");
 const DEV_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:3000";
@@ -186,6 +194,7 @@ function registerIpcHandlers() {
 	registerHttpHandlers();
 	registerTikTokHandlers();
 	registerIkeaHandlers();
+	registerLifxHandlers();
 }
 
 // ── Platform (dialogs, clipboard, shell) ──────────────────────────────────────
@@ -1194,13 +1203,69 @@ function registerIkeaHandlers() {
 
 	ipcMain.handle("ikea:startObserving", async (_, { host, deviceId }: { host: string; deviceId: number }) => {
 		await ikeaStartObserving(host, deviceId, (device) => {
-			console.log(`[IKEA] forwarding deviceUpdate to renderer: ${device.name} on=${device.lightState?.on} brightness=${device.lightState?.brightness}`);
 			sendToRenderer("ikea:deviceUpdate", [host, device]);
 		});
 	});
 
 	ipcMain.handle("ikea:stopObserving", async (_, { host, deviceId }: { host: string; deviceId: number }) => {
 		await ikeaStopObserving(host, deviceId);
+	});
+}
+
+// ── LIFX LAN ───────────────────────────────────────────────────────────────────
+
+const lifxState: { bulbs: LifxDevice[]; discoverTimer: ReturnType<typeof setInterval> | null } = {
+	bulbs: [],
+	discoverTimer: null,
+};
+
+function registerLifxHandlers() {
+	ipcMain.handle("lifx:discover", async (_, manualAddr?: string) => {
+		try {
+			lifxState.bulbs = await lifxDiscover(manualAddr);
+			sendToRenderer("lifx:deviceUpdate", lifxState.bulbs);
+			return lifxState.bulbs;
+		} catch (err: any) {
+			sendToRenderer("lifx:error", err.message ?? String(err));
+			throw err;
+		}
+	});
+
+	ipcMain.handle("lifx:startObserving", async () => {
+		if (lifxState.discoverTimer) clearInterval(lifxState.discoverTimer);
+		lifxState.discoverTimer = setInterval(async () => {
+			try {
+				lifxState.bulbs = await lifxDiscover();
+				sendToRenderer("lifx:deviceUpdate", lifxState.bulbs);
+			} catch {}
+		}, 10000);
+	});
+
+	ipcMain.handle("lifx:stopObserving", async () => {
+		if (lifxState.discoverTimer) {
+			clearInterval(lifxState.discoverTimer);
+			lifxState.discoverTimer = null;
+		}
+	});
+
+	ipcMain.handle("lifx:setPower", async (_, args: { target: string; addr: string; port: number; level: boolean; duration: number }) => {
+		await lifxSetPower(args.target, args.addr, args.port, args.level, args.duration);
+	});
+
+	ipcMain.handle("lifx:setColor", async (_, args: { target: string; addr: string; port: number; color: { hue?: number; saturation?: number; brightness?: number; kelvin?: number }; duration: number }) => {
+		await lifxSetColor(args.target, args.addr, args.port, args.color, args.duration);
+	});
+
+	ipcMain.handle("lifx:getState", async (_, args: { target: string; addr: string; port: number }) => {
+		return await lifxGetState(args.target, args.addr, args.port);
+	});
+
+	ipcMain.handle("lifx:cleanup", async () => {
+		if (lifxState.discoverTimer) {
+			clearInterval(lifxState.discoverTimer);
+			lifxState.discoverTimer = null;
+		}
+		await lifxCleanup();
 	});
 }
 

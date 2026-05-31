@@ -1,53 +1,40 @@
-interface DownloadOptionConfig {
-	tauriTarget: TauriTarget;
-}
-
-type TauriTarget =
+export type DownloadTarget =
 	| "windows-x86_64"
 	| "darwin-aarch64"
 	| "darwin-x86_64"
-	| "linux-x86_64";
+	| "linux-x86_64-AppImage"
+	| "linux-x86_64-deb";
 
-const DownloadOptions = {
-	"windows-x86_64": { tauriTarget: "windows-x86_64" },
-	"darwin-aarch64": { tauriTarget: "darwin-aarch64" },
-	"darwin-x86_64": { tauriTarget: "darwin-x86_64" },
-	"linux-x86_64-AppImage": { tauriTarget: "linux-x86_64" },
-	"linux-x86_64-deb": { tauriTarget: "linux-x86_64" },
-} satisfies Record<string, DownloadOptionConfig>;
-
-export type DownloadTarget = keyof typeof DownloadOptions;
-
-const AssetNames = {
-	"windows-x86_64": (v) => `MacroGraph_${v}_x64_en-US.msi`,
+const AssetNames: Record<DownloadTarget, (v: string) => string> = {
+	"windows-x86_64": (v) => `MacroGraph_${v}_x64.exe`,
 	"darwin-aarch64": (v) => `MacroGraph_${v}_aarch64.dmg`,
 	"darwin-x86_64": (v) => `MacroGraph_${v}_x64.dmg`,
 	"linux-x86_64-AppImage": (v) => `macro-graph_${v}_amd64.AppImage`,
 	"linux-x86_64-deb": (v) => `macro-graph_${v}_amd64.deb`,
-} satisfies Record<DownloadTarget, (version: string) => string>;
+};
+
+const GH_OWNER = "macrograph";
+const GH_REPO = "macrograph";
 
 export async function getLatestVersion() {
 	"use server";
 
 	const res = await fetch(
-		"https://cdn.crabnebula.app/update/macrograph/macrograph/darwin-aarch64/latest",
+		`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/releases/latest`,
+		{ next: { revalidate: 300 } },
 	);
 
-	const { version } = (await res.json()) as { version: string };
+	const { tag_name } = (await res.json()) as { tag_name: string };
 
-	return version;
+	return tag_name;
 }
 
 export async function getDownloadURL(target: DownloadTarget) {
 	"use server";
 
-	const res = await fetch(
-		`https://cdn.crabnebula.app/update/macrograph/macrograph/${DownloadOptions[target].tauriTarget}/latest`,
-	);
+	const version = await getLatestVersion();
 
-	const { version } = (await res.json()) as { version: string };
+	const filename = AssetNames[target](version);
 
-	return `https://cdn.crabnebula.app/download/macrograph/macrograph/latest/${AssetNames[
-		target
-	](version)}`;
+	return `https://github.com/${GH_OWNER}/${GH_REPO}/releases/download/${version}/${filename}`;
 }

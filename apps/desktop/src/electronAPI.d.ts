@@ -6,6 +6,18 @@ interface TikTokConnectionState {
 	error: string | null;
 }
 
+interface LifxDevice {
+	id: string;
+	addr: string;
+	port: number;
+	label: string;
+	power: number;
+	hue: number;
+	saturation: number;
+	brightness: number;
+	kelvin: number;
+}
+
 interface ElectronAPI {
 	platform: {
 		saveProject(data: string, path: string): Promise<void>;
@@ -99,6 +111,24 @@ interface ElectronAPI {
 	onEvent(channel: string, callback: (...args: any[]) => void): () => void;
 	path: {
 		convertFileSrc(path: string): Promise<string>;
+	};
+	ikea: {
+		connect(host: string, securityCode: string): Promise<{ identity: string; psk: string; devices: any[] }>;
+		disconnect(host: string): Promise<void>;
+		listDevices(host: string): Promise<any[]>;
+		getDevice(host: string, deviceId: number): Promise<any>;
+		controlLight(host: string, deviceId: number, command: any): Promise<void>;
+		startObserving(host: string): Promise<void>;
+		stopObserving(host: string): Promise<void>;
+	};
+	lifx: {
+		discover(manualAddr?: string): Promise<LifxDevice[]>;
+		startObserving(): Promise<void>;
+		stopObserving(): Promise<void>;
+		setPower(args: { target: string; addr: string; port: number; level: boolean; duration: number }): Promise<void>;
+		setColor(args: { target: string; addr: string; port: number; color: { hue?: number; saturation?: number; brightness?: number; kelvin?: number }; duration: number }): Promise<void>;
+		getState(args: { target: string; addr: string; port: number }): Promise<LifxDevice | null>;
+		cleanup(): Promise<void>;
 	};
 }
 

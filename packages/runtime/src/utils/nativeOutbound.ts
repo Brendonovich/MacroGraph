@@ -1,4 +1,4 @@
-/** Desktop (Tauri) native WebSocket bridges — no browser mixed-content limits on `ws://`. */
+/** Desktop native WebSocket bridges — no browser mixed-content limits on `ws://`. */
 
 export type ObsNativeBridge = {
 	connect(args: {

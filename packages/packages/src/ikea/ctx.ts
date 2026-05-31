@@ -60,14 +60,12 @@ export function createCtx(onEvent: OnEvent<Events>) {
 			"ikea:deviceUpdate",
 			([eventHost, device]: [string, IkeaDevice]) => {
 				if (eventHost !== h.unwrap()) return;
-				console.log("[IKEA] deviceUpdate received:", device.name, "on:", device.lightState?.on, "brightness:", device.lightState?.brightness);
 				setDevices((prev) => {
 					const next = new Map(prev);
 					next.set(device.id, device);
 					return next;
 				});
 				if (device.deviceType === "light" && device.lightState) {
-					console.log("[IKEA] emitting lightStateChanged event");
 					onEvent({
 						name: "lightStateChanged",
 						data: {
@@ -96,7 +94,7 @@ export function createCtx(onEvent: OnEvent<Events>) {
 			setState({ type: "connected", host: h.unwrap() });
 			const deviceList: IkeaDevice[] = result.devices ?? [];
 			setDevices(new Map(deviceList.map((d: IkeaDevice) => [d.id, d])));
-			bridge.startObserving(h.unwrap()).then(() => console.log("[IKEA] startObserving succeeded")).catch((e) => console.log("[IKEA] startObserving failed:", e));
+			bridge.startObserving(h.unwrap()).catch(() => {});
 			localStorage.setItem("ikea-was-connected", "true");
 		} catch (err: any) {
 			setState({

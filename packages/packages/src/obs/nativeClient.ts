@@ -2,7 +2,7 @@ import type { ObsNativeBridge } from "@macrograph/runtime";
 import EventEmitter from "eventemitter3";
 import type { EventTypes } from "obs-websocket-js";
 
-/** Drop-in replacement for `obs-websocket-js` `OBS` when using the Tauri native bridge. */
+/** Drop-in replacement for `obs-websocket-js` `OBS` for the native Electron bridge. */
 export class NativeObsClient extends EventEmitter<EventTypes> {
 	constructor(
 		private bridge: ObsNativeBridge,
