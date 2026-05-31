@@ -99,5 +99,14 @@ electron_1.contextBridge.exposeInMainWorld("electronAPI", {
     path: {
         convertFileSrc: (path) => electron_1.ipcRenderer.invoke("path:convertFileSrc", path),
     },
+    ikea: {
+        connect: (host, securityCode) => electron_1.ipcRenderer.invoke("ikea:connect", { host, securityCode }),
+        disconnect: (host) => electron_1.ipcRenderer.invoke("ikea:disconnect", host),
+        listDevices: (host) => electron_1.ipcRenderer.invoke("ikea:listDevices", host),
+        getDevice: (host, deviceId) => electron_1.ipcRenderer.invoke("ikea:getDevice", { host, deviceId }),
+        controlLight: (host, deviceId, command) => electron_1.ipcRenderer.invoke("ikea:controlLight", { host, deviceId, command }),
+        startObserving: (host) => electron_1.ipcRenderer.invoke("ikea:startObserving", { host, deviceId: 0 }),
+        stopObserving: (host) => electron_1.ipcRenderer.invoke("ikea:stopObserving", { host, deviceId: 0 }),
+    },
 });
 //# sourceMappingURL=preload.js.map

@@ -193,3 +193,108 @@ Error: No main window
     at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:1360:15)
     at Socket.emit (node:events:509:28)
     at TCP.<anonymous> (node:net:350:12)
+[1780212704] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780212710] [pagehide] webview pagehide (possible shutdown)
+[1780212722] [pagehide] webview pagehide (possible shutdown)
+[1780212895] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780212704)
+[1780212895] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780212907] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780212895)
+[1780212907] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780213015] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780212907)
+[1780213015] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780213655] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780213015)
+[1780213655] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780213945] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780213655)
+[1780213945] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780215512] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780213945)
+[1780215512] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780215884] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780215512)
+[1780215884] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780215958] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780215884)
+[1780215958] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780215988] [exit] window-all-closed
+[1780215988] [exit] application Exit
+[1780216064] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780216081] [exit] window-all-closed
+[1780216081] [exit] application Exit
+[1780216266] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780216272] [pagehide] webview pagehide (possible shutdown)
+[1780216285] [pagehide] webview pagehide (possible shutdown)
+[1780216300] [exit] window-all-closed
+[1780216300] [exit] application Exit
+[1780216466] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780216821] [pagehide] webview pagehide (possible shutdown)
+[1780216907] [pagehide] webview pagehide (possible shutdown)
+[1780216949] [unhandled rejection] Error: Error invoking remote method 'http:fetchSend': AggregateError
+Error: Error invoking remote method 'http:fetchSend': AggregateError
+[1780217320] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780216466)
+[1780217320] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780217329] [ikea] Connecting to 192.168.0.125...
+[1780217329] [ikea] Connected, found 5 device(s): table Bulb 2 (light), couch back (light), bedroom (light), Remote control (remote), tv (light)
+[1780217567] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780217320)
+[1780217567] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780217576] [ikea] Connecting to 192.168.0.125...
+[1780217576] [ikea] Connected, found 5 device(s): table Bulb 2 (light), couch back (light), bedroom (light), Remote control (remote), tv (light)
+[1780217633] [ikea] Connecting to 192.168.0.125...
+[1780217633] [ikea] Error: Worker exited with code null
+[1780217633] [ikea] Connect error: Error invoking remote method 'ikea:connect': Error: Worker exited with code null
+[1780217646] [pagehide] webview pagehide (possible shutdown)
+[1780217646] [ikea] Connecting to 192.168.0.125...
+[1780217646] [ikea] Connected, found 5 device(s): table Bulb 2 (light), couch back (light), bedroom (light), Remote control (remote), tv (light)
+[1780217746] [ikea] Connecting to 192.168.0.125...
+[1780217746] [ikea] Connect error: Error invoking remote method 'ikea:connect': Error: Worker exited with code null
+[1780217746] [ikea] Error: Worker exited with code null
+[1780217911] [pagehide] webview pagehide (possible shutdown)
+[1780217911] [ikea] Connecting to 192.168.0.125...
+[1780217911] [ikea] Connected, found 5 device(s): table Bulb 2 (light), couch back (light), bedroom (light), Remote control (remote), tv (light)
+[1780217959] [pagehide] webview pagehide (possible shutdown)
+[1780218037] [error] unhandledRejection: AggregateError
+[1780218037] [unhandled rejection] Error: Error invoking remote method 'http:fetchSend': AggregateError
+Error: Error invoking remote method 'http:fetchSend': AggregateError
+[1780218041] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/ikea/index.ts?t=1780218023334:285:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780218043] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/ikea/index.ts?t=1780218023334:285:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780218044] [unhandled rejection] Error: No light selected
+Error: No light selected
+    at Option.expect (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:58:11)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/ikea/index.ts?t=1780218023334:285:59)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780218056] [pagehide] webview pagehide (possible shutdown)
+[1780218060] [unhandled rejection] TypeError: bridge.getDevice is not a function
+TypeError: bridge.getDevice is not a function
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/packages/src/ikea/index.ts?t=1780218023334:288:51)
+    at Object.run (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Package.ts:103:22)
+    at ExecutionContext.execNode (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:432:43)
+    at async Option.peekAsync (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/option/src/index.ts:68:7)
+    at async Object.exec (http://localhost:3000/_build/@fs/G:/coding/MacroGraph/packages/runtime/src/models/Core.ts:338:9)
+[1780218088] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780217567)
+[1780218088] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780218334] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780218088)
+[1780218334] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780218383] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780218334)
+[1780218383] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780218662] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780218383)
+[1780218662] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780218773] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780218662)
+[1780218773] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780219002] [pagehide] webview pagehide (possible shutdown)
+[1780219211] [pagehide] webview pagehide (possible shutdown)
+[1780219241] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780218773)
+[1780219241] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780219272] [pagehide] webview pagehide (possible shutdown)

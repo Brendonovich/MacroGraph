@@ -119,4 +119,20 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	path: {
 		convertFileSrc: (path: string) => ipcRenderer.invoke("path:convertFileSrc", path),
 	},
+	ikea: {
+		connect: (host: string, securityCode: string) =>
+			ipcRenderer.invoke("ikea:connect", { host, securityCode }),
+		disconnect: (host: string) =>
+			ipcRenderer.invoke("ikea:disconnect", host),
+		listDevices: (host: string) =>
+			ipcRenderer.invoke("ikea:listDevices", host),
+		getDevice: (host: string, deviceId: number) =>
+			ipcRenderer.invoke("ikea:getDevice", { host, deviceId }),
+		controlLight: (host: string, deviceId: number, command: any) =>
+			ipcRenderer.invoke("ikea:controlLight", { host, deviceId, command }),
+		startObserving: (host: string) =>
+			ipcRenderer.invoke("ikea:startObserving", { host, deviceId: 0 }),
+		stopObserving: (host: string) =>
+			ipcRenderer.invoke("ikea:stopObserving", { host, deviceId: 0 }),
+	},
 });

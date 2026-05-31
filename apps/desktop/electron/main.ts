@@ -10,6 +10,15 @@ import OBSWebSocket from "obs-websocket-js";
 import { exec, spawn } from "child_process";
 import FormData from "form-data";
 import { WebcastPushConnection } from "tiktok-live-connector";
+import {
+	ikeaConnect,
+	ikeaDisconnect,
+	ikeaGetDevice,
+	ikeaListDevices,
+	ikeaControlLight,
+	ikeaStartObserving,
+	ikeaStopObserving,
+} from "./ikea-coap";
 
 const DEV = process.env.NODE_ENV === "development" || process.argv.includes("--dev");
 const DEV_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:3000";
@@ -176,6 +185,7 @@ function registerIpcHandlers() {
 	registerFilePathHandlers();
 	registerHttpHandlers();
 	registerTikTokHandlers();
+	registerIkeaHandlers();
 }
 
 // ── Platform (dialogs, clipboard, shell) ──────────────────────────────────────
@@ -1142,6 +1152,55 @@ function registerHttpHandlers() {
 
 	ipcMain.handle("http:fetchCancel", async (_, rid: number) => {
 		httpRequests.delete(rid);
+	});
+}
+
+// ── IKEA TRADFRI Gateway ────────────────────────────────────────────────────────
+
+function registerIkeaHandlers() {
+	ipcMain.handle("ikea:connect", async (_, { host, securityCode }: { host: string; securityCode: string }) => {
+		console.log(`[IKEA] Connecting to ${host}...`);
+		try {
+			const result = await ikeaConnect(host, securityCode);
+			console.log(`[IKEA] Connected to ${host}, fetching devices...`);
+			const devices = await ikeaListDevices(host);
+			console.log(`[IKEA] Found ${devices.length} devices`);
+			sendToRenderer("ikea:connectionStatus", [host, { status: "connected" }]);
+			return { identity: result.identity, psk: result.psk, devices };
+		} catch (err: any) {
+			const msg = err.message ?? String(err);
+			console.error(`[IKEA] Connection failed:`, msg);
+			sendToRenderer("ikea:error", [host, msg]);
+			throw err;
+		}
+	});
+
+	ipcMain.handle("ikea:disconnect", async (_, host: string) => {
+		await ikeaDisconnect(host);
+		sendToRenderer("ikea:connectionStatus", [host, { status: "disconnected" }]);
+	});
+
+	ipcMain.handle("ikea:listDevices", async (_, host: string) => {
+		return await ikeaListDevices(host);
+	});
+
+	ipcMain.handle("ikea:getDevice", async (_, { host, deviceId }: { host: string; deviceId: number }) => {
+		return await ikeaGetDevice(host, deviceId);
+	});
+
+	ipcMain.handle("ikea:controlLight", async (_, args: { host: string; deviceId: number; command: any }) => {
+		await ikeaControlLight(args.host, args.deviceId, args.command);
+	});
+
+	ipcMain.handle("ikea:startObserving", async (_, { host, deviceId }: { host: string; deviceId: number }) => {
+		await ikeaStartObserving(host, deviceId, (device) => {
+			console.log(`[IKEA] forwarding deviceUpdate to renderer: ${device.name} on=${device.lightState?.on} brightness=${device.lightState?.brightness}`);
+			sendToRenderer("ikea:deviceUpdate", [host, device]);
+		});
+	});
+
+	ipcMain.handle("ikea:stopObserving", async (_, { host, deviceId }: { host: string; deviceId: number }) => {
+		await ikeaStopObserving(host, deviceId);
 	});
 }
 

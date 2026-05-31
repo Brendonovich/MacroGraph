@@ -48,6 +48,7 @@ const obs_websocket_js_1 = __importDefault(require("obs-websocket-js"));
 const child_process_1 = require("child_process");
 const form_data_1 = __importDefault(require("form-data"));
 const tiktok_live_connector_1 = require("tiktok-live-connector");
+const ikea_coap_1 = require("./ikea-coap");
 const DEV = process.env.NODE_ENV === "development" || process.argv.includes("--dev");
 const DEV_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:3000";
 const APP_VERSION = electron_1.app.getVersion() || "1.0.0";
@@ -201,6 +202,7 @@ function registerIpcHandlers() {
     registerFilePathHandlers();
     registerHttpHandlers();
     registerTikTokHandlers();
+    registerIkeaHandlers();
 }
 // ── Platform (dialogs, clipboard, shell) ──────────────────────────────────────
 function registerPlatformHandlers() {
@@ -1093,6 +1095,48 @@ function registerHttpHandlers() {
     });
     electron_1.ipcMain.handle("http:fetchCancel", async (_, rid) => {
         httpRequests.delete(rid);
+    });
+}
+// ── IKEA TRADFRI Gateway ────────────────────────────────────────────────────────
+function registerIkeaHandlers() {
+    electron_1.ipcMain.handle("ikea:connect", async (_, { host, securityCode }) => {
+        console.log(`[IKEA] Connecting to ${host}...`);
+        try {
+            const result = await (0, ikea_coap_1.ikeaConnect)(host, securityCode);
+            console.log(`[IKEA] Connected to ${host}, fetching devices...`);
+            const devices = await (0, ikea_coap_1.ikeaListDevices)(host);
+            console.log(`[IKEA] Found ${devices.length} devices`);
+            sendToRenderer("ikea:connectionStatus", [host, { status: "connected" }]);
+            return { identity: result.identity, psk: result.psk, devices };
+        }
+        catch (err) {
+            const msg = err.message ?? String(err);
+            console.error(`[IKEA] Connection failed:`, msg);
+            sendToRenderer("ikea:error", [host, msg]);
+            throw err;
+        }
+    });
+    electron_1.ipcMain.handle("ikea:disconnect", async (_, host) => {
+        await (0, ikea_coap_1.ikeaDisconnect)(host);
+        sendToRenderer("ikea:connectionStatus", [host, { status: "disconnected" }]);
+    });
+    electron_1.ipcMain.handle("ikea:listDevices", async (_, host) => {
+        return await (0, ikea_coap_1.ikeaListDevices)(host);
+    });
+    electron_1.ipcMain.handle("ikea:getDevice", async (_, { host, deviceId }) => {
+        return await (0, ikea_coap_1.ikeaGetDevice)(host, deviceId);
+    });
+    electron_1.ipcMain.handle("ikea:controlLight", async (_, args) => {
+        await (0, ikea_coap_1.ikeaControlLight)(args.host, args.deviceId, args.command);
+    });
+    electron_1.ipcMain.handle("ikea:startObserving", async (_, { host, deviceId }) => {
+        await (0, ikea_coap_1.ikeaStartObserving)(host, deviceId, (device) => {
+            console.log(`[IKEA] forwarding deviceUpdate to renderer: ${device.name} on=${device.lightState?.on} brightness=${device.lightState?.brightness}`);
+            sendToRenderer("ikea:deviceUpdate", [host, device]);
+        });
+    });
+    electron_1.ipcMain.handle("ikea:stopObserving", async (_, { host, deviceId }) => {
+        await (0, ikea_coap_1.ikeaStopObserving)(host, deviceId);
     });
 }
 const tikTokConnections = new Map();

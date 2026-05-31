@@ -37,6 +37,7 @@ export * as variables from "./variables";
 export * as voicemod from "./voicemod";
 export * as functions from "./functions";
 export * as script from "./script";
+export * as ikea from "./ikea";
 
 export {
 	applyHostMirrorPayloadToCore,
