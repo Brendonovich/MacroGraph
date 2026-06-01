@@ -1,0 +1,18 @@
+[package]
+name = "whisper-addon"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2", features = ["napi6", "serde-json"] }
+napi-derive = "2"
+whisper-rs = { version = "0.13", features = ["whisper-cpp"] }
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+lto = true

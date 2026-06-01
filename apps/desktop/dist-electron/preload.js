@@ -17,7 +17,7 @@ electron_1.contextBridge.exposeInMainWorld("electronAPI", {
         confirm: (message, title) => electron_1.ipcRenderer.invoke("dialog:confirm", { message, title }),
     },
     shell: {
-        execute: (command) => electron_1.ipcRenderer.invoke("shell:execute", command),
+        execute: (args) => electron_1.ipcRenderer.invoke("shell:execute", args),
         openExternal: (url) => electron_1.ipcRenderer.invoke("shell:openExternal", url),
     },
     fs: {
@@ -127,6 +127,19 @@ electron_1.contextBridge.exposeInMainWorld("electronAPI", {
         incrBrightness: (args) => electron_1.ipcRenderer.invoke("elgatoKeyLight:incrBrightness", args),
         incrTemperature: (args) => electron_1.ipcRenderer.invoke("elgatoKeyLight:incrTemperature", args),
         cleanup: () => electron_1.ipcRenderer.invoke("elgatoKeyLight:cleanup"),
+    },
+    stt: {
+        sendAudioChunk: (data) => electron_1.ipcRenderer.send("stt:audioChunk", data),
+        enumerateDevices: () => electron_1.ipcRenderer.invoke("stt:enumerateDevices"),
+        loadModel: (modelName) => electron_1.ipcRenderer.invoke("stt:loadModel", modelName),
+        unloadModel: () => electron_1.ipcRenderer.invoke("stt:unloadModel"),
+        isBackendAvailable: () => electron_1.ipcRenderer.invoke("stt:isBackendAvailable"),
+        downloadModel: (modelName) => electron_1.ipcRenderer.invoke("stt:downloadModel", modelName),
+        getCachedModels: () => electron_1.ipcRenderer.invoke("stt:getCachedModels"),
+        deleteModel: (modelName) => electron_1.ipcRenderer.invoke("stt:deleteModel", modelName),
+        getStatus: () => electron_1.ipcRenderer.invoke("stt:getStatus"),
+        startCapture: (micId, modelName, settings) => electron_1.ipcRenderer.invoke("stt:startCapture", micId, modelName, settings),
+        stopCapture: () => electron_1.ipcRenderer.invoke("stt:stopCapture"),
     },
 });
 //# sourceMappingURL=preload.js.map

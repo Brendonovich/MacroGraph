@@ -13,7 +13,14 @@ extraResources:
     to: remote-public
     filter:
       - "**/*"
+  - from: electron/whisper-native
+    to: whisper-native
+    filter:
+      - "**/*"
 asar: true
+asarUnpack:
+  - "**/*.node"
+  - "**/whisper-addon*"
 win:
   target:
     - target: nsis

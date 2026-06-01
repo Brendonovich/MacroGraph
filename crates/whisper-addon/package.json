@@ -1,0 +1,17 @@
+{
+  "name": "whisper-addon",
+  "version": "0.1.0",
+  "main": "whisper-addon.win32-x64.node",
+  "napi": {
+    "name": "whisper-addon",
+    "triples": {
+      "defaults": false,
+      "additional": [
+        "x86_64-pc-windows-msvc"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.7.0"
+  }
+}

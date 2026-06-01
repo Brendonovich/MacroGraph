@@ -51,6 +51,7 @@ const tiktok_live_connector_1 = require("tiktok-live-connector");
 const ikea_coap_1 = require("./ikea-coap");
 const lifx_lan_1 = require("./lifx-lan");
 const elgato_keylight_1 = require("./elgato-keylight");
+const stt_1 = require("./stt");
 const DEV = process.env.NODE_ENV === "development" || process.argv.includes("--dev");
 const DEV_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:3000";
 const APP_VERSION = electron_1.app.getVersion() || "1.0.0";
@@ -154,6 +155,12 @@ function appendCrashLog(kind, message) {
 electron_1.app.whenReady().then(() => {
     initSessionTracking();
     createWindow();
+    electron_1.session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
+        callback(permission === "media");
+    });
+    electron_1.session.defaultSession.setPermissionCheckHandler((_wc, permission) => {
+        return permission === "media";
+    });
     registerIpcHandlers();
     electron_1.app.on("activate", () => {
         if (electron_1.BrowserWindow.getAllWindows().length === 0)
@@ -207,6 +214,7 @@ function registerIpcHandlers() {
     registerIkeaHandlers();
     registerLifxHandlers();
     registerElgatoKeyLightHandlers();
+    (0, stt_1.registerSttHandlers)();
 }
 // ── Platform (dialogs, clipboard, shell) ──────────────────────────────────────
 function registerPlatformHandlers() {
@@ -264,9 +272,29 @@ function registerFsHandlers() {
 }
 // ── Shell ──────────────────────────────────────────────────────────────────────
 function registerShellHandlers() {
-    electron_1.ipcMain.handle("shell:execute", (_, command) => {
+    electron_1.ipcMain.handle("shell:execute", (_, args) => {
         return new Promise((resolve, reject) => {
-            (0, child_process_1.exec)(command, (error) => {
+            const { command, shell } = args;
+            const opts = {};
+            if (shell && shell !== "default") {
+                if (process.platform === "win32") {
+                    switch (shell) {
+                        case "powershell":
+                            opts.shell = "powershell.exe";
+                            break;
+                        case "cmd":
+                            opts.shell = "cmd.exe";
+                            break;
+                        case "pwsh":
+                            opts.shell = "pwsh.exe";
+                            break;
+                    }
+                }
+                else {
+                    opts.shell = shell;
+                }
+            }
+            (0, child_process_1.exec)(command, opts, (error) => {
                 if (error)
                     reject(error);
                 else

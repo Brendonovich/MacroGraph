@@ -40,6 +40,7 @@ export * as script from "./script";
 export * as ikea from "./ikea";
 export * as lifx from "./lifx";
 export * as elgatoKeyLight from "./elgatoKeyLight";
+export * as speechToText from "./speechToText";
 
 export {
 	applyHostMirrorPayloadToCore,

@@ -168,8 +168,8 @@ const audioBackend: pkgs.audio.AudioBackend = {
   () => pkgs.streamdeck.pkg(wsProvider),
   pkgs.streamlabs.pkg,
   () =>
-    pkgs.shell.pkg(async (path) => {
-      await client.mutation(["shell.execute", path]);
+    pkgs.shell.pkg(async ({ command, shell }) => {
+      await client.mutation(["shell.execute", { command, shell }]);
     }),
   pkgs.twitch.pkg,
   pkgs.utils.pkg,
@@ -192,6 +192,7 @@ const audioBackend: pkgs.audio.AudioBackend = {
   pkgs.ikea.pkg,
 	pkgs.lifx.pkg,
 	pkgs.elgatoKeyLight.pkg,
+	pkgs.speechToText.pkg,
 ].map((p) => core.registerPackage(p));
 
 export default function Editor() {

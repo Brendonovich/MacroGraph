@@ -952,3 +952,179 @@ Error: No main window
     at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:1360:15)
     at Socket.emit (node:events:509:28)
     at TCP.<anonymous> (node:net:350:12)
+[1780230396] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780230414] [pagehide] webview pagehide (possible shutdown)
+[1780230423] [exit] window-all-closed
+[1780230423] [exit] application Exit
+[1780230429] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780230518] [pagehide] webview pagehide (possible shutdown)
+[1780230596] [pagehide] webview pagehide (possible shutdown)
+[1780230786] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780230429)
+[1780230786] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780230936] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780230786)
+[1780230936] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780230958] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780230936)
+[1780230958] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780231068] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780230958)
+[1780231068] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780231093] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780231068)
+[1780231093] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780231302] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780231093)
+[1780231302] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780231502] [pagehide] webview pagehide (possible shutdown)
+[1780231506] [pagehide] webview pagehide (possible shutdown)
+[1780231612] [pagehide] webview pagehide (possible shutdown)
+[1780231613] [pagehide] webview pagehide (possible shutdown)
+[1780232137] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780231302)
+[1780232137] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780232190] [panic] Error: write EOF
+Error: write EOF
+    at WriteWrap.onWriteComplete [as oncomplete] (node:internal/stream_base_commons:87:19)
+[1780232354] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780232404] [panic] Error: write EOF
+Error: write EOF
+    at WriteWrap.onWriteComplete [as oncomplete] (node:internal/stream_base_commons:87:19)
+[1780232674] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780232864] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780232674)
+[1780232864] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780233203] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780232864)
+[1780233203] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780233394] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780233203)
+[1780233394] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780233426] [pagehide] webview pagehide (possible shutdown)
+[1780233530] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780233394)
+[1780233530] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780233810] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780233530)
+[1780233810] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780234054] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780233810)
+[1780234054] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780234173] [pagehide] webview pagehide (possible shutdown)
+[1780234181] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780234054)
+[1780234181] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780234364] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780234181)
+[1780234364] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780234492] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780234364)
+[1780234492] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780234535] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780234492)
+[1780234535] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780234645] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780234535)
+[1780234645] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780234876] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780234645)
+[1780234876] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780234970] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780234876)
+[1780234970] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780235033] [pagehide] webview pagehide (possible shutdown)
+[1780235077] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780234970)
+[1780235077] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780235139] [pagehide] webview pagehide (possible shutdown)
+[1780235196] [pagehide] webview pagehide (possible shutdown)
+[1780235329] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780235077)
+[1780235329] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780235472] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780235329)
+[1780235472] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780235606] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780235472)
+[1780235606] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780235757] [pagehide] webview pagehide (possible shutdown)
+[1780236112] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780235606)
+[1780236112] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780236118] [pagehide] webview pagehide (possible shutdown)
+[1780236131] [pagehide] webview pagehide (possible shutdown)
+[1780236361] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780236112)
+[1780236361] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780277625] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780236361)
+[1780277625] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780277632] [pagehide] webview pagehide (possible shutdown)
+[1780277644] [pagehide] webview pagehide (possible shutdown)
+[1780277785] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780277625)
+[1780277785] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780277997] [pagehide] webview pagehide (possible shutdown)
+[1780278140] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780277785)
+[1780278140] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780278277] [pagehide] webview pagehide (possible shutdown)
+[1780278277] [exit] window-all-closed
+[1780278277] [exit] application Exit
+[1780278277] [panic] Error: No main window
+Error: No main window
+    at getWindow (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:183:15)
+    at sendToRenderer (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:187:17)
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:309:17)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)
+[1780278527] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780278704] [pagehide] webview pagehide (possible shutdown)
+[1780278737] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780278527)
+[1780278737] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780278932] [pagehide] webview pagehide (possible shutdown)
+[1780278955] [pagehide] webview pagehide (possible shutdown)
+[1780278955] [exit] window-all-closed
+[1780278955] [exit] application Exit
+[1780278955] [panic] Error: No main window
+Error: No main window
+    at getWindow (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:183:15)
+    at sendToRenderer (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:187:17)
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:309:17)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)
+[1780278961] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780279017] [pagehide] webview pagehide (possible shutdown)
+[1780279017] [exit] window-all-closed
+[1780279017] [exit] application Exit
+[1780279017] [panic] Error: No main window
+Error: No main window
+    at getWindow (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:183:15)
+    at sendToRenderer (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:187:17)
+    at WebSocketServer.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:294:13)
+    at WebSocketServer.emit (node:events:509:28)
+    at WebSocketServer.completeUpgrade (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket-server.js:450:5)
+    at WebSocketServer.handleUpgrade (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket-server.js:356:10)
+    at Server.upgrade (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket-server.js:129:16)
+    at Server.emit (node:events:509:28)
+    at onParserExecuteCommon (node:_http_server:987:14)
+    at onParserExecute (node:_http_server:891:3)
+[1780279017] [panic] Error: No main window
+Error: No main window
+    at getWindow (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:183:15)
+    at sendToRenderer (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:187:17)
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:309:17)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)
+[1780279024] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780279327] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780279024)
+[1780279327] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780279470] [pagehide] webview pagehide (possible shutdown)
+[1780279470] [exit] window-all-closed
+[1780279470] [exit] application Exit
+[1780279470] [panic] Error: No main window
+Error: No main window
+    at getWindow (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:183:15)
+    at sendToRenderer (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:187:17)
+    at WebSocket.<anonymous> (G:\coding\MacroGraph\apps\desktop\dist-electron\main.js:309:17)
+    at WebSocket.emit (node:events:521:24)
+    at WebSocket.emitClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:279:10)
+    at Socket.socketOnClose (G:\coding\MacroGraph\node_modules\.pnpm\ws@8.21.0_bufferutil@4.1.0_utf-8-validate@5.0.10\node_modules\ws\lib\websocket.js:1360:15)
+    at Socket.emit (node:events:509:28)
+    at TCP.<anonymous> (node:net:350:12)
+[1780280199] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780280350] [pagehide] webview pagehide (possible shutdown)
+[1780280350] [pagehide] webview pagehide (possible shutdown)
+[1780280383] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780280199)
+[1780280383] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780280453] [pagehide] webview pagehide (possible shutdown)
+[1780280714] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780280383)
+[1780280714] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780280762] [pagehide] webview pagehide (possible shutdown)
+[1780280845] [pagehide] webview pagehide (possible shutdown)
+[1780280939] [pagehide] webview pagehide (possible shutdown)
+[1780281037] [pagehide] webview pagehide (possible shutdown)
+[1780281050] [recovery] previous session (v42.3.0) did not exit cleanly (started 1780280714)
+[1780281050] [startup] MacroGraph 42.3.0 started; log: G:\coding\MacroGraph\apps\desktop\logs\crash.log
+[1780281146] [pagehide] webview pagehide (possible shutdown)

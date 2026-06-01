@@ -17,6 +17,7 @@ export function createCtx(onEvent: OnEvent<Events>) {
 
 	let unlistenDeviceUpdate: (() => void) | null = null;
 	let unlistenError: (() => void) | null = null;
+	let prevDevices = new Map<string, LifxDevice>();
 
 	async function discover() {
 		const bridge = getBridge();
@@ -26,11 +27,43 @@ export function createCtx(onEvent: OnEvent<Events>) {
 
 		try {
 			const result: LifxDevice[] = await bridge.discover();
-			setDevices(new Map(result.map((d: LifxDevice) => [d.id, d])));
+			processDeviceUpdate(result);
 			setState("ready");
 		} catch {
 			setState("idle");
 		}
+	}
+
+	function processDeviceUpdate(updated: LifxDevice[]) {
+		const next = new Map(updated.map((d: LifxDevice) => [d.id, d]));
+		setDevices(next);
+
+		for (const device of updated) {
+			const prev = prevDevices.get(device.id);
+			if (
+				prev &&
+				(prev.power !== device.power ||
+				 prev.brightness !== device.brightness ||
+				 prev.hue !== device.hue ||
+				 prev.saturation !== device.saturation ||
+				 prev.kelvin !== device.kelvin)
+			) {
+				onEvent({
+					name: "lightStateChanged",
+					data: {
+						id: device.id,
+						label: device.label,
+						power: device.power > 0,
+						brightness: Math.round((device.brightness / 65535) * 100),
+						hue: Math.round((device.hue / 65535) * 360),
+						saturation: Math.round((device.saturation / 65535) * 100),
+						kelvin: device.kelvin,
+					},
+				});
+			}
+		}
+
+		prevDevices = next;
 	}
 
 	async function startObserving() {
@@ -43,7 +76,7 @@ export function createCtx(onEvent: OnEvent<Events>) {
 		unlistenDeviceUpdate = window.electronAPI.onEvent(
 			"lifx:deviceUpdate",
 			(devices: LifxDevice[]) => {
-				setDevices(new Map(devices.map((d: LifxDevice) => [d.id, d])));
+				processDeviceUpdate(devices);
 			},
 		);
 

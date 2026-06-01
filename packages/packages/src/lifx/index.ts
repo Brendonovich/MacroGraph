@@ -7,10 +7,14 @@ export type { LifxDevice } from "./resource";
 export type { Ctx } from "./ctx";
 
 export type Events = {
-	deviceDiscovered: {
+	lightStateChanged: {
 		id: string;
 		label: string;
-		addr: string;
+		power: boolean;
+		brightness: number;
+		hue: number;
+		saturation: number;
+		kelvin: number;
 	};
 };
 

@@ -34,7 +34,7 @@ interface ElectronAPI {
 		confirm(message: string, title?: string): Promise<boolean>;
 	};
 	shell: {
-		execute(command: string): Promise<void>;
+		execute(args: { command: string; shell: string }): Promise<void>;
 		openExternal(url: string): Promise<void>;
 	};
 	fs: {
@@ -140,6 +140,19 @@ interface ElectronAPI {
 		incrBrightness(args: { addr: string; port: number; delta: number }): Promise<any>;
 		incrTemperature(args: { addr: string; port: number; delta: number }): Promise<any>;
 		cleanup(): Promise<void>;
+	};
+	stt: {
+		sendAudioChunk(data: ArrayBuffer): void;
+		enumerateDevices(): Promise<{ deviceId: string; label: string }[]>;
+		loadModel(modelName: string): Promise<boolean>;
+		unloadModel(): Promise<boolean>;
+		isBackendAvailable(): Promise<boolean>;
+		downloadModel(modelName: string): Promise<void>;
+		getCachedModels(): Promise<{ name: string; path: string; size: number }[]>;
+		deleteModel(modelName: string): Promise<boolean>;
+		getStatus(): Promise<{ modelLoaded: boolean; currentModel: string | null; isCapturing: boolean; isTranscribing: boolean; error?: string | null }>;
+		startCapture(micId: string, modelName?: string, settings?: { maxDurationSecs?: number; overlapSecs?: number }): Promise<{ success?: boolean; error?: string }>;
+		stopCapture(): Promise<boolean>;
 	};
 }
 

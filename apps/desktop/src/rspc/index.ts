@@ -12,8 +12,8 @@ function invoke(key: RpcKey, args: RpcArgs): Promise<any> {
 	switch (key) {
 		case "fs.list":
 			return electronAPI.fs.list(args[0] as string);
-		case "shell.execute":
-			return electronAPI.shell.execute(args[0] as string);
+	case "shell.execute":
+		return electronAPI.shell.execute(args[0] as { command: string; shell: string });
 		case "remoteHost.send":
 			return electronAPI.remoteHost.send(args[0] as any);
 		case "remoteHost.setPassword":

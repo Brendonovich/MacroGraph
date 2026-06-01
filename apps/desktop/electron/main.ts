@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, clipboard, shell, crashReporter } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, clipboard, shell, crashReporter, session } from "electron";
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync, createReadStream, unlinkSync } from "fs";
 import { PassThrough } from "stream";
 import { join, dirname, extname } from "path";
@@ -37,6 +37,7 @@ import {
 	elgatoCleanup,
 	type ElgatoDevice,
 } from "./elgato-keylight";
+import { registerSttHandlers } from "./stt";
 
 const DEV = process.env.NODE_ENV === "development" || process.argv.includes("--dev");
 const DEV_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:3000";
@@ -148,6 +149,14 @@ function appendCrashLog(kind: string, message: string) {
 app.whenReady().then(() => {
 	initSessionTracking();
 	createWindow();
+
+	session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
+		callback(permission === "media");
+	});
+	session.defaultSession.setPermissionCheckHandler((_wc, permission) => {
+		return permission === "media";
+	});
+
 	registerIpcHandlers();
 
 	app.on("activate", () => {
@@ -206,6 +215,7 @@ function registerIpcHandlers() {
 	registerIkeaHandlers();
 	registerLifxHandlers();
 	registerElgatoKeyLightHandlers();
+	registerSttHandlers();
 }
 
 // ── Platform (dialogs, clipboard, shell) ──────────────────────────────────────
@@ -270,9 +280,30 @@ function registerFsHandlers() {
 // ── Shell ──────────────────────────────────────────────────────────────────────
 
 function registerShellHandlers() {
-	ipcMain.handle("shell:execute", (_, command: string) => {
+	ipcMain.handle("shell:execute", (_, args: { command: string; shell: string }) => {
 		return new Promise<void>((resolve, reject) => {
-			exec(command, (error) => {
+			const { command, shell } = args;
+			const opts: any = {};
+
+			if (shell && shell !== "default") {
+				if (process.platform === "win32") {
+					switch (shell) {
+						case "powershell":
+							opts.shell = "powershell.exe";
+							break;
+						case "cmd":
+							opts.shell = "cmd.exe";
+							break;
+						case "pwsh":
+							opts.shell = "pwsh.exe";
+							break;
+					}
+				} else {
+					opts.shell = shell;
+				}
+			}
+
+			exec(command, opts, (error) => {
 				if (error) reject(error);
 				else resolve();
 			});
