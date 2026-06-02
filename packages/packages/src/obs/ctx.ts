@@ -114,6 +114,7 @@ export function createCtx(obsNative?: ObsNativeBridge) {
 			await obs.connect(ip, instance.password ?? undefined, {
 				eventSubscriptions:
 					EventSubscription.All |
+					2048 |
 					EventSubscription.SceneItemTransformChanged |
 					EventSubscription.InputActiveStateChanged |
 					EventSubscription.InputShowStateChanged,

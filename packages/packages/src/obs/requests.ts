@@ -183,7 +183,58 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 
 	// Missing BroadcastCustomEvent requires OBject request
 
-	// Missing CallVendorRequest requires Object request and response
+	createOBSExecSchema({
+		name: "Call Vendor Request",
+		createIO: ({ io }) => ({
+			vendorName: io.dataInput({
+				id: "vendorName",
+				name: "Vendor Name",
+				type: t.string(),
+			}),
+			requestType: io.dataInput({
+				id: "requestType",
+				name: "Request Type",
+				type: t.string(),
+			}),
+			requestData: io.dataInput({
+				id: "requestData",
+				name: "Request Data",
+				type: t.option(t.map(t.enum(JSONEnum))),
+			}),
+			vendorNameOut: io.dataOutput({
+				id: "vendorNameOut",
+				name: "Vendor Name",
+				type: t.string(),
+			}),
+			requestTypeOut: io.dataOutput({
+				id: "requestTypeOut",
+				name: "Request Type",
+				type: t.string(),
+			}),
+			responseData: io.dataOutput({
+				id: "responseData",
+				name: "Response Data",
+				type: t.enum(JSONEnum),
+			}),
+		}),
+		async run({ ctx, io, obs }) {
+			const data = await obs.call("CallVendorRequest", {
+				vendorName: ctx.getInput(io.vendorName),
+				requestType: ctx.getInput(io.requestType),
+				...(ctx.getInput(io.requestData).isSome()
+					? {
+							requestData: jsonToJS({
+								variant: "Map",
+								data: { value: ctx.getInput(io.requestData).unwrap() },
+							}),
+						}
+					: {}),
+			});
+			ctx.setOutput(io.vendorNameOut, data.vendorName);
+			ctx.setOutput(io.requestTypeOut, data.requestType);
+			ctx.setOutput(io.responseData, Maybe(jsToJSON(data.responseData)).unwrap());
+		},
+	});
 
 	createOBSExecSchema({
 		name: "Get Hotkey list",
@@ -588,6 +639,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Source Name",
 				type: t.string(),
 			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
+			}),
 			videoActive: io.dataOutput({
 				id: "videoActive",
 				name: "Video Active",
@@ -602,6 +658,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		async run({ ctx, io, obs }) {
 			const data = await obs.call("GetSourceActive", {
 				sourceName: ctx.getInput(io.sourceName),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 			ctx.setOutput(io.videoActive, data.videoActive);
 			ctx.setOutput(io.videoShowing, data.videoShowing);
@@ -621,6 +680,28 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		async run({ ctx, io, obs }) {
 			const data = await obs.call("GetGroupList");
 			ctx.setOutput(io, data.groups);
+		},
+	});
+
+	createOBSExecSchema({
+		name: "Get Canvas List",
+		createIO: ({ io }) =>
+			io.dataOutput({
+				id: "canvases",
+				name: "Canvases",
+				type: t.list(t.struct(types.Canvas)),
+			}),
+		async run({ ctx, io, obs }) {
+			const data = await obs.call("GetCanvasList");
+			ctx.setOutput(
+				io,
+				data.canvases.map((c: { canvasName: string; canvasUuid: string }) =>
+					types.Canvas.create({
+						canvasName: c.canvasName,
+						canvasUuid: c.canvasUuid,
+					}),
+				),
+			);
 		},
 	});
 
@@ -748,6 +829,18 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				.then((o) => o.unwrapOr([]));
 	}
 
+	function canvasListSuggestionFactory(obs: Accessor<Option<ObsSocketLike>>) {
+		return async () => {
+			const o = await obs().mapAsync(async (obs) => {
+				const resp = await obs.call("GetCanvasList");
+				return (resp.canvases as Array<{ canvasUuid: string }>).map(
+					(c) => c.canvasUuid,
+				);
+			});
+			return o.unwrapOr([]);
+		};
+	}
+
 	function imageFormatListFactory(obs: Accessor<Option<ObsSocketLike>>) {
 		return async () => {
 			const o = await obs().mapAsync(async (obs) => {
@@ -767,6 +860,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Source Name",
 				type: t.string(),
 				fetchSuggestions: inputListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			imageFormat: io.dataInput({
 				id: "imageFormat",
@@ -801,6 +899,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				imageHeight: ctx.getInput(io.imageHeight).isSome()
 					? ctx.getInput(io.imageHeight).unwrap()
 					: undefined,
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -853,28 +954,50 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 
 	createOBSExecSchema({
 		name: "Create Scene",
-		createIO: ({ io }) =>
-			io.dataInput({
+		createIO: ({ io }) => ({
+			sceneName: io.dataInput({
 				id: "sceneName",
 				name: "Scene Name",
 				type: t.string(),
 			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
+			}),
+		}),
 		async run({ ctx, io, obs }) {
-			await obs.call("CreateScene", { sceneName: ctx.getInput(io) });
+			await obs.call("CreateScene", {
+				sceneName: ctx.getInput(io.sceneName),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
+			});
 		},
 	});
 
 	createOBSExecSchema({
 		name: "Remove Scene",
-		createIO: ({ io, obs }) =>
-			io.dataInput({
+		createIO: ({ io, obs }) => ({
+			sceneName: io.dataInput({
 				id: "sceneName",
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
 			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
+			}),
+		}),
 		async run({ ctx, io, obs }) {
-			await obs.call("RemoveScene", { sceneName: ctx.getInput(io) });
+			await obs.call("RemoveScene", {
+				sceneName: ctx.getInput(io.sceneName),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
+			});
 		},
 	});
 
@@ -887,6 +1010,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
 			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
+			}),
 			newSceneName: io.dataInput({
 				id: "newSceneName",
 				name: "New Scene Name",
@@ -897,6 +1025,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			await obs.call("SetSceneName", {
 				sceneName: ctx.getInput(io.sceneName),
 				newSceneName: ctx.getInput(io.newSceneName),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -908,6 +1039,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				id: "sceneName",
 				name: "Scene Name",
 				type: t.string(),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			transitionName: io.dataOutput({
 				id: "transitionName",
@@ -923,6 +1059,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		async run({ ctx, io, obs }) {
 			const data = await obs.call("GetSceneSceneTransitionOverride", {
 				sceneName: ctx.getInput(io.sceneName),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 			ctx.setOutput(io.transitionName, data.transitionName);
 			ctx.setOutput(io.transitionDuration, data.transitionDuration);
@@ -937,6 +1076,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			transitionName: io.dataInput({
 				id: "transitionName",
@@ -954,6 +1098,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sceneName: ctx.getInput(io.sceneName),
 				transitionName: ctx.getInput(io.transitionName),
 				transitionDuration: ctx.getInput(io.transitionDuration),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -1023,6 +1170,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
 			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
+			}),
 			inputName: io.dataInput({
 				id: "inputName",
 				name: "Input Name",
@@ -1062,6 +1214,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 						value: ctx.getInput(io.inputSettings),
 					},
 				}),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 			ctx.setOutput(io.sceneItemId, data.sceneItemId);
 		},
@@ -1145,6 +1300,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 	createOBSExecSchema({
 		name: "Get Scene List",
 		createIO: ({ io }) => ({
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
+			}),
 			currentProgramSceneName: io.dataOutput({
 				id: "currentProgramSceneName",
 				name: "Program Scene Name",
@@ -1162,7 +1322,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			}),
 		}),
 		async run({ ctx, io, obs }) {
-			const data = await obs.call("GetSceneList");
+			const data = await obs.call("GetSceneList", {
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
+			});
 
 			const scene = data.scenes.map((input: any) =>
 				types.Scene.create({
@@ -1893,6 +2057,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Source Name",
 				type: t.string(),
 			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
+			}),
 			filters: io.dataOutput({
 				id: "filters",
 				name: "Filters",
@@ -1902,6 +2071,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		async run({ ctx, io, obs }) {
 			const data = await obs.call("GetSourceFilterList", {
 				sourceName: ctx.getInput(io.sourceName),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 
 			const filter = data.filters.map((data: any) =>
@@ -1953,6 +2125,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				type: t.string(),
 				fetchSuggestions: sourceListSuggestionFactory(obs),
 			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
+			}),
 			filterName: io.dataInput({
 				id: "filterName",
 				name: "Filter Name",
@@ -1983,6 +2160,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 							},
 						})
 					: {},
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -1999,6 +2179,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 
 			return {
 				sourceName,
+				canvasUuid: io.dataInput({
+					id: "canvasUuid",
+					name: "Canvas UUID",
+					type: t.option(t.string()),
+				}),
 				filterName: io.dataInput({
 					id: "filterName",
 					name: "Filter Name",
@@ -2011,6 +2196,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			await obs.call("RemoveSourceFilter", {
 				sourceName: ctx.getInput(io.sourceName),
 				filterName: ctx.getInput(io.filterName),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -2027,6 +2215,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 
 			return {
 				sourceName,
+				canvasUuid: io.dataInput({
+					id: "canvasUuid",
+					name: "Canvas UUID",
+					type: t.option(t.string()),
+				}),
 				filterName: io.dataInput({
 					id: "filterName",
 					name: "Filter Name",
@@ -2045,6 +2238,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sourceName: ctx.getInput(io.sourceName),
 				filterName: ctx.getInput(io.filterName),
 				newFilterName: ctx.getInput(io.newFilterName),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -2061,6 +2257,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 
 			return {
 				sourceName,
+				canvasUuid: io.dataInput({
+					id: "canvasUuid",
+					name: "Canvas UUID",
+					type: t.option(t.string()),
+				}),
 				filterName: io.dataInput({
 					id: "filterName",
 					name: "Filter Name",
@@ -2079,6 +2280,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				.call("GetSourceFilter", {
 					sourceName: ctx.getInput(io.sourceName),
 					filterName: ctx.getInput(io.filterName),
+					...(ctx.getInput(io.canvasUuid).isSome()
+						? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+						: {}),
 				})
 				.catch(() => null);
 
@@ -2098,7 +2302,7 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 	});
 
 	createOBSExecSchema({
-		name: "Set Source Filter Name",
+		name: "Set Source Filter Index",
 		createIO: ({ io, obs }) => {
 			const sourceName = io.dataInput({
 				id: "sourceName",
@@ -2109,6 +2313,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 
 			return {
 				sourceName,
+				canvasUuid: io.dataInput({
+					id: "canvasUuid",
+					name: "Canvas UUID",
+					type: t.option(t.string()),
+				}),
 				filterName: io.dataInput({
 					id: "filterName",
 					name: "Filter Name",
@@ -2127,6 +2336,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sourceName: ctx.getInput(io.sourceName),
 				filterName: ctx.getInput(io.filterName),
 				filterIndex: ctx.getInput(io.filterIndex),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -2143,6 +2355,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 
 			return {
 				sourceName,
+				canvasUuid: io.dataInput({
+					id: "canvasUuid",
+					name: "Canvas UUID",
+					type: t.option(t.string()),
+				}),
 				filterName: io.dataInput({
 					id: "filterName",
 					name: "Filter Name",
@@ -2172,6 +2389,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 					},
 				}),
 				overlay: ctx.getInput(io.overlay),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -2188,6 +2408,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 
 			return {
 				sourceName,
+				canvasUuid: io.dataInput({
+					id: "canvasUuid",
+					name: "Canvas UUID",
+					type: t.option(t.string()),
+				}),
 				filterName: io.dataInput({
 					id: "filterName",
 					name: "Filter Name",
@@ -2206,6 +2431,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sourceName: ctx.getInput(io.sourceName),
 				filterName: ctx.getInput(io.filterName),
 				filterEnabled: ctx.getInput(io.filterEnabled),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -2219,6 +2447,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
 			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
+			}),
 			sceneItems: io.dataOutput({
 				id: "sceneItems",
 				name: "Scene Items",
@@ -2228,6 +2461,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 		async run({ ctx, io, obs }) {
 			const data = await obs.call("GetSceneItemList", {
 				sceneName: ctx.getInput(io.sceneName),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 
 			const sceneItems = data.sceneItems.map((data: any) => {
@@ -2295,6 +2531,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 
 			return {
 				sceneName,
+				canvasUuid: io.dataInput({
+					id: "canvasUuid",
+					name: "Canvas UUID",
+					type: t.option(t.string()),
+				}),
 				sourceName: io.dataInput({
 					id: "sourceName",
 					name: "Source Name",
@@ -2318,6 +2559,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sceneName: ctx.getInput(io.sceneName),
 				sourceName: ctx.getInput(io.sourceName),
 				searchOffset: ctx.getInput(io.searchOffset),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 			ctx.setOutput(io.sceneItemId, data.sceneItemId);
 		},
@@ -2332,6 +2576,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 					name: "Scene Name",
 					type: t.string(),
 					fetchSuggestions: sceneListSuggestionFactory(obs),
+				}),
+				canvasUuid: io.dataInput({
+					id: "canvasUuid",
+					name: "Canvas UUID",
+					type: t.option(t.string()),
 				}),
 				sceneItemId: io.dataInput({
 					id: "sceneItemId",
@@ -2350,6 +2599,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			const data = await obs.call("GetSceneItemSource", {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 			ctx.setOutput(io.sourceName, data.sourceName);
 		},
@@ -2363,6 +2615,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			sourceName: io.dataInput({
 				id: "sourceName",
@@ -2386,6 +2643,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sceneName: ctx.getInput(io.sceneName),
 				sourceName: ctx.getInput(io.sourceName),
 				sceneItemEnabled: ctx.getInput(io.sceneItemEnabled),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 			ctx.setOutput(io.sceneItemId, data.sceneItemId);
 		},
@@ -2400,6 +2660,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
 			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
+			}),
 			sceneItemId: io.dataInput({
 				id: "sceneItemId",
 				name: "Scene Item Id",
@@ -2410,6 +2675,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			await obs.call("RemoveSceneItem", {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -2422,6 +2690,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			sceneItemIdIn: io.dataInput({
 				id: "sceneItemId",
@@ -2445,6 +2718,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemIdIn),
 				destinationSceneName: ctx.getInput(io.destinationSceneName),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 			ctx.setOutput(io.sceneItemIdOut, data.sceneItemId);
 		},
@@ -2458,6 +2734,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			sceneItemId: io.dataInput({
 				id: "sceneItemId",
@@ -2474,6 +2755,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			const data = await obs.call("GetSceneItemTransform", {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 
 			const sceneItemTransformObj: SceneItemTransformInterface =
@@ -2523,6 +2807,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
 			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
+			}),
 			sceneItemId: io.dataInput({
 				id: "sceneItemId",
 				name: "Scene Item ID",
@@ -2560,6 +2849,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
 				sceneItemTransform: body,
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -2572,6 +2864,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			sceneItemId: io.dataInput({
 				id: "sceneItemId",
@@ -2588,6 +2885,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			const data = await obs.call("GetSceneItemEnabled", {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 			ctx.setOutput(io.sceneItemEnabled, data.sceneItemEnabled);
 		},
@@ -2601,6 +2901,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			sceneItemId: io.dataInput({
 				id: "sceneItemId",
@@ -2618,6 +2923,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
 				sceneItemEnabled: ctx.getInput(io.sceneItemEnabled),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -2630,6 +2938,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			sceneItemId: io.dataInput({
 				id: "sceneItemId",
@@ -2646,6 +2959,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			const data = await obs.call("GetSceneItemLocked", {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 			ctx.setOutput(io.sceneItemLocked, data.sceneItemLocked);
 		},
@@ -2659,6 +2975,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			sceneItemId: io.dataInput({
 				id: "sceneItemId",
@@ -2676,6 +2997,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
 				sceneItemLocked: ctx.getInput(io.sceneItemLocked),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -2688,6 +3012,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			sceneItemId: io.dataInput({
 				id: "sceneItemId",
@@ -2704,6 +3033,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			const data = await obs.call("GetSceneItemIndex", {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 			ctx.setOutput(io.sceneItemIndex, data.sceneItemIndex);
 		},
@@ -2717,6 +3049,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			sceneItemId: io.dataInput({
 				id: "sceneItemId",
@@ -2734,6 +3071,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
 				sceneItemIndex: ctx.getInput(io.sceneItemIndex),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});
@@ -2746,6 +3086,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			sceneItemId: io.dataInput({
 				id: "sceneItemId",
@@ -2762,6 +3107,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 			const data = await obs.call("GetSceneItemBlendMode", {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 			ctx.setOutput(io.sceneItemBlendMode, data.sceneItemBlendMode);
 		},
@@ -2775,6 +3123,11 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				name: "Scene Name",
 				type: t.string(),
 				fetchSuggestions: sceneListSuggestionFactory(obs),
+			}),
+			canvasUuid: io.dataInput({
+				id: "canvasUuid",
+				name: "Canvas UUID",
+				type: t.option(t.string()),
 			}),
 			sceneItemId: io.dataInput({
 				id: "sceneItemId",
@@ -2792,6 +3145,9 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 				sceneName: ctx.getInput(io.sceneName),
 				sceneItemId: ctx.getInput(io.sceneItemId),
 				sceneItemBlendMode: ctx.getInput(io.sceneItemBlendMode),
+				...(ctx.getInput(io.canvasUuid).isSome()
+					? { canvasUuid: ctx.getInput(io.canvasUuid).unwrap() }
+					: {}),
 			});
 		},
 	});

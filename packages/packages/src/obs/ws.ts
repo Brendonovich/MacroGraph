@@ -30,6 +30,7 @@ export function createWs() {
 		await obs.connect(url, password, {
 			eventSubscriptions:
 				EventSubscription.All |
+				2048 |
 				EventSubscription.SceneItemTransformChanged |
 				EventSubscription.InputActiveStateChanged |
 				EventSubscription.InputShowStateChanged,
