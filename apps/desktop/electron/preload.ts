@@ -49,7 +49,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
 			ipcRenderer.invoke("remoteHost:setPassword", password),
 	},
 	tiktok: {
-		connect: (username: string, signApiKey?: string | null) => ipcRenderer.invoke("tiktok:connect", { username, signApiKey }),
+		connect: (username: string, apiKey: string) => ipcRenderer.invoke("tiktok:connect", { username, apiKey }),
 		disconnect: (username: string) => ipcRenderer.invoke("tiktok:disconnect", username),
 		getState: (username: string) => ipcRenderer.invoke("tiktok:getState", username),
 		disconnectAll: () => ipcRenderer.invoke("tiktok:disconnectAll"),

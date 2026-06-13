@@ -38,7 +38,7 @@ export function pkg() {
 	});
 
 	pkg.createEventSchema({
-		name: "On TikTok Chat",
+		name: "Chat",
 		event: "chat",
 		createIO({ io }) {
 			return {
@@ -63,7 +63,7 @@ export function pkg() {
 	});
 
 	pkg.createEventSchema({
-		name: "On TikTok Gift",
+		name: "Gift",
 		event: "gift",
 		createIO({ io }) {
 			return {
@@ -100,7 +100,7 @@ export function pkg() {
 	});
 
 	pkg.createEventSchema({
-		name: "On TikTok Member Join",
+		name: "Member Join",
 		event: "member",
 		createIO({ io }) {
 			return {
@@ -119,7 +119,7 @@ export function pkg() {
 	});
 
 	pkg.createEventSchema({
-		name: "On TikTok Follow",
+		name: "Follow",
 		event: "follow",
 		createIO({ io }) {
 			return {
@@ -138,7 +138,7 @@ export function pkg() {
 	});
 
 	pkg.createEventSchema({
-		name: "On TikTok Share",
+		name: "Share",
 		event: "share",
 		createIO({ io }) {
 			return {
@@ -157,7 +157,7 @@ export function pkg() {
 	});
 
 	pkg.createEventSchema({
-		name: "On TikTok Like",
+		name: "Like",
 		event: "like",
 		createIO({ io }) {
 			return {

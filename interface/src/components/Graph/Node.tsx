@@ -131,8 +131,6 @@ export const Node = (props: Props) => {
 	const [active, setActive] = Solid.createSignal(0);
 	const [running, setRunning] = Solid.createSignal(false);
 	const [editingName, setEditingName] = Solid.createSignal(false);
-	const [menuOpen, setMenuOpen] = Solid.createSignal(false);
-
 	let ref: HTMLDivElement | undefined;
 
 	Solid.onMount(() => {
@@ -343,7 +341,6 @@ export const Node = (props: Props) => {
 							>
 							<ContextMenu.Root
 								onOpenChange={(o) => {
-									setMenuOpen(o);
 									if (o) props.onSelected();
 								}}
 							>
@@ -372,77 +369,75 @@ export const Node = (props: Props) => {
 										</Solid.Show>
 									</span>
 								</ContextMenu.Trigger>
-								<Solid.Show when={menuOpen()}>
-									<ContextMenuContent>
-										<ContextMenuItem onSelect={() => setEditingName(true)}>
-											Rename
-										</ContextMenuItem>
-										{((node().schema.package.name === "Functions" &&
-											node().schema.name === "Execute Function") ||
-											(node().schema.package.name === "Function Queue" &&
-												node().schema.name === "Add to Function Queue")) && (
-											<ContextMenuItem
-												onSelect={() => {
-													const fnId = node().state.properties.function;
-													if (fnId !== undefined) {
-														const id =
-															typeof fnId === "number" ? fnId : Number(fnId);
-														const fn = node().graph.project.functions.get(id);
-														if (fn) interfaceCtx.selectFunction(fn);
-													}
-												}}
-											>
-												Open Function
-											</ContextMenuItem>
-										)}
+								<ContextMenuContent>
+									<ContextMenuItem onSelect={() => setEditingName(true)}>
+										Rename
+									</ContextMenuItem>
+									{((node().schema.package.name === "Functions" &&
+										node().schema.name === "Execute Function") ||
+										(node().schema.package.name === "Function Queue" &&
+											node().schema.name === "Add to Function Queue")) && (
 										<ContextMenuItem
 											onSelect={() => {
-												interfaceCtx.execute("setNodeTrackInvocations", {
-													...graphRefOf(graph.model()),
-													nodeId: node().id,
-													trackInvocations: !node().state.trackInvocations,
-												});
+												const fnId = node().state.properties.function;
+												if (fnId !== undefined) {
+													const id =
+														typeof fnId === "number" ? fnId : Number(fnId);
+													const fn = node().graph.project.functions.get(id);
+													if (fn) interfaceCtx.selectFunction(fn);
+												}
 											}}
 										>
-											{node().state.trackInvocations
-												? "Stop tracking invocations"
-												: "Track invocations"}
+											Open Function
 										</ContextMenuItem>
-										<ContextMenuItem
-											onSelect={() => {
-												interfaceCtx.execute("setNodeFoldPins", {
-													...graphRefOf(graph.model()),
-													nodeId: node().id,
-													foldPins: !node().state.foldPins,
-												});
-											}}
-											class="flex flex-row gap-4 items-center justify-between"
-										>
-											{node().state.foldPins ? "Expand" : "Collapse"}
-										</ContextMenuItem>
-										<ContextMenuItem
-											onSelect={() => {
-												platform.clipboard.writeText(
-													serializeClipboardItem(nodeToClipboardItem(node())),
-												);
-												toast("Node copied to clipboard");
-											}}
-										>
-											Copy
-										</ContextMenuItem>
-										<ContextMenuItem
-											onSelect={() => {
-												interfaceCtx.execute("deleteGraphItems", {
-													...graphRefOf(graph.model()),
-													items: [{ type: "node", id: node().id }],
-												});
-											}}
-											class="text-red-500 flex flex-row gap-2 items-center justify-between"
-										>
-											Delete
-										</ContextMenuItem>
-									</ContextMenuContent>
-								</Solid.Show>
+									)}
+									<ContextMenuItem
+										onSelect={() => {
+											interfaceCtx.execute("setNodeTrackInvocations", {
+												...graphRefOf(graph.model()),
+												nodeId: node().id,
+												trackInvocations: !node().state.trackInvocations,
+											});
+										}}
+									>
+										{node().state.trackInvocations
+											? "Stop tracking invocations"
+											: "Track invocations"}
+									</ContextMenuItem>
+									<ContextMenuItem
+										onSelect={() => {
+											interfaceCtx.execute("setNodeFoldPins", {
+												...graphRefOf(graph.model()),
+												nodeId: node().id,
+												foldPins: !node().state.foldPins,
+											});
+										}}
+										class="flex flex-row gap-4 items-center justify-between"
+									>
+										{node().state.foldPins ? "Expand" : "Collapse"}
+									</ContextMenuItem>
+									<ContextMenuItem
+										onSelect={() => {
+											platform.clipboard.writeText(
+												serializeClipboardItem(nodeToClipboardItem(node())),
+											);
+											toast("Node copied to clipboard");
+										}}
+									>
+										Copy
+									</ContextMenuItem>
+									<ContextMenuItem
+										onSelect={() => {
+											interfaceCtx.execute("deleteGraphItems", {
+												...graphRefOf(graph.model()),
+												items: [{ type: "node", id: node().id }],
+											});
+										}}
+										class="text-red-500 flex flex-row gap-2 items-center justify-between"
+									>
+										Delete
+									</ContextMenuItem>
+								</ContextMenuContent>
 							</ContextMenu.Root>
 							</Solid.Show>
 						}

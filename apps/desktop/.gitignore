@@ -1,1 +1,18 @@
 !.output/public/.gitkeep
+
+# Electron / Vinxi build outputs
+dist-electron/
+release/
+remote-public/
+
+# Legacy Tauri build output
+src-tauri/remote-public/
+
+# Native binaries (built via build:whisper / build:addon)
+electron/whisper-native/*
+!electron/whisper-native/.gitkeep
+electron/whisper-addon*.node
+
+# Runtime logs and local state
+logs/
+window-state.json

@@ -1,12 +1,12 @@
 import { None, Some, makePersistedOption } from "@macrograph/option";
 import { type OnEvent } from "@macrograph/runtime";
-import { createSignal, onCleanup } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
 import type { Events } from "./index";
 
 export type ConnectionState =
 	| { type: "disconnected" }
 	| { type: "connecting" }
-	| { type: "connected"; connectionMethod: "websocket" | "polling" }
+	| { type: "connected"; connectionMethod: "websocket" }
 	| { type: "error"; message: string };
 
 export type Ctx = ReturnType<typeof createCtx>;
@@ -39,6 +39,12 @@ export function createCtx(onEvent: OnEvent<Events>) {
 		const name = channelName();
 		if (name.isNone()) return;
 
+		const key = apiKey();
+		if (key.isNone()) {
+			setState({ type: "error", message: "Euler Stream API key is required" });
+			return;
+		}
+
 		const bridge = getBridge();
 		if (!bridge) {
 			setState({ type: "error", message: "TikTok bridge not available" });
@@ -57,13 +63,7 @@ export function createCtx(onEvent: OnEvent<Events>) {
 
 				switch (eventState.status) {
 					case "connected":
-						setState({
-							type: "connected",
-							connectionMethod:
-								eventState.connectionMethod === "websocket"
-									? "websocket"
-									: "polling",
-						});
+						setState({ type: "connected", connectionMethod: "websocket" });
 						break;
 					case "disconnected":
 						setState({ type: "disconnected" });
@@ -112,7 +112,7 @@ export function createCtx(onEvent: OnEvent<Events>) {
 									data.giftDetails?.giftName ??
 									data.gift?.gift_name ??
 									"Gift",
-								diamonds: ext?.diamondCount ?? data.diamondCount ?? 0,
+								diamonds: ext?.diamondCount ?? data.giftDetails?.diamondCount ?? data.gift?.diamond_count ?? data.diamondCount ?? 0,
 								repeatCount: data.repeatCount ?? 1,
 							},
 						});
@@ -156,7 +156,7 @@ export function createCtx(onEvent: OnEvent<Events>) {
 		);
 
 		try {
-			await bridge.connect(name.unwrap(), apiKey().toNullable() || undefined);
+			await bridge.connect(name.unwrap(), key.unwrap());
 		} catch (err: any) {
 			setState({
 				type: "error",
@@ -175,6 +175,12 @@ export function createCtx(onEvent: OnEvent<Events>) {
 		}
 		setState({ type: "disconnected" });
 	}
+
+	onMount(() => {
+		if (channelName().isSome() && apiKey().isSome()) {
+			connect();
+		}
+	});
 
 	onCleanup(() => {
 		unlistenState?.();

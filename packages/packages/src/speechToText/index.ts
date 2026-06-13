@@ -7,7 +7,7 @@ import * as nodes from "./nodes/speechToText";
 export type Pkg = ReturnType<typeof pkg>;
 
 type Events = {
-  speech: { text: string; confidence: number; isFinal: boolean };
+  speech: { text: string };
 };
 
 export function pkg() {
@@ -51,7 +51,7 @@ export function pkg() {
     SettingsUI: () => import("./Settings"),
   });
 
-  nodes.register(pkg);
+  nodes.register(pkg, capture);
 
   return pkg;
 }

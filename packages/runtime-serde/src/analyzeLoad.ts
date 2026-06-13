@@ -224,7 +224,7 @@ export function listReplacementSchemaOptions(
 
 	for (const pkg of core.packages) {
 		for (const schema of pkg.schemas.values()) {
-			if (!("type" in schema)) continue;
+			if (!("type" in schema) && !("event" in schema)) continue;
 			if ("internal" in schema && schema.internal) continue;
 
 			const isEvent =

@@ -14,6 +14,7 @@ export function pkg() {
 
 	window.addEventListener("keydown", (e) => {
 		if (e.key < "a" || e.key > "z") return;
+		if (e.repeat) return;
 
 		const key: Lowercase<Alphabet> = e.key as any;
 

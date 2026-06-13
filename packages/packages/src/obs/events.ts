@@ -294,6 +294,96 @@ export function register(pkg: Package<EventTypes>, types: Types) {
 	});
 
 	createOBSEventSchema({
+		event: "CanvasCreated",
+		name: "Canvas Created",
+		createIO: ({ io }) => {
+			return {
+				exec: io.execOutput({
+					id: "exec",
+					name: "",
+				}),
+				canvasName: io.dataOutput({
+					id: "canvasName",
+					name: "Canvas Name",
+					type: t.string(),
+				}),
+				canvasUuid: io.dataOutput({
+					id: "canvasUuid",
+					name: "Canvas UUID",
+					type: t.string(),
+				}),
+			};
+		},
+		run({ ctx, data, io }) {
+			ctx.setOutput(io.canvasName, data.canvasName);
+			ctx.setOutput(io.canvasUuid, data.canvasUuid);
+			ctx.exec(io.exec);
+		},
+	});
+
+	createOBSEventSchema({
+		event: "CanvasRemoved",
+		name: "Canvas Removed",
+		createIO: ({ io }) => {
+			return {
+				exec: io.execOutput({
+					id: "exec",
+					name: "",
+				}),
+				canvasName: io.dataOutput({
+					id: "canvasName",
+					name: "Canvas Name",
+					type: t.string(),
+				}),
+				canvasUuid: io.dataOutput({
+					id: "canvasUuid",
+					name: "Canvas UUID",
+					type: t.string(),
+				}),
+			};
+		},
+		run({ ctx, data, io }) {
+			ctx.setOutput(io.canvasName, data.canvasName);
+			ctx.setOutput(io.canvasUuid, data.canvasUuid);
+			ctx.exec(io.exec);
+		},
+	});
+
+	createOBSEventSchema({
+		event: "CanvasNameChanged",
+		name: "Canvas Name Changed",
+		createIO: ({ io }) => {
+			return {
+				exec: io.execOutput({
+					id: "exec",
+					name: "",
+				}),
+				canvasUuid: io.dataOutput({
+					id: "canvasUuid",
+					name: "Canvas UUID",
+					type: t.string(),
+				}),
+				oldCanvasName: io.dataOutput({
+					id: "oldCanvasName",
+					name: "Old Canvas Name",
+					type: t.string(),
+				}),
+				canvasName: io.dataOutput({
+					id: "canvasName",
+					name: "Canvas Name",
+					type: t.string(),
+				}),
+			};
+		},
+		run({ ctx, data, io }) {
+			ctx.setOutput(io.canvasUuid, data.canvasUuid);
+			ctx.setOutput(io.oldCanvasName, data.oldCanvasName);
+			ctx.setOutput(io.canvasName, data.canvasName);
+			ctx.exec(io.exec);
+		},
+	});
+
+	createOBSEventSchema({
 		event: "SceneCreated",
 		name: "Scene Created",
 		createIO: ({ io }) => {

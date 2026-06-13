@@ -9,7 +9,6 @@ import { WebSocketServer, WebSocket } from "ws";
 import OBSWebSocket from "obs-websocket-js";
 import { exec, spawn } from "child_process";
 import FormData from "form-data";
-import { WebcastPushConnection } from "tiktok-live-connector";
 import {
 	ikeaConnect,
 	ikeaDisconnect,
@@ -1376,17 +1375,19 @@ function registerElgatoKeyLightHandlers() {
 	});
 }
 
-// ── TikTok Live Connector ──────────────────────────────────────────────────────
+// ── TikTok Live (Euler Stream WebSocket) ────────────────────────────────────────
+
+const EULER_WS_URL = "wss://ws.eulerstream.com";
 
 interface TikTokConnectionState {
 	username: string;
 	status: "disconnected" | "connecting" | "connected" | "error";
-	connectionMethod: "websocket" | "polling" | null;
+	connectionMethod: "websocket" | null;
 	roomId: string | null;
 	error: string | null;
 }
 
-const tikTokConnections = new Map<string, WebcastPushConnection>();
+const tikTokConnections = new Map<string, WebSocket>();
 const tikTokConnectionStates = new Map<string, TikTokConnectionState>();
 
 function setTikTokState(username: string, partial: Partial<TikTokConnectionState>) {
@@ -1403,72 +1404,127 @@ function setTikTokState(username: string, partial: Partial<TikTokConnectionState
 	console.log(`[TikTok] ${username}: ${next.status}${next.error ? ` — ${next.error}` : ""}`);
 }
 
+const TIKTOK_EVENT_MAP: Record<string, string> = {
+	WebcastChatMessage: "chat",
+	WebcastGiftMessage: "gift",
+	WebcastMemberMessage: "member",
+	WebcastSocialMessage: "follow",
+	WebcastLikeMessage: "like",
+};
+
+function handleTikTokDispatch(username: string, type: string, data: any) {
+	if (type === "WebcastSocialMessage") {
+		const isShare = data.shareType != null || data.displayStyle === 2 || data.action === 3;
+		sendToRenderer("tiktok:data", [username, isShare ? "share" : "follow", data]);
+		return;
+	}
+	const eventName = TIKTOK_EVENT_MAP[type];
+	if (eventName) {
+		sendToRenderer("tiktok:data", [username, eventName, data]);
+	}
+}
+
+function handleTikTokMessage(username: string, raw: string) {
+	let parsed: any;
+	try {
+		parsed = JSON.parse(raw);
+	} catch {
+		return;
+	}
+	if (!parsed || typeof parsed !== "object") return;
+
+	const messages = parsed.messages ?? [parsed];
+
+	for (const msg of messages) {
+		if (!msg.type || msg.data === undefined) continue;
+
+		switch (msg.type) {
+			case "roomInfo":
+				if (msg.data.roomId) {
+					setTikTokState(username, { roomId: String(msg.data.roomId) });
+				}
+				break;
+			case "room.status":
+				switch (msg.data.state) {
+					case "connected":
+					case "connecting":
+					case "reconnecting":
+						setTikTokState(username, {
+							status: msg.data.state === "connected" ? "connected" : "connecting",
+							roomId: msg.data.roomId ?? null,
+							error: null,
+						});
+						break;
+					case "ended":
+					case "offline":
+						setTikTokState(username, { status: "disconnected", error: null });
+						break;
+					case "error":
+						setTikTokState(username, { status: "error", error: msg.data.message ?? "Room error" });
+						break;
+				}
+				break;
+			case "tiktok.connect":
+				setTikTokState(username, { status: "connected", error: null });
+				break;
+			case "tiktok.disconnect":
+				setTikTokState(username, { status: "disconnected", error: null });
+				break;
+			default:
+				handleTikTokDispatch(username, msg.type, msg.data);
+				break;
+		}
+	}
+}
+
 function registerTikTokHandlers() {
-	ipcMain.handle("tiktok:connect", async (_, { username, signApiKey }: { username: string; signApiKey?: string | null }) => {
+	ipcMain.handle("tiktok:connect", async (_, { username, apiKey }: { username: string; apiKey: string }) => {
 		const existing = tikTokConnections.get(username);
 		if (existing) {
-			existing.disconnect();
+			existing.close();
 			tikTokConnections.delete(username);
 		}
 
-		const conn = new WebcastPushConnection(username, {
-			enableExtendedGiftInfo: true,
-			...(signApiKey ? { signProviderOptions: { params: { apiKey: signApiKey } } } : {}),
-		});
-		tikTokConnections.set(username, conn);
 		setTikTokState(username, { status: "connecting", connectionMethod: null, roomId: null, error: null });
 
-		let connected = false;
+		const url = `${EULER_WS_URL}?uniqueId=${encodeURIComponent(username)}&apiKey=${encodeURIComponent(apiKey)}`;
+		const ws = new WebSocket(url);
 
-		conn.on("connected", (state: any) => {
-			connected = true;
-			setTikTokState(username, {
-				status: "connected",
-				connectionMethod: state.upgradedToWebsocket ? "websocket" : "polling",
-				roomId: state.roomId ?? null,
-				error: null,
-			});
+		tikTokConnections.set(username, ws);
+
+		ws.on("message", (raw: Buffer) => {
+			handleTikTokMessage(username, raw.toString());
 		});
 
-		conn.on("disconnected", () => {
-			setTikTokState(username, { status: "disconnected", error: null });
+		ws.on("close", (code: number) => {
+			tikTokConnections.delete(username);
+			if (code === 4404) {
+				setTikTokState(username, { status: "error", error: "Streamer is not live" });
+			} else if (code === 4401 || code === 4403) {
+				setTikTokState(username, { status: "error", error: "Invalid API key or insufficient permissions" });
+			} else if (code === 4556) {
+				setTikTokState(username, { status: "error", error: "Failed to fetch TikTok stream data" });
+			} else if (code === 1011) {
+				setTikTokState(username, { status: "error", error: "Euler Stream server error" });
+			} else if (code === 4005) {
+				setTikTokState(username, { status: "disconnected", error: null });
+			} else if (code !== 1000) {
+				setTikTokState(username, { status: "disconnected", error: `WebSocket closed (code ${code})` });
+			} else {
+				setTikTokState(username, { status: "disconnected", error: null });
+			}
 		});
 
-		conn.on("streamEnd", () => {
-			setTikTokState(username, { status: "disconnected", error: null });
+		ws.on("error", (err: Error) => {
+			console.error(`[TikTok] ${username} WebSocket error:`, err.message);
+			setTikTokState(username, { status: "error", error: err.message });
 		});
-
-		conn.on("error", (err: any) => {
-			if (!connected) return;
-			const msg = err?.exception?.message ?? err?.message ?? String(err ?? "Unknown error");
-			console.error(`[TikTok] ${username} error:`, msg);
-			setTikTokState(username, { status: "error", error: msg });
-		});
-
-		const forward = (eventName: string, data: any) => {
-			sendToRenderer("tiktok:data", [username, eventName, data]);
-		};
-
-		conn.on("chat", (data: any) => forward("chat", data));
-		conn.on("gift", (data: any) => forward("gift", data));
-		conn.on("member", (data: any) => forward("member", data));
-		conn.on("follow", (data: any) => forward("follow", data));
-		conn.on("share", (data: any) => forward("share", data));
-		conn.on("like", (data: any) => forward("like", data));
-
-		try {
-			await conn.connect();
-		} catch (err: any) {
-			const msg = err?.message ?? String(err ?? "Unknown error");
-			console.error(`[TikTok] ${username} connection failed:`, msg);
-			setTikTokState(username, { status: "error", error: msg });
-		}
 	});
 
 	ipcMain.handle("tiktok:disconnect", async (_, username: string) => {
-		const conn = tikTokConnections.get(username);
-		if (conn) {
-			conn.disconnect();
+		const ws = tikTokConnections.get(username);
+		if (ws) {
+			ws.close();
 			tikTokConnections.delete(username);
 		}
 		tikTokConnectionStates.delete(username);
@@ -1480,8 +1536,8 @@ function registerTikTokHandlers() {
 	});
 
 	ipcMain.handle("tiktok:disconnectAll", async () => {
-		for (const [username, conn] of tikTokConnections) {
-			conn.disconnect();
+		for (const [username, ws] of tikTokConnections) {
+			ws.close();
 		}
 		tikTokConnections.clear();
 		tikTokConnectionStates.clear();

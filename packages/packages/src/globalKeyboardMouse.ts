@@ -107,6 +107,8 @@ export function pkg() {
 		const { key, appFocused } = payload as { key: string; appFocused: boolean };
 		if (appFocused) return;
 
+		if (pressedKeys.has(key)) return;
+
 		pressedKeys.add(key);
 		busses.get(key)?.emit("pressed");
 	});

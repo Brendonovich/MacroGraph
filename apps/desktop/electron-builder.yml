@@ -21,6 +21,10 @@ asar: true
 asarUnpack:
   - "**/*.node"
   - "**/whisper-addon*"
+compression: normal
+nodeGypRebuild: false
+npmRebuild: false
+buildDependenciesFromSource: false
 win:
   target:
     - target: nsis

@@ -17,10 +17,7 @@ export default function (ctx: Ctx) {
 	const keyForm = createForm(() => ({
 		defaultValues: { apiKey: ctx.apiKey().toNullable() ?? "" },
 		onSubmit: ({ value }) => {
-			if (value.apiKey.length > 0)
-				ctx.setApiKey(Some(value.apiKey));
-			else
-				ctx.setApiKey(None);
+			ctx.setApiKey(value.apiKey.length > 0 ? Some(value.apiKey) : None);
 		},
 	}));
 
@@ -65,7 +62,7 @@ export default function (ctx: Ctx) {
 							onInput={(e) => field().handleChange(e.currentTarget.value)}
 							onBlur={() => field().handleBlur()}
 							value={field().state.value}
-							placeholder="Sign API Key (optional)"
+							placeholder="Euler Stream API Key (required)"
 						/>
 					)}
 				</keyForm.Field>
@@ -89,24 +86,14 @@ export default function (ctx: Ctx) {
 					</div>
 				</Match>
 				<Match when={ctx.state().type === "connected"}>
-					{(() => {
-						const s = ctx.state() as Extract<
-							ReturnType<typeof ctx.state>,
-							{ type: "connected" }
-						>;
-						return (
-							<div class="flex flex-col space-y-2">
-								<div class="flex flex-row items-center space-x-4">
-									<span class="text-green-400">
-										Connected via {s.connectionMethod}
-									</span>
-									<Button onClick={() => ctx.disconnect()} size="md">
-										Disconnect
-									</Button>
-								</div>
-							</div>
-						);
-					})()}
+					<div class="flex flex-col space-y-2">
+						<div class="flex flex-row items-center space-x-4">
+							<span class="text-green-400">Connected</span>
+							<Button onClick={() => ctx.disconnect()} size="md">
+								Disconnect
+							</Button>
+						</div>
+					</div>
 				</Match>
 				<Match when={ctx.state().type === "error"}>
 					{(() => {

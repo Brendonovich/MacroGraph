@@ -37,8 +37,9 @@ export class CaptureManager {
     return this.stream !== null;
   }
 
-  async start(micId: string) {
+  async start(micId?: string) {
     const modelName = this.ctx.selectedModel().unwrapOr("base.en");
+    if (!micId) micId = this.ctx.selectedMic().unwrapOr("");
     const settings = this.ctx.captureSettings();
 
     const result = await window.electronAPI.stt.startCapture("", modelName, settings);

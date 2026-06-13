@@ -142,6 +142,11 @@ export function createTypes(pkg: Pkg) {
 		unversionedInputKind: s.field("Unversioned Input Kind", t.string()),
 	}));
 
+	const Canvas = pkg.createStruct("Canvas", (s) => ({
+		canvasName: s.field("Canvas Name", t.string()),
+		canvasUuid: s.field("Canvas UUID", t.string()),
+	}));
+
 	return {
 		BoundsType,
 		Alignment,
@@ -157,6 +162,7 @@ export function createTypes(pkg: Pkg) {
 		PropertyItem,
 		Scene,
 		InputInfo,
+		Canvas,
 	};
 }
 

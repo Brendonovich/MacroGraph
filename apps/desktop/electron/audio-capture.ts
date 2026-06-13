@@ -76,8 +76,9 @@ function startTranscriber(modelName: string): Promise<void> {
   });
 }
 
-function transcribeAudio(pcmData: Float32Array): Promise<string> {
-  if (!transcriberProcess?.stdin || !transcriberProcess.stdout) return Promise.resolve("");
+function transcribeAudio(pcmData: Float32Array): Promise<{ text: string; confidence: number }> {
+  if (!transcriberProcess?.stdin || !transcriberProcess.stdout)
+    return Promise.resolve({ text: "", confidence: 0 });
   return new Promise((resolve) => {
     const audioBuf = Buffer.from(pcmData.buffer);
     const header = Buffer.alloc(4);
@@ -90,7 +91,7 @@ function transcribeAudio(pcmData: Float32Array): Promise<string> {
           const payload = d.subarray(4, 4 + len).toString();
           const msg = JSON.parse(payload);
           transcriberProcess!.stdout!.removeListener("data", responseHandler);
-          resolve(msg.text ?? "");
+          resolve({ text: msg.text ?? "", confidence: msg.confidence ?? 0 });
         }
       } catch {}
     };
@@ -104,10 +105,10 @@ export function feedAudioChunk(pcmData: ArrayBuffer): void {
   const samples = new Float32Array(pcmData);
   const utterance = currentVad.process(samples);
   if (utterance) {
-    transcribeAudio(utterance).then((text) => {
+    transcribeAudio(utterance).then(({ text, confidence }) => {
       if (text.trim()) {
         const win = BrowserWindow.getAllWindows()[0];
-        if (win) win.webContents.send("stt:transcription", { text, confidence: 1, isFinal: true });
+        if (win) win.webContents.send("stt:transcription", { text, confidence, isFinal: true });
       }
     });
   }

@@ -1,7 +1,7 @@
 interface TikTokConnectionState {
 	username: string;
 	status: "disconnected" | "connecting" | "connected" | "error";
-	connectionMethod: "websocket" | "polling" | null;
+	connectionMethod: "websocket" | null;
 	roomId: string | null;
 	error: string | null;
 }
@@ -46,7 +46,7 @@ interface ElectronAPI {
 		fileSize(path: string): Promise<number | null>;
 	};
 	tiktok: {
-		connect(username: string, signApiKey?: string | null): Promise<void>;
+		connect(username: string, apiKey: string): Promise<void>;
 		disconnect(username: string): Promise<void>;
 		getState(username: string): Promise<TikTokConnectionState>;
 		disconnectAll(): Promise<void>;

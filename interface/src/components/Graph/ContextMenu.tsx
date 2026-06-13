@@ -5,8 +5,31 @@ import clsx from "clsx";
 import { tw } from "../../util";
 import { useInlineTextEditorCtx } from "../../Sidebar/InlineTextEditor";
 
+function ContextMenuItemBase(props: any) {
+	const { onSelect, ...rest } = props;
+	return (
+		<ContextMenu.Item
+			{...rest}
+			onPointerDown={() => {
+				onSelect?.();
+				setTimeout(() => {
+					document.dispatchEvent(
+						new KeyboardEvent("keydown", {
+							key: "Escape",
+							bubbles: true,
+							cancelable: true,
+						}),
+					);
+				});
+			}}
+		>
+			{props.children}
+		</ContextMenu.Item>
+	);
+}
+
 export const ContextMenuItem = tw(
-	ContextMenu.Item,
+	ContextMenuItemBase,
 )`px-1.5 py-1.5 outline-none ui-highlighted:bg-white/10 rounded-sm flex flex-row items-center gap-2`;
 
 export function ContextMenuRenameItem() {

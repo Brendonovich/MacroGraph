@@ -12,7 +12,7 @@
 		"build:addon": "cd ../../crates/whisper-addon && napi build --release --platform && node -e \"try { require('fs').copyFileSync('whisper-addon.win32-x64.node', '../../apps/desktop/electron/whisper-addon.win32-x64.node') } catch(e) { console.log('Native addon build skipped:', e.message) }\"",
 		"build:whisper": "cd ../../crates/whisper-cpp-tmp && cmake --build build --config Release --target transcriber && node -e \"require('fs').copyFileSync('build/bin/Release/transcriber.exe', '../../apps/desktop/electron/whisper-native/transcriber.exe'); ['whisper.dll','ggml.dll','ggml-base.dll','ggml-cpu.dll'].forEach(f => require('fs').copyFileSync('build/bin/Release/' + f, '../../apps/desktop/electron/whisper-native/' + f))\"",
 		"build": "pnpm build:remote && pnpm build:renderer && pnpm build:electron",
-		"build:app": "pnpm build && electron-builder",
+		"build:app": "pnpm build && node scripts/package.mjs",
 "package": "pnpm build:renderer && pnpm build:electron && electron-builder",
 		"start": "electron .",
 		"typecheck": "tsc -b"
@@ -43,7 +43,6 @@
 		"obs-websocket-js": "^5.0.5",
 		"solid-js": "^1.9.5",
 		"solid-sonner": "^0.2.5",
-		"tiktok-live-connector": "1.2.3",
 		"uiohook-napi": "^1.5.5",
 		"uuid": "^14.0.0",
 		"valibot": "^0.37.0",
