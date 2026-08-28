@@ -1,7 +1,9 @@
-import { app, BrowserWindow, ipcMain, dialog, clipboard, shell, crashReporter, session } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, clipboard, shell, crashReporter, session, protocol, net } from "electron";
+
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync, createReadStream, unlinkSync } from "fs";
 import { PassThrough } from "stream";
 import { join, dirname, extname } from "path";
+import { pathToFileURL } from "url";
 import { createServer as createHttpServer, request as httpRequest } from "http";
 import { request as httpsRequest } from "https";
 import { randomUUID } from "crypto";
@@ -18,6 +20,7 @@ import {
 	ikeaStartObserving,
 	ikeaStopObserving,
 } from "./ikea-coap";
+
 import {
 	lifxDiscover,
 	lifxSetPower,
@@ -40,6 +43,29 @@ import { registerSttHandlers } from "./stt";
 
 const DEV = process.env.NODE_ENV === "development" || process.argv.includes("--dev");
 const DEV_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:3000";
+const RENDERER_ROOT = join(__dirname, "..", ".output", "public");
+
+protocol.registerSchemesAsPrivileged([
+	{
+		scheme: "app",
+		privileges: {
+			standard: true,
+			secure: true,
+			supportFetchAPI: true,
+			corsEnabled: true,
+		},
+	},
+]);
+
+function registerRendererProtocol() {
+	protocol.handle("app", (request) => {
+		const url = new URL(request.url);
+		let rel = decodeURIComponent(url.pathname);
+		if (rel === "/" || rel === "") rel = "index.html";
+		else rel = rel.replace(/^\//, "");
+		return net.fetch(pathToFileURL(join(RENDERER_ROOT, rel)).href);
+	});
+}
 
 const APP_VERSION = app.getVersion() || "1.0.0";
 
@@ -65,9 +91,18 @@ function loadWindowState(): Electron.Rectangle & { maximized?: boolean } {
 	}
 }
 
+function getIconPath(): string {
+	const name = process.platform === "win32" ? "icon.ico" : "icon.png";
+	if (app.isPackaged) {
+		const packaged = join(process.resourcesPath, name);
+		if (existsSync(packaged)) return packaged;
+	}
+	return join(__dirname, "..", "resources", name);
+}
+
 function createWindow() {
 	const saved = loadWindowState();
-	const iconPath = join(__dirname, "..", "resources", process.platform === "win32" ? "icon.ico" : "icon.png");
+	const iconPath = getIconPath();
 
 	mainWindow = new BrowserWindow({
 		width: saved.width,
@@ -92,7 +127,7 @@ function createWindow() {
 	if (DEV) {
 		mainWindow.loadURL(DEV_URL);
 	} else {
-		mainWindow.loadFile(join(__dirname, "..", ".output", "public", "index.html"));
+		mainWindow.loadURL("app://macrograph/");
 	}
 
 	mainWindow.on("resize", saveWindowState);
@@ -146,6 +181,7 @@ function appendCrashLog(kind: string, message: string) {
 // ── App lifecycle ──────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
+	if (!DEV) registerRendererProtocol();
 	initSessionTracking();
 	createWindow();
 
@@ -1374,6 +1410,8 @@ function registerElgatoKeyLightHandlers() {
 		elgatoCleanup();
 	});
 }
+
+
 
 // ── TikTok Live (Euler Stream WebSocket) ────────────────────────────────────────
 

@@ -193,6 +193,7 @@ const audioBackend: pkgs.audio.AudioBackend = {
 	pkgs.lifx.pkg,
 	pkgs.elgatoKeyLight.pkg,
 	pkgs.speechToText.pkg,
+	pkgs.zigbee2mqtt.pkg,
 ].map((p) => core.registerPackage(p));
 
 export default function Editor() {

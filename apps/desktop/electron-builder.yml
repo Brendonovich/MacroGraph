@@ -17,6 +17,10 @@ extraResources:
     to: whisper-native
     filter:
       - "**/*"
+  - from: resources/icon.ico
+    to: icon.ico
+  - from: resources/icon.png
+    to: icon.png
 asar: true
 asarUnpack:
   - "**/*.node"
@@ -30,14 +34,14 @@ win:
     - target: nsis
       arch:
         - x64
-  icon: resources/icon.ico
+  icon: icon.ico
 mac:
   target:
     - target: dmg
       arch:
         - x64
         - arm64
-  icon: resources/icon.icns
+  icon: icon.icns
   category: public.app-category.productivity
 linux:
   target:

@@ -119,6 +119,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	path: {
 		convertFileSrc: (path: string) => ipcRenderer.invoke("path:convertFileSrc", path),
 	},
+
 	ikea: {
 		connect: (host: string, securityCode: string) =>
 			ipcRenderer.invoke("ikea:connect", { host, securityCode }),

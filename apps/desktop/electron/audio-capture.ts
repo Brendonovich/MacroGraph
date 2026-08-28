@@ -11,16 +11,17 @@ let currentModel: string | null = null;
 const MODELS_DIR = join(app.getPath("userData"), "models");
 const SAMPLE_RATE = 16000;
 
-function getBackendDir() {
+function getBackendDir(): string {
+  if (app.isPackaged) {
+    return join(process.resourcesPath, "whisper-native");
+  }
   return join(__dirname, "..", "electron", "whisper-native");
 }
 
 function findTranscriberBinary(): string | null {
-  const dir = getBackendDir();
   const candidates = [
-    join(dir, "transcriber.exe"),
+    join(getBackendDir(), "transcriber.exe"),
     join(__dirname, "transcriber.exe"),
-    join(app.getAppPath(), "resources", "whisper-native", "transcriber.exe"),
   ];
   for (const p of candidates) {
     if (existsSync(p)) return p;
@@ -32,7 +33,7 @@ function startTranscriber(modelName: string): Promise<void> {
   if (transcriberProcess) return Promise.resolve();
 
   const binary = findTranscriberBinary();
-  if (!binary) throw new Error("transcriber binary not found. Run build:whisper.");
+  if (!binary) throw new Error("Speech-to-text backend not found.");
 
   const modelPath = join(MODELS_DIR, `ggml-${modelName}.bin`);
   if (!existsSync(modelPath)) throw new Error(`Model not found: ${modelPath}`);

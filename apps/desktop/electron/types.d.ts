@@ -1,3 +1,10 @@
+declare module "websocket-stream" {
+	import { Duplex } from "stream";
+	import type { WebSocket } from "ws";
+	function websocketStream(target: WebSocket | string, opts?: any): Duplex;
+	export default websocketStream;
+}
+
 declare module "multicast-dns" {
 	import { EventEmitter } from "events";
 

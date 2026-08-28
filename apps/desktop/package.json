@@ -13,7 +13,7 @@
 		"build:whisper": "cd ../../crates/whisper-cpp-tmp && cmake --build build --config Release --target transcriber && node -e \"require('fs').copyFileSync('build/bin/Release/transcriber.exe', '../../apps/desktop/electron/whisper-native/transcriber.exe'); ['whisper.dll','ggml.dll','ggml-base.dll','ggml-cpu.dll'].forEach(f => require('fs').copyFileSync('build/bin/Release/' + f, '../../apps/desktop/electron/whisper-native/' + f))\"",
 		"build": "pnpm build:remote && pnpm build:renderer && pnpm build:electron",
 		"build:app": "pnpm build && node scripts/package.mjs",
-"package": "pnpm build:renderer && pnpm build:electron && electron-builder",
+		"package": "pnpm build:renderer && pnpm build:electron && electron-builder",
 		"start": "electron .",
 		"typecheck": "tsc -b"
 	},
@@ -34,6 +34,7 @@
 		"@tanstack/solid-query": "^4.36.1",
 		"@ts-rest/core": "^3.52.1",
 		"@ts-rest/solid-query": "^3.41.1",
+		"aedes": "^1.0.2",
 		"coap-packet": "^1.1.1",
 		"express": "^5.2.1",
 		"form-data": "^4.0.5",
@@ -47,7 +48,11 @@
 		"uuid": "^14.0.0",
 		"valibot": "^0.37.0",
 		"vinxi": "0.4.1",
+		"websocket-stream": "^5.5.2",
 		"ws": "^8.21.0",
+		"zigbee-herdsman": "^10.4.0",
+		"zigbee-herdsman-converters": "^26.65.0",
+		"zigbee2mqtt": "^2.12.0",
 		"zod": "^3.24.2"
 	},
 	"devDependencies": {

@@ -101,6 +101,7 @@ const core = new Core({
 	pkgs.vtubeStudio.pkg,
 	pkgs.voicemod.pkg,
 	pkgs.script.pkg,
+	pkgs.zigbee2mqtt.pkg,
 ].map((p) => p && core.registerPackage(p));
 
 export default () => {

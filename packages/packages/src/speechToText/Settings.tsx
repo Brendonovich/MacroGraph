@@ -103,7 +103,7 @@ export default function (props: Ctx & { capture: any }) {
       <Switch>
         <Match when={!backendAvailable()}>
           <div class="bg-yellow-900/40 border border-yellow-700 rounded px-3 py-2 text-xs text-yellow-300">
-            Transcoder binary not found. Run <code>pnpm build:whisper</code> in apps/desktop.
+            Speech-to-text is unavailable in this installation.
           </div>
         </Match>
       </Switch>

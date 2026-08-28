@@ -163,6 +163,7 @@ const remotePlatform: Platform = {
 	pkgs.voicemod.pkg,
 	pkgs.functions.pkg,
 	pkgs.script.pkg,
+	pkgs.zigbee2mqtt.pkg,
 ].map((p) => core.registerPackage(p));
 
 function wsUrl() {

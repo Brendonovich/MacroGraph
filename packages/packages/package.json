@@ -44,10 +44,10 @@
 		"octokit": "^3.1.2",
 		"openai": "^4.31.0",
 		"socket.io-client": "^4.7.5",
-
 		"typescript": "^5.5.3",
 		"valibot": "^0.37.0",
 		"vtubestudio": "^3.10.1",
+		"ws": "^8.21.0",
 		"zod": "^3.24.2"
 	},
 	"devDependencies": {

@@ -41,6 +41,7 @@ export * as ikea from "./ikea";
 export * as lifx from "./lifx";
 export * as elgatoKeyLight from "./elgatoKeyLight";
 export * as speechToText from "./speechToText";
+export * as zigbee2mqtt from "./zigbee2mqtt";
 
 export {
 	applyHostMirrorPayloadToCore,
